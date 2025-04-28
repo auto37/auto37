@@ -7,74 +7,88 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
-import { QuotationWithDetails, Customer, Vehicle, QuotationItem } from '@/lib/types';
+import { 
+  InvoiceWithDetails, 
+  Customer, 
+  Vehicle, 
+  RepairOrder, 
+  RepairOrderItem 
+} from '@/lib/types';
 import { 
   formatCurrency, 
   formatDate, 
-  getQuotationStatusText, 
-  getQuotationStatusClass,
+  getInvoiceStatusText, 
+  getInvoiceStatusClass,
+  getPaymentMethodText,
   exportToPdf,
   printDocument
 } from '@/lib/utils';
 
-export default function QuoteDetails() {
+export default function InvoiceDetails() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [quote, setQuote] = useState<QuotationWithDetails | null>(null);
+  const [invoice, setInvoice] = useState<InvoiceWithDetails | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-  const [items, setItems] = useState<QuotationItem[]>([]);
+  const [repairOrder, setRepairOrder] = useState<RepairOrder | null>(null);
+  const [repairItems, setRepairItems] = useState<RepairOrderItem[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const quoteId = parseInt(id);
-    if (isNaN(quoteId)) {
+    const invoiceId = parseInt(id);
+    if (isNaN(invoiceId)) {
       toast({
         title: 'Lỗi',
-        description: 'ID báo giá không hợp lệ',
+        description: 'ID hóa đơn không hợp lệ',
         variant: 'destructive',
       });
-      navigate('/quotes');
+      navigate('/invoices');
       return;
     }
 
-    const fetchQuoteData = async () => {
+    const fetchInvoiceData = async () => {
       setIsLoading(true);
       try {
-        // Fetch quote
-        const quoteData = await db.quotations.get(quoteId);
-        if (!quoteData) {
+        // Fetch invoice
+        const invoiceData = await db.invoices.get(invoiceId);
+        if (!invoiceData) {
           toast({
             title: 'Lỗi',
-            description: 'Không tìm thấy báo giá',
+            description: 'Không tìm thấy hóa đơn',
             variant: 'destructive',
           });
-          navigate('/quotes');
+          navigate('/invoices');
           return;
         }
-        setQuote(quoteData);
+        setInvoice(invoiceData);
         
         // Fetch customer
-        const customerData = await db.customers.get(quoteData.customerId);
+        const customerData = await db.customers.get(invoiceData.customerId);
         setCustomer(customerData ?? null);
         
         // Fetch vehicle
-        const vehicleData = await db.vehicles.get(quoteData.vehicleId);
+        const vehicleData = await db.vehicles.get(invoiceData.vehicleId);
         setVehicle(vehicleData ?? null);
         
-        // Fetch quote items
-        const quoteItems = await db.quotationItems
-          .where('quotationId')
-          .equals(quoteId)
-          .toArray();
-        setItems(quoteItems);
+        // Fetch repair order
+        const repairData = await db.repairOrders.get(invoiceData.repairOrderId);
+        setRepairOrder(repairData ?? null);
+        
+        // Fetch repair items
+        if (repairData) {
+          const items = await db.repairOrderItems
+            .where('repairOrderId')
+            .equals(repairData.id!)
+            .toArray();
+          setRepairItems(items);
+        }
       } catch (error) {
-        console.error('Error fetching quote details:', error);
+        console.error('Error fetching invoice details:', error);
         toast({
           title: 'Lỗi',
-          description: 'Có lỗi xảy ra khi tải dữ liệu báo giá',
+          description: 'Có lỗi xảy ra khi tải dữ liệu hóa đơn',
           variant: 'destructive',
         });
       } finally {
@@ -82,70 +96,49 @@ export default function QuoteDetails() {
       }
     };
 
-    fetchQuoteData();
+    fetchInvoiceData();
   }, [id, navigate, toast]);
 
   const handleStatusChange = async (status: string) => {
     try {
-      if (quote?.id) {
-        await db.quotations.update(quote.id, { status: status as any });
-        setQuote({ ...quote, status: status as any });
+      if (invoice?.id) {
+        await db.invoices.update(invoice.id, { status: status as any });
+        setInvoice({ ...invoice, status: status as any });
         
         toast({
           title: 'Thành công',
-          description: `Đã cập nhật trạng thái báo giá thành "${getQuotationStatusText(status)}".`,
+          description: `Đã cập nhật trạng thái hóa đơn thành "${getInvoiceStatusText(status)}".`,
         });
       }
     } catch (error) {
-      console.error('Error updating quote status:', error);
+      console.error('Error updating invoice status:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể cập nhật trạng thái báo giá. Vui lòng thử lại.',
+        description: 'Không thể cập nhật trạng thái hóa đơn. Vui lòng thử lại.',
         variant: 'destructive'
       });
     }
   };
 
   const handleDelete = async () => {
-    if (!quote?.id) return;
+    if (!invoice?.id) return;
     
-    if (window.confirm('Bạn có chắc chắn muốn xóa báo giá này không?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa hóa đơn này không?')) {
       try {
-        // Check if the quotation has already been converted to a repair order
-        const repairOrder = await db.repairOrders
-          .where('quotationId')
-          .equals(quote.id)
-          .first();
-        
-        if (repairOrder) {
-          toast({
-            title: 'Không thể xóa',
-            description: 'Báo giá này đã được chuyển thành lệnh sửa chữa.',
-            variant: 'destructive'
-          });
-          return;
-        }
-        
-        // First delete all quotation items
-        await db.quotationItems
-          .where('quotationId')
-          .equals(quote.id)
-          .delete();
-        
-        // Then delete the quotation
-        await db.quotations.delete(quote.id);
+        // Delete the invoice
+        await db.invoices.delete(invoice.id);
         
         toast({
           title: 'Thành công',
-          description: 'Đã xóa báo giá.',
+          description: 'Đã xóa hóa đơn.',
         });
         
-        navigate('/quotes');
+        navigate('/invoices');
       } catch (error) {
-        console.error('Error deleting quote:', error);
+        console.error('Error deleting invoice:', error);
         toast({
           title: 'Lỗi',
-          description: 'Không thể xóa báo giá. Vui lòng thử lại.',
+          description: 'Không thể xóa hóa đơn. Vui lòng thử lại.',
           variant: 'destructive'
         });
       }
@@ -153,11 +146,11 @@ export default function QuoteDetails() {
   };
 
   const handlePrint = () => {
-    printDocument('quotePrintable');
+    printDocument('invoicePrintable');
   };
 
   const handleExportPdf = () => {
-    exportToPdf('quotePrintable', `Bao_Gia_${quote?.code || 'BG'}`);
+    exportToPdf('invoicePrintable', `Hoa_Don_${invoice?.code ?? 'HD'}`);
   };
 
   if (isLoading) {
@@ -176,7 +169,7 @@ export default function QuoteDetails() {
     );
   }
 
-  if (!quote || !customer || !vehicle) {
+  if (!invoice || !customer || !vehicle || !repairOrder) {
     return null;
   }
 
@@ -184,21 +177,20 @@ export default function QuoteDetails() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2 sm:mb-0">
-          Chi Tiết Báo Giá: {quote.code}
+          Chi Tiết Hóa Đơn: {invoice.code}
         </h1>
         <div className="flex flex-wrap gap-2">
           <Select
-            value={quote.status}
+            value={invoice.status}
             onValueChange={handleStatusChange}
           >
-            <SelectTrigger className={`w-[160px] ${getQuotationStatusClass(quote.status)}`}>
+            <SelectTrigger className={`w-[160px] ${getInvoiceStatusClass(invoice.status)}`}>
               <SelectValue placeholder="Trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">Mới Tạo</SelectItem>
-              <SelectItem value="sent">Đã Gửi KH</SelectItem>
-              <SelectItem value="accepted">KH Đồng Ý</SelectItem>
-              <SelectItem value="rejected">KH Từ Chối</SelectItem>
+              <SelectItem value="unpaid">Chưa Thanh Toán</SelectItem>
+              <SelectItem value="partial">Thanh Toán Một Phần</SelectItem>
+              <SelectItem value="paid">Đã Thanh Toán</SelectItem>
             </SelectContent>
           </Select>
           
@@ -211,15 +203,6 @@ export default function QuoteDetails() {
             <i className="fas fa-file-pdf mr-2"></i>
             Xuất PDF
           </Button>
-          
-          {quote.status === 'accepted' && (
-            <Link href={`/repairs/from-quote/${quote.id}`}>
-              <Button>
-                <i className="fas fa-tools mr-2"></i>
-                Tạo Lệnh Sửa Chữa
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
 
@@ -227,21 +210,31 @@ export default function QuoteDetails() {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Thông Tin Báo Giá</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Thông Tin Hóa Đơn</h3>
               <div className="space-y-2">
                 <div className="flex">
-                  <span className="font-medium w-32">Mã báo giá:</span>
-                  <span>{quote.code}</span>
+                  <span className="font-medium w-32">Mã hóa đơn:</span>
+                  <span>{invoice.code}</span>
                 </div>
                 <div className="flex">
                   <span className="font-medium w-32">Ngày tạo:</span>
-                  <span>{formatDate(quote.dateCreated)}</span>
+                  <span>{formatDate(invoice.dateCreated)}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-32">Mã LSC:</span>
+                  <Link href={`/repairs/${repairOrder.id}`} className="text-primary hover:underline">
+                    {repairOrder.code}
+                  </Link>
                 </div>
                 <div className="flex">
                   <span className="font-medium w-32">Trạng thái:</span>
-                  <span className={`status-badge ${getQuotationStatusClass(quote.status)}`}>
-                    {getQuotationStatusText(quote.status)}
+                  <span className={`status-badge ${getInvoiceStatusClass(invoice.status)}`}>
+                    {getInvoiceStatusText(invoice.status)}
                   </span>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-32">Thanh toán:</span>
+                  <span>{getPaymentMethodText(invoice.paymentMethod)}</span>
                 </div>
               </div>
             </div>
@@ -268,7 +261,7 @@ export default function QuoteDetails() {
           </div>
           
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Chi Tiết Báo Giá</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Chi Tiết Hóa Đơn</h3>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -282,14 +275,14 @@ export default function QuoteDetails() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.length === 0 ? (
+                  {repairItems.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-10 text-gray-500">
-                        Không có vật tư hoặc dịch vụ nào trong báo giá
+                        Không có vật tư hoặc dịch vụ nào trong hóa đơn
                       </TableCell>
                     </TableRow>
                   ) : (
-                    items.map((item, index) => (
+                    repairItems.map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{item.type === 'part' ? 'Vật tư' : 'Dịch vụ'}</TableCell>
@@ -309,34 +302,43 @@ export default function QuoteDetails() {
             <div className="w-full max-w-xs space-y-2">
               <div className="flex justify-between">
                 <span>Tạm tính:</span>
-                <span>{formatCurrency(quote.subtotal)}</span>
+                <span>{formatCurrency(invoice.subtotal)}</span>
               </div>
+              {invoice.discount && invoice.discount > 0 && (
+                <div className="flex justify-between">
+                  <span>Giảm giá:</span>
+                  <span>{formatCurrency(invoice.discount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Thuế VAT:</span>
-                <span>{formatCurrency(quote.tax || 0)}</span>
+                <span>{formatCurrency(invoice.tax || 0)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg pt-2 border-t">
                 <span>Tổng cộng:</span>
-                <span>{formatCurrency(quote.total)}</span>
+                <span>{formatCurrency(invoice.total)}</span>
               </div>
+              <div className="flex justify-between font-medium pt-2">
+                <span>Đã thanh toán:</span>
+                <span className="text-green-600">{formatCurrency(invoice.amountPaid)}</span>
+              </div>
+              {invoice.total > invoice.amountPaid && (
+                <div className="flex justify-between font-medium text-red-600">
+                  <span>Còn lại:</span>
+                  <span>{formatCurrency(invoice.total - invoice.amountPaid)}</span>
+                </div>
+              )}
             </div>
           </div>
           
-          {quote.notes && (
-            <div className="mt-6 pt-4 border-t">
-              <h3 className="text-md font-semibold text-gray-800 mb-2">Ghi Chú & Điều Khoản</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{quote.notes}</p>
-            </div>
-          )}
-          
           <div className="flex justify-end gap-2 mt-6 pt-6 border-t">
-            <Link href="/quotes">
+            <Link href="/invoices">
               <Button variant="outline">
                 <i className="fas fa-arrow-left mr-2"></i>
                 Quay Lại
               </Button>
             </Link>
-            <Link href={`/quotes/${quote.id}/edit`}>
+            <Link href={`/invoices/${invoice.id}/edit`}>
               <Button variant="outline">
                 <i className="fas fa-edit mr-2"></i>
                 Sửa
@@ -355,10 +357,10 @@ export default function QuoteDetails() {
       
       {/* Printable version */}
       <div className="hidden">
-        <div id="quotePrintable" ref={printRef} className="p-8 max-w-4xl mx-auto bg-white">
+        <div id="invoicePrintable" ref={printRef} className="p-8 max-w-4xl mx-auto bg-white">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold mb-1">BÁO GIÁ DỊCH VỤ</h1>
-            <p className="text-gray-500">Mã: {quote.code}</p>
+            <h1 className="text-2xl font-bold mb-1">HÓA ĐƠN</h1>
+            <p className="text-gray-500">Mã: {invoice.code}</p>
           </div>
           
           <div className="flex justify-between mb-6">
@@ -383,7 +385,13 @@ export default function QuoteDetails() {
             <p>Hãng xe: {vehicle.brand}</p>
             <p>Model: {vehicle.model}</p>
             <p>Biển số: {vehicle.licensePlate}</p>
-            <p>Số Km: {vehicle.lastOdometer.toLocaleString()} km</p>
+          </div>
+          
+          <div className="mb-4">
+            <h3 className="font-bold mb-2">THÔNG TIN THANH TOÁN</h3>
+            <p>Số phiếu sửa chữa: {repairOrder.code}</p>
+            <p>Ngày lập hóa đơn: {formatDate(invoice.dateCreated)}</p>
+            <p>Phương thức thanh toán: {getPaymentMethodText(invoice.paymentMethod)}</p>
           </div>
           
           <table className="w-full border-collapse mb-6">
@@ -397,7 +405,7 @@ export default function QuoteDetails() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => (
+              {repairItems.map((item, index) => (
                 <tr key={index}>
                   <td className="border p-2">{index + 1}</td>
                   <td className="border p-2">{item.name}</td>
@@ -411,41 +419,52 @@ export default function QuoteDetails() {
               <tr>
                 <td colSpan={3} className="border p-2"></td>
                 <td className="border p-2 font-bold text-right">Tạm tính:</td>
-                <td className="border p-2 text-right">{formatCurrency(quote.subtotal)}</td>
+                <td className="border p-2 text-right">{formatCurrency(invoice.subtotal)}</td>
               </tr>
+              {invoice.discount && invoice.discount > 0 && (
+                <tr>
+                  <td colSpan={3} className="border p-2"></td>
+                  <td className="border p-2 font-bold text-right">Giảm giá:</td>
+                  <td className="border p-2 text-right">{formatCurrency(invoice.discount)}</td>
+                </tr>
+              )}
               <tr>
                 <td colSpan={3} className="border p-2"></td>
                 <td className="border p-2 font-bold text-right">Thuế VAT:</td>
-                <td className="border p-2 text-right">{formatCurrency(quote.tax || 0)}</td>
+                <td className="border p-2 text-right">{formatCurrency(invoice.tax || 0)}</td>
               </tr>
               <tr>
                 <td colSpan={3} className="border p-2"></td>
                 <td className="border p-2 font-bold text-right">Tổng cộng:</td>
-                <td className="border p-2 text-right font-bold">{formatCurrency(quote.total)}</td>
+                <td className="border p-2 text-right font-bold">{formatCurrency(invoice.total)}</td>
               </tr>
+              <tr>
+                <td colSpan={3} className="border p-2"></td>
+                <td className="border p-2 font-bold text-right">Đã thanh toán:</td>
+                <td className="border p-2 text-right">{formatCurrency(invoice.amountPaid)}</td>
+              </tr>
+              {invoice.total > invoice.amountPaid && (
+                <tr>
+                  <td colSpan={3} className="border p-2"></td>
+                  <td className="border p-2 font-bold text-right">Còn lại:</td>
+                  <td className="border p-2 text-right font-bold">{formatCurrency(invoice.total - invoice.amountPaid)}</td>
+                </tr>
+              )}
             </tfoot>
           </table>
           
-          {quote.notes && (
-            <div className="mb-6">
-              <h3 className="font-bold mb-2">GHI CHÚ & ĐIỀU KHOẢN</h3>
-              <p className="whitespace-pre-wrap">{quote.notes}</p>
-            </div>
-          )}
-          
           <div className="flex justify-between mt-12">
             <div className="text-center">
-              <p className="font-bold">Người lập báo giá</p>
-              <p className="mt-16">(Ký, ghi rõ họ tên)</p>
+              <p className="font-bold">Người lập hóa đơn</p>
+              <p className="text-sm text-gray-500 mt-12">(Ký và ghi rõ họ tên)</p>
             </div>
             <div className="text-center">
               <p className="font-bold">Khách hàng</p>
-              <p className="mt-16">(Ký, ghi rõ họ tên)</p>
+              <p className="text-sm text-gray-500 mt-12">(Ký và ghi rõ họ tên)</p>
             </div>
           </div>
           
-          <div className="mt-6 text-center">
-            <p>Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatDate(quote.dateCreated)}</p>
+          <div className="mt-6 text-center text-sm text-gray-500">
             <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
           </div>
         </div>
