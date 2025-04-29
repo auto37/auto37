@@ -837,6 +837,59 @@ export default function Reports() {
         </CardContent>
       </Card>
       
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Biểu đồ phân tích</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                {reportType === 'sales' ? (
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                    <Legend />
+                    <Bar dataKey="value" name="Doanh thu" fill="#4f46e5" />
+                  </BarChart>
+                ) : reportType === 'inventory' ? (
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                    <Legend />
+                    <Bar dataKey="value" name="Giá trị" fill="#10b981" />
+                  </BarChart>
+                ) : reportType === 'services' ? (
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                    <Legend />
+                    <Bar dataKey="value" name="Doanh thu dịch vụ" fill="#f59e0b" />
+                  </BarChart>
+                ) : (
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                    <Legend />
+                    <Bar dataKey="value" name="Chi tiêu" fill="#ef4444" />
+                  </BarChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+        
+      {/* Export */}
       <Card>
         <CardHeader>
           <CardTitle>Xuất Dữ Liệu</CardTitle>
@@ -847,12 +900,12 @@ export default function Reports() {
           </p>
           
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={handleGenerateReport}>
+            <Button variant="outline" onClick={exportToCSV}>
               <i className="fas fa-file-excel mr-2"></i>
               Xuất Excel
             </Button>
             
-            <Button variant="outline" onClick={handleGenerateReport}>
+            <Button variant="outline" onClick={exportToCSV}>
               <i className="fas fa-file-csv mr-2"></i>
               Xuất CSV
             </Button>
