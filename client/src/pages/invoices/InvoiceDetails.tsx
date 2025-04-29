@@ -25,7 +25,8 @@ import {
 } from '@/lib/utils';
 
 export default function InvoiceDetails() {
-  const { id } = useParams();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -37,8 +38,8 @@ export default function InvoiceDetails() {
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const invoiceId = parseInt(id);
-    if (isNaN(invoiceId)) {
+    const invoiceId = parseInt(id || '0');
+    if (isNaN(invoiceId) || invoiceId === 0) {
       toast({
         title: 'Lỗi',
         description: 'ID hóa đơn không hợp lệ',
@@ -203,6 +204,13 @@ export default function InvoiceDetails() {
             <i className="fas fa-file-pdf mr-2"></i>
             Xuất PDF
           </Button>
+          
+          <Link href={`/print/invoice/${invoice.id}`}>
+            <Button variant="outline">
+              <i className="fas fa-file-invoice mr-2"></i>
+              Mẫu in nâng cao
+            </Button>
+          </Link>
         </div>
       </div>
 

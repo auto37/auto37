@@ -18,7 +18,8 @@ import {
 } from '@/lib/utils';
 
 export default function QuoteDetails() {
-  const { id } = useParams();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -29,8 +30,8 @@ export default function QuoteDetails() {
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const quoteId = parseInt(id);
-    if (isNaN(quoteId)) {
+    const quoteId = parseInt(id || '0');
+    if (isNaN(quoteId) || quoteId === 0) {
       toast({
         title: 'Lỗi',
         description: 'ID báo giá không hợp lệ',
@@ -211,6 +212,13 @@ export default function QuoteDetails() {
             <i className="fas fa-file-pdf mr-2"></i>
             Xuất PDF
           </Button>
+          
+          <Link href={`/print/quote/${quote.id}`}>
+            <Button variant="outline">
+              <i className="fas fa-file-contract mr-2"></i>
+              Mẫu in nâng cao
+            </Button>
+          </Link>
           
           {quote.status === 'accepted' && (
             <Link href={`/repairs/from-quote/${quote.id}`}>
