@@ -69,7 +69,7 @@ export default function QuoteForm() {
   const [selectedItemId, setSelectedItemId] = useState<number>(0);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors }, trigger } = useForm<FormData>({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       customerId: 0,
@@ -112,6 +112,11 @@ export default function QuoteForm() {
         if (match && params.id) {
           setIsEditing(true);
           await fetchQuoteData(parseInt(params.id));
+          
+          // Trigger form validation after loading data
+          setTimeout(() => {
+            trigger();
+          }, 500);
         } else {
           // New quote - get URL params if any
           const urlParams = new URLSearchParams(window.location.search);
@@ -152,7 +157,7 @@ export default function QuoteForm() {
     };
     
     loadFormData();
-  }, [match, params.id, setValue, toast]);
+  }, [match, params.id, setValue, toast, trigger]);
   
   // When customer changes, filter vehicles
   useEffect(() => {
@@ -190,6 +195,8 @@ export default function QuoteForm() {
     const taxAmount = watchTax !== undefined ? subtotal * (watchTax / 100) : 0;
     const totalWithTax = subtotal + taxAmount;
     
+    console.log('Cập nhật tổng cộng:', { subtotal, taxAmount, totalWithTax });
+    
     setTotals({
       subtotal,
       tax: taxAmount,
@@ -198,7 +205,10 @@ export default function QuoteForm() {
     
     // Update the form values
     setValue('items', quoteItems);
-  }, [quoteItems, watchTax, setValue]);
+    
+    // Thông báo form đã thay đổi để kích hoạt nút Submit
+    trigger();
+  }, [quoteItems, watchTax, setValue, trigger]);
   
   const fetchQuoteData = async (id: number) => {
     try {
@@ -385,7 +395,15 @@ export default function QuoteForm() {
   };
   
   const onSubmit = async (data: FormData) => {
-    if (data.items.length === 0) {
+    console.log('Nộp form với dữ liệu:', data);
+    console.log('Trạng thái hiện tại:', {
+      customerId: data.customerId, 
+      vehicleId: data.vehicleId, 
+      items: quoteItems.length
+    });
+    
+    // Kiểm tra xem có mục nào không
+    if (quoteItems.length === 0) {
       toast({
         title: 'Lỗi',
         description: 'Báo giá cần có ít nhất một vật tư hoặc dịch vụ.',
@@ -398,6 +416,7 @@ export default function QuoteForm() {
     try {
       const taxRate = data.tax || 0;
       const taxAmount = totals.subtotal * (taxRate / 100);
+      console.log('Tính toán thuế:', { taxRate, taxAmount, total: totals.subtotal + taxAmount });
       
       if (isEditing && params.id) {
         try {
