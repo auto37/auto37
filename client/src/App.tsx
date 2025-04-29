@@ -22,6 +22,7 @@ import Invoices from "./pages/invoices/Invoices";
 import InvoiceForm from "./pages/invoices/InvoiceForm";
 import InvoiceDetails from "./pages/invoices/InvoiceDetails";
 import Reports from "./pages/reports/Reports";
+import Settings from "./pages/settings/Settings";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -66,6 +67,8 @@ function App() {
             <Route path="/invoices/:id" component={InvoiceDetails} />
             
             <Route path="/reports" component={Reports} />
+            
+            <Route path="/settings" component={Settings} />
             
             <Route component={NotFound} />
           </Switch>

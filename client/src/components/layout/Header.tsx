@@ -1,7 +1,30 @@
 import { useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
+import { settingsDb } from '@/lib/settings';
 
 export default function Header() {
   const [location] = useLocation();
+  const [logo, setLogo] = useState<string>('');
+  const [garageName, setGarageName] = useState<string>('Hệ Thống Quản Lý Gara');
+  
+  // Lấy thông tin logo và tên gara từ cài đặt
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await settingsDb.getSettings();
+        if (settings.logoUrl) {
+          setLogo(settings.logoUrl);
+        }
+        if (settings.garageName) {
+          setGarageName(settings.garageName);
+        }
+      } catch (error) {
+        console.error('Error fetching settings in header:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
   
   // Function to get the title based on current path
   const getTitle = () => {
@@ -19,7 +42,12 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-sm h-16 flex items-center px-6">
-      <div className="flex-1 flex">
+      <div className="flex-1 flex items-center">
+        {logo && (
+          <div className="mr-4">
+            <img src={logo} alt={garageName} className="h-10 max-w-[120px]" />
+          </div>
+        )}
         <h2 className="text-xl font-semibold text-gray-800">{getTitle()}</h2>
       </div>
       
