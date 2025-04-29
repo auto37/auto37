@@ -191,11 +191,19 @@ export default function QuoteForm() {
   
   // Update totals when items or tax changes
   useEffect(() => {
-    const { subtotal, tax, total } = calculateTotals(quoteItems);
+    // Tính lại tổng cộng cho tất cả các mục
+    // Sử dụng reduce để đảm bảo chính xác
+    const subtotal = quoteItems.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = watchTax !== undefined ? subtotal * (watchTax / 100) : 0;
     const totalWithTax = subtotal + taxAmount;
     
-    console.log('Cập nhật tổng cộng:', { subtotal, taxAmount, totalWithTax });
+    console.log('Cập nhật tổng cộng:', {
+      quoteItems, 
+      itemCount: quoteItems.length,
+      subtotal,
+      taxAmount,
+      totalWithTax
+    });
     
     setTotals({
       subtotal,
@@ -313,12 +321,22 @@ export default function QuoteForm() {
       const updatedItems = [...quoteItems];
       const item = updatedItems[existingItemIndex];
       const newQuantity = item.quantity + selectedQuantity;
+      const newTotal = item.unitPrice * newQuantity;
+      
+      console.log('Cập nhật số lượng mục hiện có:', {
+        existingItemIndex,
+        oldQuantity: item.quantity,
+        newQuantity,
+        unitPrice: item.unitPrice,
+        newTotal
+      });
+      
       updatedItems[existingItemIndex] = {
         ...item,
         quantity: newQuantity,
-        total: item.unitPrice * newQuantity
+        total: newTotal
       };
-      setQuoteItems(updatedItems);
+      setQuoteItems([...updatedItems]);
     } else {
       // Add new item
       let name = '';
@@ -345,13 +363,24 @@ export default function QuoteForm() {
         unitPrice = service.price;
       }
       
+      const itemTotal = unitPrice * selectedQuantity;
+      
+      console.log('Thêm mục mới:', {
+        type: selectedItemType,
+        itemId: selectedItemId,
+        name,
+        quantity: selectedQuantity,
+        unitPrice,
+        total: itemTotal
+      });
+      
       const newItem: QuoteItemForm = {
         type: selectedItemType,
         itemId: selectedItemId,
         name,
         quantity: selectedQuantity,
         unitPrice,
-        total: unitPrice * selectedQuantity
+        total: itemTotal
       };
       
       setQuoteItems([...quoteItems, newItem]);
@@ -385,14 +414,20 @@ export default function QuoteForm() {
       }
     }
     
+    const newTotal = item.unitPrice * newQuantity;
+    
     updatedItems[index] = {
       ...item,
       quantity: newQuantity,
-      total: item.unitPrice * newQuantity
+      total: newTotal
     };
     
-    console.log('Cập nhật số lượng mới cho mục #', index, ':', newQuantity, ' - tổng tiền:', item.unitPrice * newQuantity);
-    setQuoteItems(updatedItems);
+    console.log('Cập nhật số lượng mới cho mục #', index, ':', newQuantity, ' - tổng tiền:', newTotal);
+    console.log('Item trước khi cập nhật:', item);
+    console.log('Item sau khi cập nhật:', updatedItems[index]);
+    
+    // Đảm bảo state được cập nhật đúng
+    setQuoteItems([...updatedItems]);
   };
   
   const onSubmit = async (data: FormData) => {

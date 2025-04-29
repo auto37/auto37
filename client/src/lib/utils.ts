@@ -171,10 +171,24 @@ export function exportToPdf(id: string, fileName: string): void {
   printDocument(id);
 }
 
-export function calculateTotals(items: { quantity: number, unitPrice: number }[]) {
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const tax = subtotal * 0.1; // Default tax rate of 10%
-  const total = subtotal + tax;
+export function calculateTotals(items: { quantity: number, unitPrice: number, total?: number }[]) {
+  // Sử dụng total nếu có, nếu không thì tính từ quantity và unitPrice
+  const subtotal = items.reduce((sum, item) => {
+    // Kiểm tra xem total đã được tính trước chưa
+    if (item.total !== undefined) {
+      console.log('Sử dụng total đã tính sẵn:', item.total, ' cho mục', item);
+      return sum + item.total;
+    }
+    // Nếu chưa, thì tính dựa vào quantity và unitPrice
+    const itemTotal = item.quantity * item.unitPrice;
+    console.log('Tính total:', itemTotal, ' cho mục', item);
+    return sum + itemTotal;
+  }, 0);
   
-  return { subtotal, tax, total };
+  // Tạm thời không tính thuế, sẽ được tính trong component dựa vào tax rate
+  return { 
+    subtotal, 
+    tax: 0, 
+    total: subtotal 
+  };
 }
