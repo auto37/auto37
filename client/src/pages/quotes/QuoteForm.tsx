@@ -203,7 +203,7 @@ export default function QuoteForm() {
       total: totalWithTax
     });
     
-    // Update the form values
+    // Update the form values - dữ liệu để gửi đi khi submit form
     setValue('items', quoteItems);
     
     // Thông báo form đã thay đổi để kích hoạt nút Submit
@@ -391,6 +391,7 @@ export default function QuoteForm() {
       total: item.unitPrice * newQuantity
     };
     
+    console.log('Cập nhật số lượng mới cho mục #', index, ':', newQuantity, ' - tổng tiền:', item.unitPrice * newQuantity);
     setQuoteItems(updatedItems);
   };
   
@@ -401,6 +402,9 @@ export default function QuoteForm() {
       vehicleId: data.vehicleId, 
       items: quoteItems.length
     });
+    
+    // Log items được gửi đi để kiểm tra
+    console.log('Items được gửi đi:', quoteItems);
     
     // Kiểm tra xem có mục nào không
     if (quoteItems.length === 0) {
