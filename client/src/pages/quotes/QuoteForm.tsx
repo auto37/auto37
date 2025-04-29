@@ -810,8 +810,8 @@ export default function QuoteForm() {
                 type="submit" 
                 disabled={
                   isLoading || 
-                  !watchCustomerId || 
-                  !watch('vehicleId') || 
+                  (isEditing ? false : !watchCustomerId) || 
+                  (isEditing ? false : !watch('vehicleId')) || 
                   quoteItems.length === 0
                 }
               >
