@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { DateRange } from 'react-day-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +31,7 @@ interface InventoryReportItem {
   quantity: number;
   unit: string;
   value: number;
+  minQuantity?: number;
 }
 
 interface ServiceReportItem {
@@ -209,7 +211,8 @@ export default function Reports() {
           category: category ? category.name : 'Không xác định',
           quantity: item.quantity,
           unit: item.unit,
-          value: value
+          value: value,
+          minQuantity: item.minQuantity
         });
         
         // Chỉ thêm vào biểu đồ các mặt hàng có giá trị lớn
@@ -260,13 +263,14 @@ export default function Reports() {
         return;
       }
       
+      // Ensure dateRange is valid and has a from date
+      const fromDate = dateRange.from ? startOfDay(dateRange.from) : startOfDay(new Date());
+      const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(new Date());
+      
       // Lọc sửa chữa trong khoảng thời gian được chọn
       const filteredOrders = repairOrders.filter(order => {
         const orderDate = new Date(order.dateCreated);
-        return (
-          orderDate >= startOfDay(dateRange.from) &&
-          orderDate <= endOfDay(dateRange.to || dateRange.from)
-        );
+        return (orderDate >= fromDate && orderDate <= toDate);
       }).map(order => order.id);
       
       // Lọc các mục dịch vụ trong các lệnh sửa chữa đã lọc
@@ -744,15 +748,33 @@ export default function Reports() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">
-                          <span className="text-gray-400 italic">Đang phát triển...</span>
-                        </TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                      </TableRow>
+                      {servicesReport.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-gray-500 py-4">
+                            Không có dữ liệu dịch vụ trong khoảng thời gian được chọn.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        servicesReport.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {item.code}
+                            </TableCell>
+                            <TableCell>
+                              {item.name}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.usageCount}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(item.revenue)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.percentageOfTotal.toFixed(2)}%
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -777,15 +799,33 @@ export default function Reports() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">
-                          <span className="text-gray-400 italic">Đang phát triển...</span>
-                        </TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                      </TableRow>
+                      {customersReport.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-gray-500 py-4">
+                            Không có dữ liệu khách hàng trong khoảng thời gian được chọn.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        customersReport.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {item.code}
+                            </TableCell>
+                            <TableCell>
+                              {item.name}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.usageCount}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(item.totalSpent)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.lastUsage ? formatDate(item.lastUsage) : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
