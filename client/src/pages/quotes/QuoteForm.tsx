@@ -404,6 +404,8 @@ export default function QuoteForm() {
           status: data.status
         });
         
+        console.log('Cập nhật báo giá:', quoteId, 'với', data.items.length, 'mục');
+        
         // Delete old items and add new ones
         await db.quotationItems
           .where('quotationId')
@@ -411,7 +413,7 @@ export default function QuoteForm() {
           .delete();
         
         // Add new items
-        for (const item of data.items) {
+        for (const item of quoteItems) {
           await db.quotationItems.add({
             quotationId: quoteId,
             type: item.type,
@@ -444,7 +446,7 @@ export default function QuoteForm() {
         });
         
         // Add items
-        for (const item of data.items) {
+        for (const item of quoteItems) {
           await db.quotationItems.add({
             quotationId: quoteId,
             type: item.type,
