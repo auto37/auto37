@@ -202,8 +202,10 @@ export default function QuoteForm() {
   
   const fetchQuoteData = async (id: number) => {
     try {
+      console.log('Tải dữ liệu báo giá ID:', id);
       const quote = await db.quotations.get(id);
       if (!quote) {
+        console.error('Không tìm thấy báo giá ID:', id);
         toast({
           title: 'Lỗi',
           description: 'Không tìm thấy báo giá.',
@@ -212,6 +214,8 @@ export default function QuoteForm() {
         setLocation('/quotes');
         return;
       }
+      
+      console.log('Báo giá tìm thấy:', quote);
       
       // Set form values
       setValue('customerId', quote.customerId);
@@ -227,12 +231,16 @@ export default function QuoteForm() {
         .toArray();
       setVehicles(customerVehicles);
       setFilteredVehicles(customerVehicles);
+      console.log('Số xe của khách hàng:', customerVehicles.length);
       
       // Load quote items
       const items = await db.quotationItems
         .where('quotationId')
         .equals(id)
         .toArray();
+      
+      console.log('Số mục trong báo giá:', items.length);
+      console.log('Các mục trong báo giá:', items);
       
       // Convert to form items
       const formItems = items.map(item => ({
@@ -244,9 +252,10 @@ export default function QuoteForm() {
         total: item.total
       }));
       
+      console.log('Các mục đã chuyển đổi:', formItems);
       setQuoteItems(formItems);
     } catch (error) {
-      console.error('Error fetching quote data:', error);
+      console.error('Lỗi khi tải dữ liệu báo giá:', error);
       toast({
         title: 'Lỗi',
         description: 'Không thể tải thông tin báo giá. Vui lòng thử lại.',
@@ -424,10 +433,13 @@ export default function QuoteForm() {
             .toArray();
           console.log('Số mục cần xóa:', itemsToDelete.length);
           
-          await db.quotationItems
-            .where('quotationId')
-            .equals(quoteId)
-            .delete();
+          // Xóa từng mục một
+          for (const item of itemsToDelete) {
+            if (item.id) {
+              await db.quotationItems.delete(item.id);
+              console.log('Đã xóa mục có ID:', item.id);
+            }
+          }
           
           // Add new items
           console.log('Thêm các mục mới:', quoteItems);
