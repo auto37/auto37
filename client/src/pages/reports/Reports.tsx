@@ -81,7 +81,7 @@ export default function Reports() {
       // Lấy dữ liệu từ database
       const invoices = await db.invoices.toArray();
       
-      if (!dateRange?.from || !dateRange?.to) {
+      if (!dateRange?.from) {
         toast({
           title: 'Lỗi',
           description: 'Vui lòng chọn khoảng thời gian',
@@ -90,13 +90,14 @@ export default function Reports() {
         return;
       }
       
+      // Ensure dateRange is valid and has a from date
+      const fromDate = startOfDay(dateRange.from);
+      const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+      
       // Lọc hóa đơn trong khoảng thời gian được chọn
       const filteredInvoices = invoices.filter(invoice => {
         const invoiceDate = new Date(invoice.dateCreated);
-        return (
-          invoiceDate >= startOfDay(dateRange.from) &&
-          invoiceDate <= endOfDay(dateRange.to || dateRange.from)
-        );
+        return (invoiceDate >= fromDate && invoiceDate <= toDate);
       });
       
       // Nhóm dữ liệu theo khoảng thời gian
@@ -342,7 +343,7 @@ export default function Reports() {
       const customers = await db.customers.toArray();
       const invoices = await db.invoices.toArray();
       
-      if (!dateRange?.from || !dateRange?.to) {
+      if (!dateRange?.from) {
         toast({
           title: 'Lỗi',
           description: 'Vui lòng chọn khoảng thời gian',
@@ -351,13 +352,14 @@ export default function Reports() {
         return;
       }
       
+      // Ensure dateRange is valid and has a from date
+      const fromDate = startOfDay(dateRange.from);
+      const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+      
       // Lọc hóa đơn trong khoảng thời gian được chọn
       const filteredInvoices = invoices.filter(invoice => {
         const invoiceDate = new Date(invoice.dateCreated);
-        return (
-          invoiceDate >= startOfDay(dateRange.from) &&
-          invoiceDate <= endOfDay(dateRange.to || dateRange.from)
-        );
+        return (invoiceDate >= fromDate && invoiceDate <= toDate);
       });
       
       // Tổng hợp dữ liệu khách hàng
