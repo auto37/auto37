@@ -23,6 +23,8 @@ import InvoiceForm from "./pages/invoices/InvoiceForm";
 import InvoiceDetails from "./pages/invoices/InvoiceDetails";
 import Reports from "./pages/reports/Reports";
 import Settings from "./pages/settings/Settings";
+import InvoicePrint from "./pages/print/InvoicePrint";
+import QuotePrint from "./pages/print/QuotePrint";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -69,6 +71,9 @@ function App() {
             <Route path="/reports" component={Reports} />
             
             <Route path="/settings" component={Settings} />
+            
+            <Route path="/print/invoice/:id" component={InvoicePrint} />
+            <Route path="/print/quote/:id" component={QuotePrint} />
             
             <Route component={NotFound} />
           </Switch>
