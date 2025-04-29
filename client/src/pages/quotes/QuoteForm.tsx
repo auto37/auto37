@@ -391,38 +391,62 @@ export default function QuoteForm() {
       const taxAmount = totals.subtotal * (taxRate / 100);
       
       if (isEditing && params.id) {
-        const quoteId = parseInt(params.id);
-        
-        // Update the quote
-        await db.quotations.update(quoteId, {
-          customerId: data.customerId,
-          vehicleId: data.vehicleId,
-          subtotal: totals.subtotal,
-          tax: taxAmount,
-          total: totals.subtotal + taxAmount,
-          notes: data.notes,
-          status: data.status
-        });
-        
-        console.log('Cập nhật báo giá:', quoteId, 'với', data.items.length, 'mục');
-        
-        // Delete old items and add new ones
-        await db.quotationItems
-          .where('quotationId')
-          .equals(quoteId)
-          .delete();
-        
-        // Add new items
-        for (const item of quoteItems) {
-          await db.quotationItems.add({
-            quotationId: quoteId,
-            type: item.type,
-            itemId: item.itemId,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total
+        try {
+          const quoteId = parseInt(params.id);
+          console.log('Bắt đầu cập nhật báo giá ID:', quoteId);
+          console.log('Dữ liệu cập nhật:', {
+            customerId: data.customerId,
+            vehicleId: data.vehicleId,
+            subtotal: totals.subtotal,
+            tax: taxAmount,
+            total: totals.subtotal + taxAmount,
+            notes: data.notes,
+            status: data.status
           });
+          console.log('Số lượng mục:', quoteItems.length);
+          
+          // Update the quote
+          await db.quotations.update(quoteId, {
+            customerId: data.customerId,
+            vehicleId: data.vehicleId,
+            subtotal: totals.subtotal,
+            tax: taxAmount,
+            total: totals.subtotal + taxAmount,
+            notes: data.notes,
+            status: data.status
+          });
+          
+          // Delete old items and add new ones
+          console.log('Xóa các mục cũ của báo giá');
+          const itemsToDelete = await db.quotationItems
+            .where('quotationId')
+            .equals(quoteId)
+            .toArray();
+          console.log('Số mục cần xóa:', itemsToDelete.length);
+          
+          await db.quotationItems
+            .where('quotationId')
+            .equals(quoteId)
+            .delete();
+          
+          // Add new items
+          console.log('Thêm các mục mới:', quoteItems);
+          for (const item of quoteItems) {
+            const newItemId = await db.quotationItems.add({
+              quotationId: quoteId,
+              type: item.type,
+              itemId: item.itemId,
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total
+            });
+            console.log('Đã thêm mục mới với ID:', newItemId);
+          }
+          console.log('Hoàn tất cập nhật báo giá');
+        } catch (error) {
+          console.error('Chi tiết lỗi cập nhật báo giá:', error);
+          throw error; // Ném lại lỗi để xử lý ở catch bên ngoài
         }
         
         toast({
