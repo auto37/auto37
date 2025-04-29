@@ -82,6 +82,14 @@ export default function InventoryForm() {
       generateSku();
     }
   }, [match, params.id]);
+  
+  // Cập nhật mã SKU tự động khi danh mục thay đổi
+  useEffect(() => {
+    if (!isEditing && watch('categoryId')) {
+      generateSku();
+    }
+  }, [watch('categoryId')]);
+
 
   const fetchInventoryItem = async (id: number) => {
     setIsLoading(true);
@@ -121,8 +129,49 @@ export default function InventoryForm() {
 
   const generateSku = async () => {
     try {
-      const count = await db.inventoryItems.count();
-      const sku = `PT${(count + 1).toString().padStart(4, '0')}`;
+      const categoryId = watch('categoryId');
+      if (!categoryId) {
+        // Nếu chưa chọn danh mục, đặt mã mặc định
+        const count = await db.inventoryItems.count();
+        const sku = `VT${(count + 1).toString().padStart(4, '0')}`;
+        setValue('sku', sku);
+        return;
+      }
+
+      // Lấy thông tin danh mục
+      const category = await db.inventoryCategories.get(categoryId);
+      if (!category) {
+        throw new Error('Không tìm thấy danh mục');
+      }
+
+      // Lấy tiền tố mã dựa vào tên danh mục
+      let prefix = 'VT'; // Mặc định
+
+      // Các danh mục đặc biệt
+      if (category.name.toLowerCase().includes('phụ tùng')) {
+        prefix = 'PT';
+      } else if (category.name.toLowerCase().includes('nhân công')) {
+        prefix = 'NC';
+      } else if (category.name.toLowerCase().includes('gia công')) {
+        prefix = 'GC';
+      } else {
+        // Lấy 2 chữ cái đầu tiên viết hoa từ tên danh mục
+        const words = category.name.split(' ');
+        if (words.length >= 2) {
+          prefix = (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        } else if (words.length === 1 && words[0].length >= 2) {
+          prefix = words[0].substring(0, 2).toUpperCase();
+        }
+      }
+
+      // Đếm số lượng mặt hàng thuộc danh mục này
+      const items = await db.inventoryItems
+        .where('categoryId')
+        .equals(categoryId)
+        .toArray();
+        
+      const count = items.length;
+      const sku = `${prefix}${(count + 1).toString().padStart(4, '0')}`;
       setValue('sku', sku);
     } catch (error) {
       console.error('Error generating SKU:', error);
