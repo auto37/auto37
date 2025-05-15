@@ -44,9 +44,27 @@ export default function PrintButton({ elementId, fileName, label = 'Xuất PDF' 
       });
       
       const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Chia thành nhiều trang nếu nội dung quá dài
+      let heightLeft = imgHeight;
+      let position = 0;
+      let page = 1;
+      
+      // Thêm trang đầu tiên
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Thêm các trang tiếp theo nếu cần
+      while (heightLeft > 0) {
+        position = -pageHeight * page;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        page++;
+      }
+      
       pdf.save(`${fileName}.pdf`);
 
       toast({
