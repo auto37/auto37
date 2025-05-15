@@ -460,18 +460,8 @@ export default function QuoteForm() {
       if (isEditing && params.id) {
         const quoteId = parseInt(params.id);
         console.log('Bắt đầu cập nhật báo giá ID:', quoteId);
-        console.log('Dữ liệu cập nhật:', {
-          customerId: data.customerId,
-          vehicleId: data.vehicleId,
-          subtotal: totals.subtotal,
-          tax: taxAmount,
-          total: totals.subtotal + taxAmount,
-          notes: data.notes,
-          status: data.status
-        });
-        console.log('Số lượng mục:', quoteItems.length);
         
-        // Update the quote
+        // 1. Cập nhật thông tin báo giá trước
         await db.quotations.update(quoteId, {
           customerId: data.customerId,
           vehicleId: data.vehicleId,
@@ -481,38 +471,50 @@ export default function QuoteForm() {
           notes: data.notes,
           status: data.status
         });
+        console.log('Đã cập nhật thông tin báo giá cơ bản');
         
-        // Delete old items and add new ones
-        console.log('Xóa các mục cũ của báo giá');
-        const itemsToDelete = await db.quotationItems
-          .where('quotationId')
-          .equals(quoteId)
-          .toArray();
-        console.log('Số mục cần xóa:', itemsToDelete.length);
-        
-        // Xóa từng mục một
-        for (const item of itemsToDelete) {
-          if (item.id) {
-            await db.quotationItems.delete(item.id);
-            console.log('Đã xóa mục có ID:', item.id);
+        try {
+          // 2. Xóa tất cả các mục cũ
+          console.log('Bắt đầu xóa các mục cũ của báo giá');
+          const itemsToDelete = await db.quotationItems
+            .where('quotationId')
+            .equals(quoteId)
+            .toArray();
+          
+          console.log('Số mục cần xóa:', itemsToDelete.length);
+          
+          // Xóa từng mục một
+          for (const item of itemsToDelete) {
+            if (item.id) {
+              await db.quotationItems.delete(item.id);
+              console.log('Đã xóa mục có ID:', item.id);
+            }
           }
-        }
-        
-        // Add new items
-        console.log('Thêm các mục mới:', quoteItems);
-        for (const item of quoteItems) {
-          const newItemId = await db.quotationItems.add({
-            quotationId: quoteId,
-            type: item.type,
-            itemId: item.itemId,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total
+          
+          // 3. Thêm các mục mới
+          console.log('Bắt đầu thêm mục mới - số lượng:', quoteItems.length);
+          for (const item of quoteItems) {
+            const newItemId = await db.quotationItems.add({
+              quotationId: quoteId,
+              type: item.type,
+              itemId: item.itemId,
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total
+            });
+            console.log('Đã thêm mục mới với ID:', newItemId);
+          }
+          
+          console.log('Hoàn tất cập nhật báo giá và các mục');
+        } catch (itemError) {
+          console.error('Lỗi khi cập nhật các mục của báo giá:', itemError);
+          toast({
+            title: 'Lỗi',
+            description: 'Không thể cập nhật đầy đủ các mục trong báo giá.',
+            variant: 'destructive'
           });
-          console.log('Đã thêm mục mới với ID:', newItemId);
         }
-        console.log('Hoàn tất cập nhật báo giá');
         
         toast({
           title: 'Thành công',
