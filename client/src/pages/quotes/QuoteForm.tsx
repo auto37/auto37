@@ -66,8 +66,13 @@ export default function QuoteForm() {
 
   // For adding new items
   const [selectedItemType, setSelectedItemType] = useState<'part' | 'service'>('part');
+  // selectedItemId = -1 nghĩa là đang thêm mới
   const [selectedItemId, setSelectedItemId] = useState<number>(0);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+
+  // State dùng cho form nhập thông tin mới
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState<number>(0);
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isValid }, trigger } = useForm<FormData>({
     resolver: zodResolver(quoteSchema),
@@ -300,7 +305,7 @@ export default function QuoteForm() {
     }
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!selectedItemId) {
       toast({
         title: 'Lỗi',
@@ -319,6 +324,85 @@ export default function QuoteForm() {
       return;
     }
 
+    // Nếu chọn "Thêm mới" (selectedItemId = -1) thì tiến hành lưu mục mới
+    if (selectedItemId === -1) {
+      if (!newItemName.trim()) {
+        toast({
+          title: 'Lỗi',
+          description: 'Vui lòng nhập tên cho mục mới.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (newItemPrice <= 0) {
+        toast({
+          title: 'Lỗi',
+          description: 'Đơn giá phải lớn hơn 0.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      let newId = 0;
+
+      if (selectedItemType === 'part') {
+        try {
+          const newPart = {
+            sku: `NEW${Date.now()}`, // Tạo một mã SKU tạm thời
+            name: newItemName,
+            sellingPrice: newItemPrice,
+            costPrice: newItemPrice * 0.8, // Giá nhập ước tính
+            quantity: 100, // Giá trị mặc định cho kho
+            unit: 'cái',
+            categoryId: 1, // Đảm bảo sử dụng một ID danh mục hợp lệ
+            minQuantity: 10, // Giá trị mặc định
+            location: 'Kho chính', // Giá trị mặc định
+            supplier: 'Chưa xác định' // Giá trị mặc định
+          };
+          newId = await db.inventoryItems.add(newPart);
+          console.log("Đã thêm vật tư mới với ID:", newId);
+          setInventoryItems(prev => [
+            ...prev,
+            { ...newPart, id: newId, category: { id: 1, name: 'Phụ tùng', code: 'PT' } }
+          ]);
+        } catch (error) {
+          console.error("Lỗi khi thêm vật tư mới:", error);
+          toast({
+            title: 'Lỗi',
+            description: 'Không thể thêm vật tư mới. Vui lòng thử lại.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      } else {
+        try {
+          const newService = {
+            code: `DV${Date.now()}`, // Tạo mã dịch vụ tạm thời
+            name: newItemName,
+            price: newItemPrice,
+            description: '',
+            estimatedTime: 60 // Thời gian mặc định 60 phút
+          };
+          newId = await db.services.add(newService);
+          console.log("Đã thêm dịch vụ mới với ID:", newId);
+          setServices(prev => [...prev, { ...newService, id: newId }]);
+        } catch (error) {
+          console.error("Lỗi khi thêm dịch vụ mới:", error);
+          toast({
+            title: 'Lỗi',
+            description: 'Không thể thêm dịch vụ mới. Vui lòng thử lại.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
+      // Cập nhật selectedItemId với ID mới tạo được
+      setSelectedItemId(newId);
+    }
+
+    // Kiểm tra xem mục có đã có trong danh sách báo giá chưa
     const existingItemIndex = quoteItems.findIndex(
       item => item.type === selectedItemType && item.itemId === selectedItemId
     );
@@ -334,7 +418,7 @@ export default function QuoteForm() {
         quantity: newQuantity,
         total: newTotal
       };
-      setQuoteItems([...updatedItems]);
+      setQuoteItems(updatedItems);
     } else {
       let name = '';
       let unitPrice = 0;
@@ -373,8 +457,11 @@ export default function QuoteForm() {
       setQuoteItems([...quoteItems, newItem]);
     }
 
+    // Reset lại các giá trị đã chọn, cũng như thông tin mục mới
     setSelectedItemId(0);
     setSelectedQuantity(1);
+    setNewItemName('');
+    setNewItemPrice(0);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -407,7 +494,7 @@ export default function QuoteForm() {
       total: newTotal
     };
 
-    setQuoteItems([...updatedItems]);
+    setQuoteItems(updatedItems);
   };
 
   const onSubmit = async (data: FormData) => {
@@ -637,7 +724,6 @@ export default function QuoteForm() {
 
                   <div className="space-y-2">
                     <Label htmlFor="status">Trạng Thái</Label>
- accounting
                     <Select
                       value={watch('status')}
                       onValueChange={(value) => setValue('status', value as any, { shouldValidate: true })}
@@ -719,33 +805,39 @@ export default function QuoteForm() {
                           </SelectTrigger>
                           <SelectContent>
                             {selectedItemType === 'part' ? (
-                              inventoryItems.length === 0 ? (
-                                <SelectItem value="0" disabled>Không có vật tư nào</SelectItem>
-                              ) : (
-                                inventoryItems.map((item) => (
-                                  <SelectItem 
-                                    key={item.id} 
-                                    value={item.id?.toString() || '0'}
-                                    disabled={item.quantity <= 0}
-                                  >
-                                    {item.name} ({formatCurrency(item.sellingPrice)})
-                                    {item.quantity <= 0 && ' - Hết hàng'}
-                                  </SelectItem>
-                                ))
-                              )
+                              <>
+                                <SelectItem value="-1">Thêm mới vật tư</SelectItem>
+                                {inventoryItems.length === 0 ? (
+                                  <SelectItem value="0" disabled>Không có vật tư nào</SelectItem>
+                                ) : (
+                                  inventoryItems.map((item) => (
+                                    <SelectItem 
+                                      key={item.id} 
+                                      value={item.id?.toString() || '0'}
+                                      disabled={item.quantity <= 0}
+                                    >
+                                      {item.name} ({formatCurrency(item.sellingPrice)})
+                                      {item.quantity <= 0 && ' - Hết hàng'}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </>
                             ) : (
-                              services.length === 0 ? (
-                                <SelectItem value="0" disabled>Không có dịch vụ nào</SelectItem>
-                              ) : (
-                                services.map((service) => (
-                                  <SelectItem 
-                                    key={service.id} 
-                                    value={service.id?.toString() || '0'}
-                                  >
-                                    {service.name} ({formatCurrency(service.price)})
-                                  </SelectItem>
-                                ))
-                              )
+                              <>
+                                <SelectItem value="-1">Thêm mới dịch vụ</SelectItem>
+                                {services.length === 0 ? (
+                                  <SelectItem value="0" disabled>Không có dịch vụ nào</SelectItem>
+                                ) : (
+                                  services.map((service) => (
+                                    <SelectItem 
+                                      key={service.id} 
+                                      value={service.id?.toString() || '0'}
+                                    >
+                                      {service.name} ({formatCurrency(service.price)})
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </>
                             )}
                           </SelectContent>
                         </Select>
@@ -773,6 +865,32 @@ export default function QuoteForm() {
                         </Button>
                       </div>
                     </div>
+
+                    {/* Form nhập thông tin cho mục mới nếu chọn "Thêm mới" */}
+                    {selectedItemId === -1 && (
+                      <div className="mt-4">
+                        <h4 className="text-md font-semibold">Nhập thông tin {selectedItemType === 'part' ? 'vật tư mới' : 'dịch vụ mới'}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>{selectedItemType === 'part' ? 'Tên vật tư' : 'Tên dịch vụ'}</Label>
+                            <Input 
+                              value={newItemName} 
+                              onChange={(e) => setNewItemName(e.target.value)} 
+                              placeholder="Nhập tên" 
+                            />
+                          </div>
+                          <div>
+                            <Label>{selectedItemType === 'part' ? 'Đơn giá' : 'Giá dịch vụ'}</Label>
+                            <Input 
+                              type="number" 
+                              value={newItemPrice}
+                              onChange={(e) => setNewItemPrice(parseFloat(e.target.value) || 0)}
+                              placeholder="Nhập giá" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
