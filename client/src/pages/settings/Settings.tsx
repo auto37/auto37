@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
+import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -23,6 +25,12 @@ export default function SettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -123,6 +131,155 @@ export default function SettingsPage() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  // Xử lý sao lưu dữ liệu
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      await downloadBackup();
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã tạo bản sao lưu dữ liệu.',
+      });
+    } catch (error) {
+      console.error('Error backing up data:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tạo bản sao lưu. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+  
+  // Xử lý khi chọn file khôi phục
+  const handleRestoreFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      
+      // Kiểm tra định dạng file
+      if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+        toast({
+          title: 'Lỗi',
+          description: 'Vui lòng chọn file JSON hợp lệ.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      setRestoreFile(file);
+    }
+  };
+  
+  // Xử lý khôi phục dữ liệu
+  const handleRestore = async () => {
+    if (!restoreFile) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng chọn file sao lưu để khôi phục.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    const confirmRestore = window.confirm(
+      'Khôi phục dữ liệu sẽ xóa toàn bộ dữ liệu hiện tại và thay thế bằng dữ liệu từ file sao lưu. Bạn có chắc chắn muốn tiếp tục?'
+    );
+    
+    if (!confirmRestore) return;
+    
+    setIsRestoring(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          try {
+            await importDatabaseFromJson(event.target.result);
+            
+            // Tải lại cài đặt sau khi khôi phục
+            const currentSettings = await settingsDb.getSettings();
+            setSettings(currentSettings);
+            if (currentSettings.logoUrl) {
+              setLogoPreview(currentSettings.logoUrl);
+            }
+            
+            toast({
+              title: 'Thành công',
+              description: 'Đã khôi phục dữ liệu thành công.',
+            });
+            
+            // Reset file input
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+            setRestoreFile(null);
+            
+          } catch (importError) {
+            console.error('Error importing data:', importError);
+            toast({
+              title: 'Lỗi',
+              description: 'Không thể khôi phục dữ liệu. File sao lưu có thể không hợp lệ.',
+              variant: 'destructive'
+            });
+          }
+        }
+      };
+      reader.readAsText(restoreFile);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể đọc file sao lưu. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+  
+  // Xử lý xóa toàn bộ dữ liệu
+  const handleClearData = async () => {
+    const confirmClear = window.confirm(
+      'CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu trong hệ thống. Bạn có chắc chắn muốn tiếp tục?'
+    );
+    
+    if (!confirmClear) return;
+    
+    // Yêu cầu xác nhận lần thứ hai
+    const confirmFinal = window.confirm(
+      'ĐÂY LÀ THAO TÁC XÓA VĨNH VIỄN. Nhập "XÓA" để xác nhận.'
+    );
+    
+    if (!confirmFinal) return;
+    
+    setIsClearing(true);
+    try {
+      await clearAllData();
+      
+      // Khởi tạo lại cài đặt
+      const currentSettings = await settingsDb.getSettings();
+      setSettings(currentSettings);
+      setLogoPreview('');
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa toàn bộ dữ liệu.',
+      });
+      
+      setShowClearConfirm(false);
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xóa dữ liệu. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -274,11 +431,33 @@ export default function SettingsPage() {
                   Sao lưu toàn bộ dữ liệu hệ thống, bao gồm khách hàng, phương tiện, kho, hóa đơn và các giao dịch khác.
                 </p>
                 <div className="flex space-x-2">
-                  <Button variant="secondary">
-                    <i className="fas fa-download mr-2"></i>
-                    Tạo bản sao lưu
+                  <Button 
+                    variant="secondary"
+                    onClick={handleBackup}
+                    disabled={isBackingUp}
+                  >
+                    {isBackingUp ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Đang tạo sao lưu...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-download mr-2"></i>
+                        Tạo bản sao lưu
+                      </>
+                    )}
                   </Button>
                 </div>
+                
+                <Alert className="my-4">
+                  <i className="fas fa-info-circle mr-2 text-blue-500"></i>
+                  <AlertTitle>Lưu ý về sao lưu</AlertTitle>
+                  <AlertDescription>
+                    Dữ liệu được lưu trong trình duyệt của bạn (IndexedDB). Để đảm bảo an toàn dữ liệu, 
+                    bạn nên thường xuyên thực hiện sao lưu và lưu trữ các file sao lưu ở nơi an toàn.
+                  </AlertDescription>
+                </Alert>
                 
                 <Separator className="my-4" />
                 
@@ -289,13 +468,73 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="restoreFile">Chọn tệp sao lưu</Label>
-                    <Input id="restoreFile" type="file" accept=".json" />
+                    <Input 
+                      id="restoreFile" 
+                      type="file" 
+                      accept=".json" 
+                      ref={fileInputRef}
+                      onChange={handleRestoreFileChange} 
+                      disabled={isRestoring}
+                    />
+                    {restoreFile && (
+                      <p className="text-sm text-green-600">
+                        Đã chọn: {restoreFile.name}
+                      </p>
+                    )}
                   </div>
-                  <Button variant="destructive">
-                    <i className="fas fa-sync-alt mr-2"></i>
-                    Phục hồi dữ liệu
+                  <Button 
+                    variant="destructive"
+                    onClick={handleRestore}
+                    disabled={!restoreFile || isRestoring}
+                  >
+                    {isRestoring ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Đang phục hồi...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-sync-alt mr-2"></i>
+                        Phục hồi dữ liệu
+                      </>
+                    )}
                   </Button>
                 </div>
+                
+                <Separator className="my-4" />
+                
+                <h3 className="text-lg font-semibold">Xóa Tất Cả Dữ Liệu</h3>
+                <p className="text-sm text-gray-500">
+                  Cảnh báo: Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu. Hãy đảm bảo bạn đã sao lưu trước.
+                </p>
+                
+                <Alert variant="destructive">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  <AlertTitle>Thao tác nguy hiểm</AlertTitle>
+                  <AlertDescription>
+                    Dữ liệu đã xóa không thể khôi phục trừ khi bạn có bản sao lưu. 
+                    Thao tác này sẽ xóa tất cả khách hàng, phương tiện, hóa đơn, báo giá và tất cả dữ liệu khác.
+                  </AlertDescription>
+                </Alert>
+                
+                <Button 
+                  variant="destructive"
+                  onClick={handleClearData}
+                  disabled={isClearing}
+                  className="bg-red-700 hover:bg-red-800"
+                >
+                  {isClearing ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Đang xóa dữ liệu...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-trash-alt mr-2"></i>
+                      Xóa Tất Cả Dữ Liệu
+                    </>
+                  )}
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

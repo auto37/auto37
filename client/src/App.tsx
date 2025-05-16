@@ -33,6 +33,7 @@ function App() {
     <SidebarProvider>
       <TooltipProvider>
         <Toaster />
+        <OfflineIndicator />
         <Layout>
           <Switch>
             <Route path="/" component={Dashboard} />
