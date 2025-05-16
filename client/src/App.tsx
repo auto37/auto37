@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "./context/SidebarContext";
 import Layout from "./components/layout/Layout";
+import { OfflineIndicator } from "./components/ui/offline-indicator";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/customers/Customers";
 import CustomerForm from "./pages/customers/CustomerForm";
