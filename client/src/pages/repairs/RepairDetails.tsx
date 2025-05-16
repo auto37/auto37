@@ -241,10 +241,7 @@ export default function RepairDetails() {
             In
           </Button>
           
-          <Button variant="outline" onClick={handleExportPdf}>
-            <i className="fas fa-file-pdf mr-2"></i>
-            Xuất PDF
-          </Button>
+          
           
           {repair.status === 'completed' && (
             <Link href={`/invoices/from-repair/${repair.id}`}>
