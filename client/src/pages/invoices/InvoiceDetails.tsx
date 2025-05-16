@@ -195,20 +195,12 @@ export default function InvoiceDetails() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" onClick={handlePrint}>
-            <i className="fas fa-print mr-2"></i>
-            In
-          </Button>
           
-          <Button variant="outline" onClick={handleExportPdf}>
-            <i className="fas fa-file-pdf mr-2"></i>
-            Xuất PDF
-          </Button>
           
           <Link href={`/print/invoice/${invoice.id}`}>
             <Button variant="outline">
               <i className="fas fa-file-invoice mr-2"></i>
-              Mẫu in nâng cao
+              In Hóa Đơn
             </Button>
           </Link>
         </div>

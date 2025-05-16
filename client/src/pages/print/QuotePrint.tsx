@@ -10,7 +10,7 @@ import {
   QuotationItem,
   Vehicle
 } from '@/lib/types';
-import QuyetToanTemplate from '@/components/print/QuyetToanTemplate';
+import QuotationTemplate from '@/components/print/QuotationTemplate';
 import PrintButton from '@/components/print/PrintButton';
 
 export default function QuotePrint() {
@@ -140,7 +140,7 @@ export default function QuotePrint() {
 
       {/* Printable template */}
       <div id="quotePrintTemplate">
-        <QuyetToanTemplate
+        <QuotationTemplate
           customerName={customer.name}
           customerAddress={customer.address}
           customerPhone={customer.phone}
@@ -150,7 +150,7 @@ export default function QuotePrint() {
           invoiceNumber={quote.code}
           invoiceDate={new Date(quote.dateCreated)}
           repairTechnician=""
-          odometerReading={0}
+          odometerReading={vehicle.lastOdometer}
           items={printItems}
           subtotal={quote.subtotal}
           tax={quote.tax}

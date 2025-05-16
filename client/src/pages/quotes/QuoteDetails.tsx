@@ -154,7 +154,7 @@ export default function QuoteDetails() {
   };
 
   const handlePrint = () => {
-    printDocument('quotePrintable');
+    navigate(`/print/quote/${quote?.id}`);
   };
 
   const handleExportPdf = () => {
@@ -203,20 +203,12 @@ export default function QuoteDetails() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" onClick={handlePrint}>
-            <i className="fas fa-print mr-2"></i>
-            In
-          </Button>
-          
-          <Button variant="outline" onClick={handleExportPdf}>
-            <i className="fas fa-file-pdf mr-2"></i>
-            Xuất PDF
-          </Button>
+
           
           <Link href={`/print/quote/${quote.id}`}>
             <Button variant="outline">
               <i className="fas fa-file-contract mr-2"></i>
-              Mẫu in nâng cao
+              In Báo Giá
             </Button>
           </Link>
           

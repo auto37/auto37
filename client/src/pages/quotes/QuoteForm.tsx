@@ -21,7 +21,7 @@ import {
   Service,
   QuotationItem
 } from '@/lib/types';
-import { formatCurrency, calculateTotals } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 const quoteItemSchema = z.object({
   type: z.enum(['part', 'service']),
@@ -52,24 +52,24 @@ export default function QuoteForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-  
+
   // Data for selects
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItemWithCategory[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  
+
   // Items in the quote
   const [quoteItems, setQuoteItems] = useState<QuoteItemForm[]>([]);
   const [totals, setTotals] = useState({ subtotal: 0, tax: 0, total: 0 });
-  
+
   // For adding new items
   const [selectedItemType, setSelectedItemType] = useState<'part' | 'service'>('part');
   const [selectedItemId, setSelectedItemId] = useState<number>(0);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
-  
-  const { register, handleSubmit, setValue, watch, formState: { errors }, trigger } = useForm<FormData>({
+
+  const { register, handleSubmit, setValue, watch, formState: { errors, isValid }, trigger } = useForm<FormData>({
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       customerId: 0,
@@ -80,11 +80,18 @@ export default function QuoteForm() {
       status: 'new'
     }
   });
-  
+
   // Watch for changes to update dependent fields
   const watchCustomerId = watch('customerId');
   const watchTax = watch('tax');
-  
+
+  // Log form errors for debugging
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log('Lỗi xác thực form:', errors);
+    }
+  }, [errors]);
+
   // Initialize form and load data
   useEffect(() => {
     const loadFormData = async () => {
@@ -93,7 +100,7 @@ export default function QuoteForm() {
         // Load customers
         const allCustomers = await db.customers.toArray();
         setCustomers(allCustomers);
-        
+
         // Load inventory items with categories
         const allItems = await db.inventoryItems.toArray();
         const itemsWithCategory = await Promise.all(
@@ -103,30 +110,25 @@ export default function QuoteForm() {
           })
         );
         setInventoryItems(itemsWithCategory);
-        
+
         // Load services
         const allServices = await db.services.toArray();
         setServices(allServices);
-        
+
         // Check if editing
         if (match && params.id) {
           setIsEditing(true);
           await fetchQuoteData(parseInt(params.id));
-          
-          // Trigger form validation after loading data
-          setTimeout(() => {
-            trigger();
-          }, 500);
         } else {
           // New quote - get URL params if any
           const urlParams = new URLSearchParams(window.location.search);
           const customerId = urlParams.get('customerId');
           const vehicleId = urlParams.get('vehicleId');
-          
+
           if (customerId) {
             const customerIdNum = parseInt(customerId);
-            setValue('customerId', customerIdNum);
-            
+            setValue('customerId', customerIdNum, { shouldValidate: true });
+
             // Load vehicles for this customer
             const customerVehicles = await db.vehicles
               .where('customerId')
@@ -134,15 +136,15 @@ export default function QuoteForm() {
               .toArray();
             setVehicles(customerVehicles);
             setFilteredVehicles(customerVehicles);
-            
-            // If vehicleId is provided, set it
-            if (vehicleId) {
+
+            if (vehicleId && !isNaN(parseInt(vehicleId))) {
               const vehicleIdNum = parseInt(vehicleId);
-              setValue('vehicleId', vehicleIdNum);
+              setValue('vehicleId', vehicleIdNum, { shouldValidate: true });
             }
           }
-          
+
           await generateQuoteCode();
+          await trigger();
         }
       } catch (error) {
         console.error('Error loading form data:', error);
@@ -155,14 +157,14 @@ export default function QuoteForm() {
         setIsLoading(false);
       }
     };
-    
+
     loadFormData();
   }, [match, params.id, setValue, toast, trigger]);
-  
+
   // When customer changes, filter vehicles
   useEffect(() => {
     const loadVehiclesForCustomer = async () => {
-      if (watchCustomerId) {
+      if (watchCustomerId && !isNaN(watchCustomerId)) {
         try {
           const customerVehicles = await db.vehicles
             .where('customerId')
@@ -170,11 +172,11 @@ export default function QuoteForm() {
             .toArray();
           setVehicles(customerVehicles);
           setFilteredVehicles(customerVehicles);
-          
+
           // Clear vehicle selection if current selection is not valid for new customer
           const currentVehicleId = watch('vehicleId');
           if (currentVehicleId && !customerVehicles.some(v => v.id === currentVehicleId)) {
-            setValue('vehicleId', 0);
+            setValue('vehicleId', 0, { shouldValidate: true });
           }
         } catch (error) {
           console.error('Error loading vehicles for customer:', error);
@@ -182,42 +184,29 @@ export default function QuoteForm() {
       } else {
         setVehicles([]);
         setFilteredVehicles([]);
-        setValue('vehicleId', 0);
+        setValue('vehicleId', 0, { shouldValidate: true });
       }
     };
-    
+
     loadVehiclesForCustomer();
   }, [watchCustomerId, setValue, watch]);
-  
+
   // Update totals when items or tax changes
   useEffect(() => {
-    // Tính lại tổng cộng cho tất cả các mục
-    // Sử dụng reduce để đảm bảo chính xác
     const subtotal = quoteItems.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = watchTax !== undefined ? subtotal * (watchTax / 100) : 0;
     const totalWithTax = subtotal + taxAmount;
-    
-    console.log('Cập nhật tổng cộng:', {
-      quoteItems, 
-      itemCount: quoteItems.length,
-      subtotal,
-      taxAmount,
-      totalWithTax
-    });
-    
+
     setTotals({
       subtotal,
       tax: taxAmount,
       total: totalWithTax
     });
-    
-    // Update the form values - dữ liệu để gửi đi khi submit form
-    setValue('items', quoteItems);
-    
-    // Thông báo form đã thay đổi để kích hoạt nút Submit
+
+    setValue('items', quoteItems, { shouldValidate: true });
     trigger();
   }, [quoteItems, watchTax, setValue, trigger]);
-  
+
   const fetchQuoteData = async (id: number) => {
     try {
       console.log('Tải dữ liệu báo giá ID:', id);
@@ -232,16 +221,27 @@ export default function QuoteForm() {
         setLocation('/quotes');
         return;
       }
-      
-      console.log('Báo giá tìm thấy:', quote);
-      
+
+      // Validate vehicleId
+      const vehicleId = Number(quote.vehicleId);
+      if (isNaN(vehicleId) || vehicleId <= 0) {
+        console.error('vehicleId không hợp lệ:', quote.vehicleId);
+        toast({
+          title: 'Lỗi',
+          description: 'Dữ liệu xe không hợp lệ trong báo giá.',
+          variant: 'destructive'
+        });
+        setLocation('/quotes');
+        return;
+      }
+
       // Set form values
-      setValue('customerId', quote.customerId);
-      setValue('vehicleId', quote.vehicleId);
-      setValue('notes', quote.notes || '');
-      setValue('status', quote.status);
-      setValue('tax', quote.tax ? (quote.tax / quote.subtotal) * 100 : 0);
-      
+      setValue('customerId', quote.customerId, { shouldValidate: true });
+      setValue('vehicleId', vehicleId, { shouldValidate: true });
+      setValue('notes', quote.notes || '', { shouldValidate: true });
+      setValue('status', quote.status, { shouldValidate: true });
+      setValue('tax', quote.tax ? (quote.tax / quote.subtotal) * 100 : 0, { shouldValidate: true });
+
       // Load vehicles for this customer
       const customerVehicles = await db.vehicles
         .where('customerId')
@@ -249,18 +249,25 @@ export default function QuoteForm() {
         .toArray();
       setVehicles(customerVehicles);
       setFilteredVehicles(customerVehicles);
-      console.log('Số xe của khách hàng:', customerVehicles.length);
-      
+
+      // Validate vehicleId exists in customer vehicles
+      if (!customerVehicles.some(v => v.id === vehicleId)) {
+        console.error('vehicleId không tồn tại trong danh sách xe của khách hàng:', vehicleId);
+        toast({
+          title: 'Lỗi',
+          description: 'Xe không thuộc khách hàng này.',
+          variant: 'destructive'
+        });
+        setLocation('/quotes');
+        return;
+      }
+
       // Load quote items
       const items = await db.quotationItems
         .where('quotationId')
         .equals(id)
         .toArray();
-      
-      console.log('Số mục trong báo giá:', items.length);
-      console.log('Các mục trong báo giá:', items);
-      
-      // Convert to form items
+
       const formItems = items.map(item => ({
         type: item.type,
         itemId: item.itemId,
@@ -269,9 +276,12 @@ export default function QuoteForm() {
         unitPrice: item.unitPrice,
         total: item.total
       }));
-      
-      console.log('Các mục đã chuyển đổi:', formItems);
+
       setQuoteItems(formItems);
+      setValue('items', formItems, { shouldValidate: true });
+
+      // Trigger validation
+      await trigger();
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu báo giá:', error);
       toast({
@@ -281,17 +291,15 @@ export default function QuoteForm() {
       });
     }
   };
-  
+
   const generateQuoteCode = async () => {
     try {
       const code = await db.generateQuotationCode();
-      // We don't set this in the form as it's not part of the form data
-      // It will be generated when saving
     } catch (error) {
       console.error('Error generating quote code:', error);
     }
   };
-  
+
   const handleAddItem = () => {
     if (!selectedItemId) {
       toast({
@@ -301,7 +309,7 @@ export default function QuoteForm() {
       });
       return;
     }
-    
+
     if (selectedQuantity <= 0) {
       toast({
         title: 'Lỗi',
@@ -310,27 +318,17 @@ export default function QuoteForm() {
       });
       return;
     }
-    
-    // Check if item already exists in the list
+
     const existingItemIndex = quoteItems.findIndex(
       item => item.type === selectedItemType && item.itemId === selectedItemId
     );
-    
+
     if (existingItemIndex !== -1) {
-      // Update existing item
       const updatedItems = [...quoteItems];
       const item = updatedItems[existingItemIndex];
       const newQuantity = item.quantity + selectedQuantity;
       const newTotal = item.unitPrice * newQuantity;
-      
-      console.log('Cập nhật số lượng mục hiện có:', {
-        existingItemIndex,
-        oldQuantity: item.quantity,
-        newQuantity,
-        unitPrice: item.unitPrice,
-        newTotal
-      });
-      
+
       updatedItems[existingItemIndex] = {
         ...item,
         quantity: newQuantity,
@@ -338,17 +336,15 @@ export default function QuoteForm() {
       };
       setQuoteItems([...updatedItems]);
     } else {
-      // Add new item
       let name = '';
       let unitPrice = 0;
-      
+
       if (selectedItemType === 'part') {
         const item = inventoryItems.find(i => i.id === selectedItemId);
         if (!item) return;
         name = item.name;
         unitPrice = item.sellingPrice;
-        
-        // Check if enough in stock
+
         if (item.quantity < selectedQuantity) {
           toast({
             title: 'Cảnh báo',
@@ -362,18 +358,9 @@ export default function QuoteForm() {
         name = service.name;
         unitPrice = service.price;
       }
-      
+
       const itemTotal = unitPrice * selectedQuantity;
-      
-      console.log('Thêm mục mới:', {
-        type: selectedItemType,
-        itemId: selectedItemId,
-        name,
-        quantity: selectedQuantity,
-        unitPrice,
-        total: itemTotal
-      });
-      
+
       const newItem: QuoteItemForm = {
         type: selectedItemType,
         itemId: selectedItemId,
@@ -382,28 +369,26 @@ export default function QuoteForm() {
         unitPrice,
         total: itemTotal
       };
-      
+
       setQuoteItems([...quoteItems, newItem]);
     }
-    
-    // Reset selection
+
     setSelectedItemId(0);
     setSelectedQuantity(1);
   };
-  
+
   const handleRemoveItem = (index: number) => {
     const updatedItems = [...quoteItems];
     updatedItems.splice(index, 1);
     setQuoteItems(updatedItems);
   };
-  
+
   const handleUpdateItemQuantity = (index: number, newQuantity: number) => {
     if (newQuantity <= 0) return;
-    
+
     const updatedItems = [...quoteItems];
     const item = updatedItems[index];
-    
-    // Check stock if it's a part
+
     if (item.type === 'part') {
       const inventoryItem = inventoryItems.find(i => i.id === item.itemId);
       if (inventoryItem && inventoryItem.quantity < newQuantity) {
@@ -413,23 +398,18 @@ export default function QuoteForm() {
         });
       }
     }
-    
+
     const newTotal = item.unitPrice * newQuantity;
-    
+
     updatedItems[index] = {
       ...item,
       quantity: newQuantity,
       total: newTotal
     };
-    
-    console.log('Cập nhật số lượng mới cho mục #', index, ':', newQuantity, ' - tổng tiền:', newTotal);
-    console.log('Item trước khi cập nhật:', item);
-    console.log('Item sau khi cập nhật:', updatedItems[index]);
-    
-    // Đảm bảo state được cập nhật đúng
+
     setQuoteItems([...updatedItems]);
   };
-  
+
   const onSubmit = async (data: FormData) => {
     console.log('Nộp form với dữ liệu:', data);
     console.log('Trạng thái hiện tại:', {
@@ -437,11 +417,7 @@ export default function QuoteForm() {
       vehicleId: data.vehicleId, 
       items: quoteItems.length
     });
-    
-    // Log items được gửi đi để kiểm tra
-    console.log('Items được gửi đi:', quoteItems);
-    
-    // Kiểm tra xem có mục nào không
+
     if (quoteItems.length === 0) {
       toast({
         title: 'Lỗi',
@@ -450,18 +426,14 @@ export default function QuoteForm() {
       });
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const taxRate = data.tax || 0;
       const taxAmount = totals.subtotal * (taxRate / 100);
-      console.log('Tính toán thuế:', { taxRate, taxAmount, total: totals.subtotal + taxAmount });
-      
+
       if (isEditing && params.id) {
         const quoteId = parseInt(params.id);
-        console.log('Bắt đầu cập nhật báo giá ID:', quoteId);
-        
-        // 1. Cập nhật thông tin báo giá trước
         await db.quotations.update(quoteId, {
           customerId: data.customerId,
           vehicleId: data.vehicleId,
@@ -471,72 +443,18 @@ export default function QuoteForm() {
           notes: data.notes,
           status: data.status
         });
-        console.log('Đã cập nhật thông tin báo giá cơ bản');
-        
-        try {
-          // 2. Xóa tất cả các mục cũ
-          console.log('Bắt đầu xóa các mục cũ của báo giá');
-          const itemsToDelete = await db.quotationItems
-            .where('quotationId')
-            .equals(quoteId)
-            .toArray();
-          
-          console.log('Số mục cần xóa:', itemsToDelete.length);
-          
-          // Xóa từng mục một
-          for (const item of itemsToDelete) {
-            if (item.id) {
-              await db.quotationItems.delete(item.id);
-              console.log('Đã xóa mục có ID:', item.id);
-            }
+
+        const itemsToDelete = await db.quotationItems
+          .where('quotationId')
+          .equals(quoteId)
+          .toArray();
+
+        for (const item of itemsToDelete) {
+          if (item.id) {
+            await db.quotationItems.delete(item.id);
           }
-          
-          // 3. Thêm các mục mới
-          console.log('Bắt đầu thêm mục mới - số lượng:', quoteItems.length);
-          for (const item of quoteItems) {
-            const newItemId = await db.quotationItems.add({
-              quotationId: quoteId,
-              type: item.type,
-              itemId: item.itemId,
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total
-            });
-            console.log('Đã thêm mục mới với ID:', newItemId);
-          }
-          
-          console.log('Hoàn tất cập nhật báo giá và các mục');
-        } catch (itemError) {
-          console.error('Lỗi khi cập nhật các mục của báo giá:', itemError);
-          toast({
-            title: 'Lỗi',
-            description: 'Không thể cập nhật đầy đủ các mục trong báo giá.',
-            variant: 'destructive'
-          });
         }
-        
-        toast({
-          title: 'Thành công',
-          description: 'Đã cập nhật báo giá.',
-        });
-      } else {
-        // Create new quote
-        const quoteCode = await db.generateQuotationCode();
-        
-        const quoteId = await db.quotations.add({
-          code: quoteCode,
-          dateCreated: new Date(),
-          customerId: data.customerId,
-          vehicleId: data.vehicleId,
-          subtotal: totals.subtotal,
-          tax: taxAmount,
-          total: totals.subtotal + taxAmount,
-          notes: data.notes,
-          status: data.status
-        });
-        
-        // Add items
+
         for (const item of quoteItems) {
           await db.quotationItems.add({
             quotationId: quoteId,
@@ -548,14 +466,44 @@ export default function QuoteForm() {
             total: item.total
           });
         }
-        
+
+        toast({
+          title: 'Thành công',
+          description: 'Đã cập nhật báo giá.',
+        });
+      } else {
+        const quoteCode = await db.generateQuotationCode();
+
+        const quoteId = await db.quotations.add({
+          code: quoteCode,
+          dateCreated: new Date(),
+          customerId: data.customerId,
+          vehicleId: data.vehicleId,
+          subtotal: totals.subtotal,
+          tax: taxAmount,
+          total: totals.subtotal + taxAmount,
+          notes: data.notes,
+          status: data.status
+        });
+
+        for (const item of quoteItems) {
+          await db.quotationItems.add({
+            quotationId: quoteId,
+            type: item.type,
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total
+          });
+        }
+
         toast({
           title: 'Thành công',
           description: 'Đã tạo báo giá mới.',
         });
       }
-      
-      // Redirect to quotes list
+
       setLocation('/quotes');
     } catch (error) {
       console.error('Error saving quote:', error);
@@ -568,7 +516,7 @@ export default function QuoteForm() {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div>
       <Card>
@@ -582,14 +530,19 @@ export default function QuoteForm() {
                 <TabsTrigger value="info">Thông Tin Báo Giá</TabsTrigger>
                 <TabsTrigger value="items">Vật Tư & Dịch Vụ</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="info" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="customerId">Khách Hàng*</Label>
                     <Select
-                      value={watch('customerId')?.toString()}
-                      onValueChange={(value) => setValue('customerId', parseInt(value), { shouldValidate: true })}
+                      value={watch('customerId')?.toString() || '0'}
+                      onValueChange={(value) => {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          setValue('customerId', numValue, { shouldValidate: true });
+                        }
+                      }}
                       disabled={isEditing}
                     >
                       <SelectTrigger id="customerId">
@@ -621,12 +574,17 @@ export default function QuoteForm() {
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="vehicleId">Xe*</Label>
                     <Select
-                      value={watch('vehicleId')?.toString()}
-                      onValueChange={(value) => setValue('vehicleId', parseInt(value), { shouldValidate: true })}
+                      value={watch('vehicleId')?.toString() || '0'}
+                      onValueChange={(value) => {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                          setValue('vehicleId', numValue, { shouldValidate: true });
+                        }
+                      }}
                       disabled={isEditing || !watchCustomerId}
                     >
                       <SelectTrigger id="vehicleId">
@@ -660,7 +618,7 @@ export default function QuoteForm() {
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="tax">Thuế VAT (%)</Label>
                     <Input
@@ -676,12 +634,13 @@ export default function QuoteForm() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="status">Trạng Thái</Label>
+ accounting
                     <Select
                       value={watch('status')}
-                      onValueChange={(value) => setValue('status', value as any)}
+                      onValueChange={(value) => setValue('status', value as any, { shouldValidate: true })}
                     >
                       <SelectTrigger id="status">
                         <SelectValue placeholder="Chọn trạng thái" />
@@ -694,7 +653,7 @@ export default function QuoteForm() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="notes">Ghi Chú & Điều Khoản</Label>
                     <Textarea
@@ -705,7 +664,7 @@ export default function QuoteForm() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-lg font-semibold mb-2">Tổng Cộng</h3>
                   <div className="space-y-2">
@@ -724,7 +683,7 @@ export default function QuoteForm() {
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="items">
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -748,11 +707,11 @@ export default function QuoteForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="itemId">Chọn {selectedItemType === 'part' ? 'Vật Tư' : 'Dịch Vụ'}</Label>
                         <Select
-                          value={selectedItemId?.toString()}
+                          value={selectedItemId?.toString() || '0'}
                           onValueChange={(value) => setSelectedItemId(parseInt(value))}
                         >
                           <SelectTrigger id="itemId">
@@ -791,7 +750,7 @@ export default function QuoteForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="quantity">Số Lượng</Label>
                         <Input
@@ -802,7 +761,7 @@ export default function QuoteForm() {
                           onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 0)}
                         />
                       </div>
-                      
+
                       <div className="flex items-end">
                         <Button 
                           type="button" 
@@ -815,7 +774,7 @@ export default function QuoteForm() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Danh Sách Vật Tư & Dịch Vụ</h3>
                     {quoteItems.length === 0 ? (
@@ -870,7 +829,7 @@ export default function QuoteForm() {
                         </Table>
                       </div>
                     )}
-                    
+
                     <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                       <h3 className="text-lg font-semibold mb-2">Tổng Cộng</h3>
                       <div className="space-y-2">
@@ -892,19 +851,14 @@ export default function QuoteForm() {
                 </div>
               </TabsContent>
             </Tabs>
-            
+
             <div className="flex justify-end gap-2 mt-6">
               <Link href="/quotes">
                 <Button type="button" variant="outline">Hủy</Button>
               </Link>
               <Button 
                 type="submit" 
-                disabled={
-                  isLoading || 
-                  (isEditing ? false : !watchCustomerId) || 
-                  (isEditing ? false : !watch('vehicleId')) || 
-                  quoteItems.length === 0
-                }
+                disabled={isLoading || !isValid || quoteItems.length === 0}
               >
                 {isLoading ? (
                   <>

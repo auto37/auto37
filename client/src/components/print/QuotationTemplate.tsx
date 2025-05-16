@@ -4,7 +4,7 @@ import { settingsDb } from '@/lib/settings';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-interface QuyetToanItemType {
+interface QuotationItemType {
   id: number;
   stt: number;
   description: string;
@@ -16,7 +16,7 @@ interface QuyetToanItemType {
   total: number;
 }
 
-interface QuyetToanTemplateProps {
+interface QuotationTemplateProps {
   customerName: string;
   customerAddress?: string;
   customerPhone?: string;
@@ -27,14 +27,13 @@ interface QuyetToanTemplateProps {
   invoiceDate: Date;
   repairTechnician?: string;
   odometerReading?: number;
-  items: QuyetToanItemType[];
+  items: QuotationItemType[];
   subtotal: number;
   tax?: number;
   discount?: number;
   total: number;
   notes?: string;
   isPrintMode?: boolean;
-  documentType?: 'quotation' | 'settlement'; // Thêm prop để xác định loại tài liệu
 }
 
 // Hàm chuyển số thành chữ tiếng Việt với chữ cái đầu viết hoa
@@ -88,7 +87,7 @@ const numberToVietnameseText = (number: number): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-export default function QuyetToanTemplate({
+export default function QuotationTemplate({
   customerName,
   customerAddress,
   customerPhone,
@@ -106,8 +105,7 @@ export default function QuyetToanTemplate({
   total,
   notes,
   isPrintMode = false,
-  documentType = 'settlement', // Mặc định là quyết toán
-}: QuyetToanTemplateProps) {
+}: QuotationTemplateProps) {
   const { toast } = useToast();
   const [logo, setLogo] = useState<string>('');
   const [garageName, setGarageName] = useState<string>('AUTO37 GARAGE');
@@ -138,7 +136,7 @@ export default function QuyetToanTemplate({
   const printToPdf = () => {
     setIsGeneratingPdf(true);
     setTimeout(() => {
-      const element = document.getElementById('quyetToanPrint');
+      const element = document.getElementById('quotationPrint');
       if (!element) {
         toast({
           title: 'Lỗi',
@@ -156,9 +154,7 @@ export default function QuyetToanTemplate({
         const height = (canvas.height * width) / canvas.width;
 
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        // Đặt tên file PDF dựa trên documentType
-        const filePrefix = documentType === 'quotation' ? 'Bao_gia' : 'Quyet_toan';
-        pdf.save(`${filePrefix}_${invoiceNumber}.pdf`);
+        pdf.save(`Bao_gia_${invoiceNumber}.pdf`);
 
         toast({
           title: 'Thành công',
@@ -184,9 +180,6 @@ export default function QuyetToanTemplate({
   const subtotalServices = services.reduce((sum, item) => sum + item.total, 0);
   const subtotalMaterials = materials.reduce((sum, item) => sum + item.total, 0);
 
-  // Xác định tiêu đề dựa trên documentType
-  const documentTitle = documentType === 'quotation' ? 'BÁO GIÁ DỊCH VỤ' : 'QUYẾT TOÁN DỊCH VỤ';
-
   // Kiểm tra dữ liệu total
   useEffect(() => {
     const calculatedTotal = subtotalServices + subtotalMaterials + (tax || 0) - (discount || 0);
@@ -210,7 +203,7 @@ export default function QuyetToanTemplate({
       )}
 
       <div
-        id="quyetToanPrint"
+        id="quotationPrint"
         className={`bg-white font-['Roboto',sans-serif] ${
           isPrintMode || isGeneratingPdf ? 'p-0' : 'p-8 border border-gray-200 rounded-lg shadow-lg'
         }`}
@@ -230,7 +223,7 @@ export default function QuyetToanTemplate({
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-2xl font-semibold text-blue-600">{documentTitle}</h2>
+            <h2 className="text-2xl font-semibold text-blue-600">BÁO GIÁ DỊCH VỤ</h2>
             <p className="text-gray-600">Số: {invoiceNumber}</p>
             <p className="text-gray-600">Ngày: {formatLocalDate(invoiceDate)}</p>
           </div>
@@ -411,22 +404,9 @@ export default function QuyetToanTemplate({
         {/* Notes */}
         <div className="mb-6 text-sm italic text-gray-600">
           <p>- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
+          <p>- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
           {notes && <p>- {notes}</p>}
         </div>
-
-        {/* Signatures (Ẩn cho báo giá) */}
-        {documentType === 'settlement' && (
-          <div className="grid grid-cols-2 text-center text-sm mt-8 mb-6">
-            <div>
-              <p className="font-semibold mb-8">Người lập phiếu</p>
-              <p className="italic text-gray-600">(Ký và ghi rõ họ tên)</p>
-            </div>
-            <div>
-              <p className="font-semibold mb-8">Khách hàng</p>
-              <p className="italic text-gray-600">(Ký và ghi rõ họ tên)</p>
-            </div>
-          </div>
-        )}
 
         {/* Footer */}
         <div className="border-t border-gray-200 pt-4 text-center text-xs text-gray-500">
@@ -461,7 +441,7 @@ export default function QuyetToanTemplate({
           .print-hidden {
             display: none !important;
           }
-          #quyetToanPrint {
+          #quotationPrint {
             width: 100%;
             max-width: none;
           }
