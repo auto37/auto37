@@ -306,12 +306,21 @@ export default function QuoteForm() {
   };
 
   const handleAddItem = async () => {
+    console.log("Bắt đầu thêm mục mới: ", { 
+      selectedItemType, 
+      selectedItemId, 
+      selectedQuantity,
+      newItemName: selectedItemId === -1 ? newItemName : 'N/A',
+      newItemPrice: selectedItemId === -1 ? newItemPrice : 'N/A'
+    });
+    
     if (!selectedItemId) {
       toast({
         title: 'Lỗi',
         description: 'Vui lòng chọn vật tư hoặc dịch vụ.',
         variant: 'destructive'
       });
+      console.log("Không có mục nào được chọn");
       return;
     }
 
@@ -321,6 +330,7 @@ export default function QuoteForm() {
         description: 'Số lượng phải lớn hơn 0.',
         variant: 'destructive'
       });
+      console.log("Số lượng không hợp lệ");
       return;
     }
 
@@ -348,7 +358,8 @@ export default function QuoteForm() {
 
       if (selectedItemType === 'part') {
         try {
-          const newPart = {
+          // Tạo đối tượng vật tư mới theo đúng interface InventoryItem
+          const newPart: InventoryItem = {
             sku: `NEW${Date.now()}`, // Tạo một mã SKU tạm thời
             name: newItemName,
             sellingPrice: newItemPrice,
@@ -360,12 +371,17 @@ export default function QuoteForm() {
             location: 'Kho chính', // Giá trị mặc định
             supplier: 'Chưa xác định' // Giá trị mặc định
           };
+          
           newId = await db.inventoryItems.add(newPart);
           console.log("Đã thêm vật tư mới với ID:", newId);
-          setInventoryItems(prev => [
-            ...prev,
-            { ...newPart, id: newId, category: { id: 1, name: 'Phụ tùng', code: 'PT' } }
-          ]);
+          
+          const newItemWithCategory: InventoryItemWithCategory = {
+            ...newPart,
+            id: newId,
+            category: { id: 1, name: 'Phụ tùng', code: 'PT' }
+          };
+          
+          setInventoryItems(prev => [...prev, newItemWithCategory]);
         } catch (error) {
           console.error("Lỗi khi thêm vật tư mới:", error);
           toast({
@@ -377,15 +393,19 @@ export default function QuoteForm() {
         }
       } else {
         try {
-          const newService = {
-            code: `DV${Date.now()}`, // Tạo mã dịch vụ tạm thời
+          // Tạo đối tượng dịch vụ mới theo đúng interface Service
+          const newService: Service = {
+            code: `DV${Date.now().toString().slice(-6)}`, // Tạo mã dịch vụ tạm thời
             name: newItemName,
             price: newItemPrice,
             description: '',
             estimatedTime: 60 // Thời gian mặc định 60 phút
           };
+          
           newId = await db.services.add(newService);
           console.log("Đã thêm dịch vụ mới với ID:", newId);
+          
+          // Thêm vào state với ID vừa được tạo
           setServices(prev => [...prev, { ...newService, id: newId }]);
         } catch (error) {
           console.error("Lỗi khi thêm dịch vụ mới:", error);
@@ -813,7 +833,7 @@ export default function QuoteForm() {
                                   inventoryItems.map((item) => (
                                     <SelectItem 
                                       key={item.id} 
-                                      value={item.id?.toString() || '0'}
+                                      value={item.id?.toString()}
                                       disabled={item.quantity <= 0}
                                     >
                                       {item.name} ({formatCurrency(item.sellingPrice)})
@@ -831,7 +851,7 @@ export default function QuoteForm() {
                                   services.map((service) => (
                                     <SelectItem 
                                       key={service.id} 
-                                      value={service.id?.toString() || '0'}
+                                      value={service.id?.toString()}
                                     >
                                       {service.name} ({formatCurrency(service.price)})
                                     </SelectItem>
