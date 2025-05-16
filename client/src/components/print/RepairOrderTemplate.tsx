@@ -131,13 +131,7 @@ export default function RepairOrderTemplate({
     >
       {!(isPrintMode || isGeneratingPdf) && (
         <div className="mb-6 flex justify-end max-w-4xl mx-auto print-hidden">
-          <button
-            onClick={printToPdf}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center hover:bg-blue-700"
-          >
-            <i className="fas fa-file-pdf mr-2"></i>
-            Xuất PDF
-          </button>
+        
         </div>
       )}
 

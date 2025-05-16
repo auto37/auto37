@@ -131,11 +131,7 @@ export default function QuotePrint() {
           Quay lại báo giá
         </Button>
 
-        <PrintButton 
-          elementId="quotePrintTemplate" 
-          fileName={`BaoGia_${quote.code}`}
-          label="Xuất PDF"
-        />
+       
       </div>
 
       {/* Printable template */}
