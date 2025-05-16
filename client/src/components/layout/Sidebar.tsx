@@ -204,7 +204,7 @@ Lệnh Sửa Chữa
 
 <a className={isActive('/invoices') ? 'sidebar-link-active' : 'sidebar-link'}>
 
-<i className="fas fa-receipt w-6"></i>
+<i className="fas fa-receipt w-6 text-orange-500"></i>
 
 <span className={`ml-2 truncate whitespace-nowrap ${!isExpanded && 'opacity-0'}`}>
 
@@ -226,7 +226,7 @@ Hóa Đơn
 
 <a className={isActive('/reports') ? 'sidebar-link-active' : 'sidebar-link'}>
 
-<i className="fas fa-chart-line w-6"></i>
+<i className="fas fa-chart-line w-6 text-orange-500"></i>
 
 <span className={`ml-2 truncate whitespace-nowrap ${!isExpanded && 'opacity-0'}`}>
 
@@ -250,7 +250,7 @@ Báo Cáo
 
 <a className="flex items-center text-gray-400 hover:text-white">
 
-<i className="fas fa-cog w-6"></i>
+<i className="fas fa-cog w-6 text-orange-500"></i>
 
 <span className={`ml-2 truncate whitespace-nowrap ${!isExpanded && 'opacity-0'}`}>
 
