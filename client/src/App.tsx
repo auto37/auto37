@@ -26,6 +26,7 @@ import Reports from "./pages/reports/Reports";
 import Settings from "./pages/settings/Settings";
 import InvoicePrint from "./pages/print/InvoicePrint";
 import QuotePrint from "./pages/print/QuotePrint";
+import RepairPrint from "./pages/print/RepairPrint";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
             
             <Route path="/print/invoice/:id" component={InvoicePrint} />
             <Route path="/print/quote/:id" component={QuotePrint} />
+            <Route path="/print/repair/:id" component={RepairPrint} />
             
             <Route component={NotFound} />
           </Switch>

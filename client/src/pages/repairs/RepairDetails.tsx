@@ -185,7 +185,7 @@ export default function RepairDetails() {
   };
 
   const handlePrint = () => {
-    printDocument('repairPrintable');
+    navigate(`/print/repair/${repair?.id}`);
   };
 
   const handleExportPdf = () => {
