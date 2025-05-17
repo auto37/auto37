@@ -1,15 +1,25 @@
 // Kết nối và cấu hình Supabase
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // URL và khóa API từ biến môi trường (sẽ cần được cấu hình)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
 
-// Tạo client Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Tạo client Supabase nếu có đủ thông tin
+export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0) 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
+
+// Kiểm tra xem Supabase đã được khởi tạo chưa
+export const isSupabaseInitialized = !!supabase;
 
 // Kiểm tra kết nối Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
+  if (!supabase) {
+    console.error('Lỗi kết nối Supabase: Không có thông tin kết nối');
+    return false;
+  }
+  
   try {
     const { error } = await supabase.from('settings').select('id').limit(1);
     if (error) {

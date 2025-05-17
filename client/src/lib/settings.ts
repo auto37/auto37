@@ -17,7 +17,9 @@ export interface Settings {
 }
 
 // Kiểm tra xem có kết nối Supabase hay không
-const USE_SUPABASE = true; // Mặc định sử dụng Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+const USE_SUPABASE = supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0;
 
 // Lớp Dexie để lưu trữ cài đặt cục bộ (fallback)
 class SettingsDatabase extends Dexie {

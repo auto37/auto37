@@ -49,6 +49,10 @@ function mapFromSettings(data: Partial<Settings>): Partial<SupabaseSettings> {
 export class SupabaseSettingsService {
   // Lấy cài đặt từ Supabase
   async getSettings(): Promise<Settings> {
+    if (!supabase) {
+      throw new Error('Không thể kết nối đến Supabase: Thông tin kết nối chưa được cấu hình');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('settings')
