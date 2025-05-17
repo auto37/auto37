@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { testSupabaseConnection, checkSupabaseTables, createInitialSettings } from '@/lib/test-supabase';
+import { settingsDb } from '@/lib/settings';
 import { 
   Card, 
   CardContent, 
@@ -15,14 +16,19 @@ import {
   AlertDescription,
   AlertTitle
 } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { 
   AlertCircle,
   Check,
   X,
   Database,
-  Loader2
+  Loader2,
+  HardDrive,
+  Cloud
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseInitialized } from '@/lib/supabase';
 
 export default function DatabaseStatus() {
   const { toast } = useToast();
@@ -32,11 +38,25 @@ export default function DatabaseStatus() {
   const [isCreatingTables, setIsCreatingTables] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isInitialSettingsCreated, setIsInitialSettingsCreated] = useState<boolean | null>(null);
+  const [useSupabase, setUseSupabase] = useState<boolean>(false);
+  const [isSwitchingDatabase, setIsSwitchingDatabase] = useState(false);
   
-  // Kiểm tra kết nối khi trang được tải
+  // Kiểm tra kết nối và tùy chọn DB khi trang được tải
   useEffect(() => {
     checkConnection();
+    loadDatabasePreference();
   }, []);
+  
+  // Lấy tùy chọn cơ sở dữ liệu từ cài đặt
+  const loadDatabasePreference = async () => {
+    try {
+      const settings = await settingsDb.getSettings();
+      setUseSupabase(settings.useSupabase || false);
+    } catch (error) {
+      console.error('Lỗi khi tải tùy chọn cơ sở dữ liệu:', error);
+      setUseSupabase(false);
+    }
+  };
   
   // Kiểm tra kết nối Supabase
   const checkConnection = async () => {
@@ -99,6 +119,51 @@ export default function DatabaseStatus() {
       title: 'Hướng dẫn thiết lập',
       description: 'Vui lòng truy cập vào Supabase Dashboard, mở SQL Editor và chạy mã SQL trong tệp supabase/migrations.sql để tạo cấu trúc cơ sở dữ liệu.',
     });
+  };
+  
+  // Xử lý khi người dùng thay đổi tùy chọn cơ sở dữ liệu
+  const handleDatabaseChange = async (newUseSupabase: boolean) => {
+    // Nếu chọn Supabase nhưng không có kết nối, hiện thông báo
+    if (newUseSupabase && !isConnected) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể kết nối đến Supabase. Vui lòng kiểm tra kết nối trước.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsSwitchingDatabase(true);
+    
+    try {
+      // Cập nhật cài đặt trong localStorage ngay lập tức để ảnh hưởng đến lần tải trang tiếp theo
+      localStorage.setItem('useSupabase', newUseSupabase.toString());
+      
+      // Cập nhật cài đặt trong cơ sở dữ liệu
+      const settings = await settingsDb.getSettings();
+      await settingsDb.updateSettings({
+        ...settings,
+        useSupabase: newUseSupabase
+      });
+      
+      // Cập nhật state
+      setUseSupabase(newUseSupabase);
+      
+      toast({
+        title: 'Thành công',
+        description: `Đã chuyển sang sử dụng ${newUseSupabase ? 'Supabase (đám mây)' : 'IndexedDB (cục bộ)'}. Thay đổi sẽ có hiệu lực sau khi tải lại trang.`,
+      });
+      
+    } catch (error) {
+      console.error('Lỗi khi thay đổi cơ sở dữ liệu:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể thay đổi cơ sở dữ liệu. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSwitchingDatabase(false);
+    }
   };
   
   // Hiển thị thông tin kết nối
@@ -239,6 +304,63 @@ export default function DatabaseStatus() {
             </AlertDescription>
           </Alert>
         )}
+        {/* Phần chuyển đổi loại cơ sở dữ liệu */}
+        <div className="mt-6 border rounded-md p-4">
+          <h3 className="text-lg font-medium flex items-center">
+            <Database className="mr-2 h-5 w-5" />
+            Tùy chọn lưu trữ dữ liệu
+          </h3>
+          
+          <p className="text-sm text-gray-500 mt-1 mb-4">
+            Chọn nơi lưu trữ dữ liệu ứng dụng. Thay đổi này sẽ áp dụng cho phiên làm việc tiếp theo.
+          </p>
+          
+          <div className="flex flex-col space-y-4">
+            <div className={`flex items-center justify-between p-3 rounded-md ${!useSupabase ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'}`}>
+              <div className="flex items-center">
+                <HardDrive className="h-6 w-6 mr-3 text-blue-600" />
+                <div>
+                  <h4 className="font-medium">IndexedDB (Cục bộ)</h4>
+                  <p className="text-sm text-gray-500">Dữ liệu được lưu trên trình duyệt, không cần kết nối mạng</p>
+                </div>
+              </div>
+              <div>
+                <Switch
+                  checked={!useSupabase}
+                  onCheckedChange={() => handleDatabaseChange(false)}
+                  disabled={isSwitchingDatabase || !isSupabaseInitialized}
+                />
+              </div>
+            </div>
+            
+            <div className={`flex items-center justify-between p-3 rounded-md ${useSupabase ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'}`}>
+              <div className="flex items-center">
+                <Cloud className="h-6 w-6 mr-3 text-blue-600" />
+                <div>
+                  <h4 className="font-medium">Supabase (Đám mây)</h4>
+                  <p className="text-sm text-gray-500">Dữ liệu được lưu trữ trên đám mây, truy cập từ nhiều thiết bị</p>
+                </div>
+              </div>
+              <div>
+                <Switch
+                  checked={useSupabase}
+                  onCheckedChange={() => handleDatabaseChange(true)}
+                  disabled={isSwitchingDatabase || !isConnected || !isSupabaseInitialized}
+                />
+              </div>
+            </div>
+            
+            {!isSupabaseInitialized && (
+              <Alert className="mt-2 bg-yellow-50 border-yellow-200">
+                <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
+                <AlertTitle className="text-yellow-700">Chưa cấu hình Supabase</AlertTitle>
+                <AlertDescription className="text-yellow-600">
+                  Cần cấu hình thông tin kết nối Supabase để sử dụng chế độ đám mây.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </div>
       </CardContent>
       
       <CardFooter className="flex justify-between">
