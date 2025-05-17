@@ -11,6 +11,11 @@ import {
   RepairOrderItem,
   Invoice
 } from './types';
+import { supabaseCustomerService } from './supabase-services/customers';
+import { supabase } from './supabase';
+
+// Kiểm tra xem có kết nối Supabase hay không
+const USE_SUPABASE = true; // Mặc định sử dụng Supabase
 
 class GarageDexie extends Dexie {
   customers!: Table<Customer>;
@@ -43,6 +48,16 @@ class GarageDexie extends Dexie {
 
   // Helper functions for generating auto-increment codes
   async generateCustomerCode(): Promise<string> {
+    if (USE_SUPABASE) {
+      try {
+        return await supabaseCustomerService.generateCustomerCode();
+      } catch (error) {
+        console.error('Lỗi khi tạo mã khách hàng từ Supabase:', error);
+        console.log('Fallback sang IndexedDB...');
+      }
+    }
+    
+    // Fallback về IndexedDB
     const count = await this.customers.count();
     return `KH${(count + 1).toString().padStart(4, '0')}`;
   }

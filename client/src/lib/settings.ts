@@ -1,5 +1,7 @@
 // Lưu trữ và quản lý cài đặt của ứng dụng
 import Dexie, { Table } from 'dexie';
+import { supabaseSettingsService } from './supabase-services/settings';
+import { supabase } from './supabase';
 
 // Định nghĩa kiểu dữ liệu cài đặt
 export interface Settings {
@@ -14,7 +16,10 @@ export interface Settings {
   updatedAt: Date;
 }
 
-// Lớp Dexie để lưu trữ cài đặt
+// Kiểm tra xem có kết nối Supabase hay không
+const USE_SUPABASE = true; // Mặc định sử dụng Supabase
+
+// Lớp Dexie để lưu trữ cài đặt cục bộ (fallback)
 class SettingsDatabase extends Dexie {
   settings!: Table<Settings>;
 
@@ -27,6 +32,18 @@ class SettingsDatabase extends Dexie {
 
   // Lấy cài đặt hiện tại
   async getSettings(): Promise<Settings> {
+    // Nếu có kết nối Supabase, sử dụng Supabase
+    if (USE_SUPABASE) {
+      try {
+        const settings = await supabaseSettingsService.getSettings();
+        return settings;
+      } catch (error) {
+        console.error('Lỗi khi lấy cài đặt từ Supabase:', error);
+        console.log('Fallback sang IndexedDB...');
+      }
+    }
+    
+    // Fallback sang IndexedDB nếu không kết nối được Supabase
     const allSettings = await this.settings.toArray();
     
     // Nếu không có cài đặt nào, tạo mới với giá trị mặc định
@@ -52,6 +69,18 @@ class SettingsDatabase extends Dexie {
 
   // Cập nhật cài đặt
   async updateSettings(settings: Partial<Settings>): Promise<void> {
+    // Nếu có kết nối Supabase, sử dụng Supabase
+    if (USE_SUPABASE) {
+      try {
+        await supabaseSettingsService.updateSettings(settings);
+        return;
+      } catch (error) {
+        console.error('Lỗi khi cập nhật cài đặt trên Supabase:', error);
+        console.log('Fallback sang IndexedDB...');
+      }
+    }
+    
+    // Fallback sang IndexedDB
     const currentSettings = await this.getSettings();
     
     // Cập nhật cài đặt với ID hiện tại
@@ -65,6 +94,17 @@ class SettingsDatabase extends Dexie {
 
   // Lưu ảnh dưới dạng base64
   async saveLogoAsBase64(file: File): Promise<string> {
+    // Nếu có kết nối Supabase, sử dụng Supabase
+    if (USE_SUPABASE) {
+      try {
+        return await supabaseSettingsService.saveLogoAsBase64(file);
+      } catch (error) {
+        console.error('Lỗi khi lưu logo trên Supabase:', error);
+        console.log('Fallback sang IndexedDB...');
+      }
+    }
+    
+    // Fallback sang IndexedDB
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
