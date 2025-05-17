@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
+import DatabaseStatus from './DatabaseStatus';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -296,6 +297,7 @@ export default function SettingsPage() {
               <TabsTrigger value="garage">Thông Tin Gara</TabsTrigger>
               <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
               <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
+              <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
             </TabsList>
             
             <TabsContent value="garage" className="space-y-6">
