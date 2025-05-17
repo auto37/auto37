@@ -12,6 +12,7 @@ export interface SupabaseSettings {
   garage_tax_code?: string;
   logo_url?: string;
   icon_color?: string;
+  use_supabase?: boolean;
   updated_at: string;
 }
 
@@ -26,6 +27,7 @@ function mapToSettings(data: SupabaseSettings): Settings {
     garageTaxCode: data.garage_tax_code,
     logoUrl: data.logo_url,
     iconColor: data.icon_color,
+    useSupabase: data.use_supabase,
     updatedAt: new Date(data.updated_at)
   };
 }
@@ -41,6 +43,7 @@ function mapFromSettings(data: Partial<Settings>): Partial<SupabaseSettings> {
   if (data.garageTaxCode !== undefined) result.garage_tax_code = data.garageTaxCode;
   if (data.logoUrl !== undefined) result.logo_url = data.logoUrl;
   if (data.iconColor !== undefined) result.icon_color = data.iconColor;
+  if (data.useSupabase !== undefined) result.use_supabase = data.useSupabase;
   
   return result;
 }

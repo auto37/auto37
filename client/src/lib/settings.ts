@@ -13,13 +13,19 @@ export interface Settings {
   garageTaxCode?: string;
   logoUrl?: string;
   iconColor?: string;
+  useSupabase?: boolean; // Tùy chọn sử dụng Supabase
   updatedAt: Date;
 }
 
-// Kiểm tra xem có kết nối Supabase hay không
+// Kiểm tra xem có thể kết nối Supabase hay không
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
-const USE_SUPABASE = supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0;
+const SUPABASE_AVAILABLE = supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0;
+
+// Kiểm tra cài đặt người dùng về việc sử dụng Supabase (localStorage)
+const userPreference = localStorage.getItem('useSupabase');
+// Chỉ sử dụng Supabase nếu có thể kết nối và người dùng không tắt
+const USE_SUPABASE = SUPABASE_AVAILABLE && (userPreference === null || userPreference === 'true');
 
 // Lớp Dexie để lưu trữ cài đặt cục bộ (fallback)
 class SettingsDatabase extends Dexie {
