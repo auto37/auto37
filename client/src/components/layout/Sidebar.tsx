@@ -42,7 +42,7 @@ export default function Sidebar() {
     >
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         <div className="flex items-center space-x-2 overflow-hidden">
-          <i className="fas fa-car-mechanic text-2xl" style={{ color: iconColor }}></i>
+          <i className="fas fa-car text-2xl" style={{ color: iconColor }}></i>
 
           <h1
             className={`text-xl font-bold text-white truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
