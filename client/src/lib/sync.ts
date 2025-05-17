@@ -76,7 +76,7 @@ const mapToSupabaseFormat = {
   quotations: (quotation: Quotation) => ({
     id: quotation.id,
     code: quotation.code,
-    date_created: quotation.dateCreated.toISOString(),
+    date_created: quotation.dateCreated instanceof Date ? quotation.dateCreated.toISOString() : new Date(quotation.dateCreated).toISOString(),
     customer_id: quotation.customerId,
     vehicle_id: quotation.vehicleId,
     subtotal: quotation.subtotal,
@@ -100,8 +100,9 @@ const mapToSupabaseFormat = {
   repair_orders: (order: RepairOrder) => ({
     id: order.id,
     code: order.code,
-    date_created: order.dateCreated.toISOString(),
-    date_expected: order.dateExpected ? order.dateExpected.toISOString() : null,
+    date_created: order.dateCreated instanceof Date ? order.dateCreated.toISOString() : new Date(order.dateCreated).toISOString(),
+    date_expected: order.dateExpected ? 
+      (order.dateExpected instanceof Date ? order.dateExpected.toISOString() : new Date(order.dateExpected).toISOString()) : null,
     quotation_id: order.quotationId || null,
     customer_id: order.customerId,
     vehicle_id: order.vehicleId,
@@ -129,7 +130,7 @@ const mapToSupabaseFormat = {
   invoices: (invoice: Invoice) => ({
     id: invoice.id,
     code: invoice.code,
-    date_created: invoice.dateCreated.toISOString(),
+    date_created: invoice.dateCreated instanceof Date ? invoice.dateCreated.toISOString() : new Date(invoice.dateCreated).toISOString(),
     repair_order_id: invoice.repairOrderId,
     customer_id: invoice.customerId,
     vehicle_id: invoice.vehicleId,
@@ -340,17 +341,48 @@ class DataSynchronizer {
 
         // Nếu có dữ liệu để đồng bộ
         if (table.data.length > 0) {
-          const dataToSync = table.data.map(item => mapperFunction(item));
-          
-          // Đẩy dữ liệu lên Supabase
-          const { error: insertError } = await supabase.from(table.name).insert(dataToSync);
-          
-          if (insertError) {
-            console.error(`Lỗi khi đồng bộ dữ liệu lên bảng ${table.name}:`, insertError);
+          try {
+            // Xử lý đặc biệt cho mỗi loại bảng
+            let dataToSync;
+            
+            if (table.name === 'customers') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.customers(item as Customer));
+            } else if (table.name === 'vehicles') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.vehicles(item as Vehicle));
+            } else if (table.name === 'inventory_categories') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.inventory_categories(item as InventoryCategory));
+            } else if (table.name === 'inventory_items') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.inventory_items(item as InventoryItem));
+            } else if (table.name === 'services') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.services(item as Service));
+            } else if (table.name === 'quotations') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.quotations(item as Quotation));
+            } else if (table.name === 'quotation_items') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.quotation_items(item as QuotationItem));
+            } else if (table.name === 'repair_orders') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.repair_orders(item as RepairOrder));
+            } else if (table.name === 'repair_order_items') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.repair_order_items(item as RepairOrderItem));
+            } else if (table.name === 'invoices') {
+              dataToSync = table.data.map(item => mapToSupabaseFormat.invoices(item as Invoice));
+            } else {
+              console.error(`Không có xử lý cho bảng ${table.name}`);
+              continue;
+            }
+            
+            // Đẩy dữ liệu lên Supabase
+            const { error: insertError } = await supabase.from(table.name).insert(dataToSync);
+            
+            if (insertError) {
+              console.error(`Lỗi khi đồng bộ dữ liệu lên bảng ${table.name}:`, insertError);
+              continue;
+            }
+            
+            console.log(`Đã đồng bộ ${dataToSync.length} bản ghi lên bảng ${table.name}`);
+          } catch (error) {
+            console.error(`Lỗi khi xử lý dữ liệu cho bảng ${table.name}:`, error);
             continue;
           }
-          
-          console.log(`Đã đồng bộ ${dataToSync.length} bản ghi lên bảng ${table.name}`);
         }
       }
 
@@ -411,8 +443,37 @@ class DataSynchronizer {
           await this.clearLocalTable(tableName);
           
           // Chuyển đổi dữ liệu và thêm vào IndexedDB
-          const localData = data.map(item => mapperFunction(item));
-          await this.addToLocalDb(tableName, localData);
+          try {
+            let localData: any[] = [];
+            if (tableName === 'customers') {
+              localData = data.map(item => mapFromSupabaseFormat.customers(item));
+            } else if (tableName === 'vehicles') {
+              localData = data.map(item => mapFromSupabaseFormat.vehicles(item));
+            } else if (tableName === 'inventory_categories') {
+              localData = data.map(item => mapFromSupabaseFormat.inventory_categories(item));
+            } else if (tableName === 'inventory_items') {
+              localData = data.map(item => mapFromSupabaseFormat.inventory_items(item));
+            } else if (tableName === 'services') {
+              localData = data.map(item => mapFromSupabaseFormat.services(item));
+            } else if (tableName === 'quotations') {
+              localData = data.map(item => mapFromSupabaseFormat.quotations(item));
+            } else if (tableName === 'quotation_items') {
+              localData = data.map(item => mapFromSupabaseFormat.quotation_items(item));
+            } else if (tableName === 'repair_orders') {
+              localData = data.map(item => mapFromSupabaseFormat.repair_orders(item));
+            } else if (tableName === 'repair_order_items') {
+              localData = data.map(item => mapFromSupabaseFormat.repair_order_items(item));
+            } else if (tableName === 'invoices') {
+              localData = data.map(item => mapFromSupabaseFormat.invoices(item));
+            } else {
+              console.error(`Không có xử lý cho bảng ${tableName}`);
+              throw new Error(`Không có xử lý cho bảng ${tableName}`);
+            }
+            await this.addToLocalDb(tableName, localData);
+          } catch (error) {
+            console.error(`Lỗi khi xử lý dữ liệu cho bảng ${tableName}:`, error);
+            throw error;
+          }
           
           console.log(`Đã đồng bộ ${localData.length} bản ghi từ bảng ${tableName} về local`);
         }
