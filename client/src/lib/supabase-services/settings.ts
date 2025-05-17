@@ -90,6 +90,10 @@ export class SupabaseSettingsService {
   
   // Tạo mới cài đặt trong Supabase
   async createSettings(settings: Settings): Promise<void> {
+    if (!supabase) {
+      throw new Error('Không thể kết nối đến Supabase: Thông tin kết nối chưa được cấu hình');
+    }
+    
     try {
       const { error } = await supabase
         .from('settings')
@@ -105,6 +109,10 @@ export class SupabaseSettingsService {
   
   // Cập nhật cài đặt trong Supabase
   async updateSettings(settings: Partial<Settings>): Promise<void> {
+    if (!supabase) {
+      throw new Error('Không thể kết nối đến Supabase: Thông tin kết nối chưa được cấu hình');
+    }
+    
     try {
       // Lấy settings hiện tại trước
       const currentSettings = await this.getSettings();
