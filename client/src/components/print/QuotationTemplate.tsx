@@ -192,7 +192,28 @@ export default function QuotationTemplate({
     <div className={`${isPrintMode || isGeneratingPdf ? 'p-0' : 'p-4 bg-gray-100 min-h-screen'}`}>
       {!(isPrintMode || isGeneratingPdf) && (
         <div className="mb-6 flex justify-end max-w-4xl mx-auto print-hidden">
-          
+          <button
+            onClick={printToPdf}
+            disabled={isGeneratingPdf}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 focus:outline-none"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Đang xuất PDF...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd"></path>
+                </svg>
+                Xuất PDF
+              </>
+            )}
+          </button>
         </div>
       )}
 
