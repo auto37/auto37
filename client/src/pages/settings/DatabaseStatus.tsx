@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { testSupabaseConnection, checkSupabaseTables, createInitialSettings } from '@/lib/test-supabase';
 import { settingsDb } from '@/lib/settings';
+import { dataSynchronizer } from '@/lib/sync';
 import { 
   Card, 
   CardContent, 
@@ -27,7 +28,10 @@ import {
   Database,
   Loader2,
   HardDrive,
-  Cloud
+  Cloud,
+  Upload,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { supabase, isSupabaseInitialized } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
