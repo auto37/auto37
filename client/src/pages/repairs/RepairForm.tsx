@@ -1122,7 +1122,7 @@ export default function RepairForm() {
               </Link>
               <Button 
                 type="submit" 
-                disabled={isLoading || !isValid || repairItems.length === 0}
+                disabled={isLoading || !isValid}
               >
                 {isLoading ? (
                   <>
