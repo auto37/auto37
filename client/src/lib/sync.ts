@@ -14,6 +14,9 @@ import type {
   Invoice
 } from './types';
 
+type TableName = 'customers' | 'vehicles' | 'inventory_categories' | 'inventory_items' 
+  | 'services' | 'quotations' | 'quotation_items' | 'repair_orders' | 'repair_order_items' | 'invoices';
+
 // Chuyển đổi kiểu dữ liệu từ local sang supabase format
 const mapToSupabaseFormat = {
   customers: (customer: Customer) => ({
@@ -299,19 +302,24 @@ class DataSynchronizer {
       return false;
     }
 
+    if (!supabase) {
+      console.error('Không có kết nối Supabase');
+      return false;
+    }
+
     try {
       // Danh sách các bảng cần đồng bộ
       const tables = [
-        { name: 'customers', data: await db.customers.toArray() },
-        { name: 'vehicles', data: await db.vehicles.toArray() },
-        { name: 'inventory_categories', data: await db.inventoryCategories.toArray() },
-        { name: 'inventory_items', data: await db.inventoryItems.toArray() },
-        { name: 'services', data: await db.services.toArray() },
-        { name: 'quotations', data: await db.quotations.toArray() },
-        { name: 'quotation_items', data: await db.quotationItems.toArray() },
-        { name: 'repair_orders', data: await db.repairOrders.toArray() },
-        { name: 'repair_order_items', data: await db.repairOrderItems.toArray() },
-        { name: 'invoices', data: await db.invoices.toArray() },
+        { name: 'customers' as TableName, data: await db.customers.toArray() },
+        { name: 'vehicles' as TableName, data: await db.vehicles.toArray() },
+        { name: 'inventory_categories' as TableName, data: await db.inventoryCategories.toArray() },
+        { name: 'inventory_items' as TableName, data: await db.inventoryItems.toArray() },
+        { name: 'services' as TableName, data: await db.services.toArray() },
+        { name: 'quotations' as TableName, data: await db.quotations.toArray() },
+        { name: 'quotation_items' as TableName, data: await db.quotationItems.toArray() },
+        { name: 'repair_orders' as TableName, data: await db.repairOrders.toArray() },
+        { name: 'repair_order_items' as TableName, data: await db.repairOrderItems.toArray() },
+        { name: 'invoices' as TableName, data: await db.invoices.toArray() },
       ];
 
       // Đồng bộ từng bảng
@@ -332,7 +340,7 @@ class DataSynchronizer {
 
         // Nếu có dữ liệu để đồng bộ
         if (table.data.length > 0) {
-          const dataToSync = table.data.map(mapperFunction);
+          const dataToSync = table.data.map(item => mapperFunction(item));
           
           // Đẩy dữ liệu lên Supabase
           const { error: insertError } = await supabase.from(table.name).insert(dataToSync);
@@ -361,9 +369,14 @@ class DataSynchronizer {
       return false;
     }
 
+    if (!supabase) {
+      console.error('Không có kết nối Supabase');
+      return false;
+    }
+
     try {
       // Danh sách các bảng cần đồng bộ
-      const tables = [
+      const tables: TableName[] = [
         'customers',
         'vehicles',
         'inventory_categories',
@@ -398,7 +411,7 @@ class DataSynchronizer {
           await this.clearLocalTable(tableName);
           
           // Chuyển đổi dữ liệu và thêm vào IndexedDB
-          const localData = data.map(mapperFunction);
+          const localData = data.map(item => mapperFunction(item));
           await this.addToLocalDb(tableName, localData);
           
           console.log(`Đã đồng bộ ${localData.length} bản ghi từ bảng ${tableName} về local`);

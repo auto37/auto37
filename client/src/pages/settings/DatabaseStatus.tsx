@@ -47,11 +47,108 @@ export default function DatabaseStatus() {
   const [useSupabase, setUseSupabase] = useState<boolean>(false);
   const [isSwitchingDatabase, setIsSwitchingDatabase] = useState(false);
   
+  // Trạng thái cho phần đồng bộ dữ liệu
+  const [isSyncingToSupabase, setIsSyncingToSupabase] = useState(false);
+  const [isSyncingFromSupabase, setIsSyncingFromSupabase] = useState(false);
+  
   // Trạng thái cho phần chỉnh sửa thông tin kết nối
   const [showEditCredentials, setShowEditCredentials] = useState<boolean>(false);
   const [supabaseUrl, setSupabaseUrl] = useState<string>('');
   const [supabaseKey, setSupabaseKey] = useState<string>('');
   const [isSavingCredentials, setIsSavingCredentials] = useState<boolean>(false);
+  
+  // Đồng bộ dữ liệu từ IndexedDB lên Supabase
+  const syncToSupabase = async () => {
+    if (!isConnected) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể đồng bộ khi không có kết nối Supabase',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsSyncingToSupabase(true);
+    try {
+      toast({
+        title: 'Đang đồng bộ',
+        description: 'Đang đồng bộ dữ liệu lên Supabase. Vui lòng đợi...',
+      });
+      
+      const success = await dataSynchronizer.syncAllToSupabase();
+      
+      if (success) {
+        toast({
+          title: 'Thành công',
+          description: 'Đã đồng bộ dữ liệu lên Supabase thành công.',
+        });
+      } else {
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại kết nối.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error: any) {
+      console.error('Lỗi đồng bộ dữ liệu:', error);
+      toast({
+        title: 'Lỗi',
+        description: `Không thể đồng bộ dữ liệu: ${error.message || 'Lỗi không xác định'}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSyncingToSupabase(false);
+    }
+  };
+  
+  // Đồng bộ dữ liệu từ Supabase về IndexedDB
+  const syncFromSupabase = async () => {
+    if (!isConnected) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể đồng bộ khi không có kết nối Supabase',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Hiển thị xác nhận vì đây là hành động sẽ ghi đè dữ liệu cục bộ
+    if (!confirm('Dữ liệu cục bộ sẽ bị ghi đè. Bạn có muốn tiếp tục?')) {
+      return;
+    }
+    
+    setIsSyncingFromSupabase(true);
+    try {
+      toast({
+        title: 'Đang đồng bộ',
+        description: 'Đang đồng bộ dữ liệu từ Supabase. Vui lòng đợi...',
+      });
+      
+      const success = await dataSynchronizer.syncAllFromSupabase();
+      
+      if (success) {
+        toast({
+          title: 'Thành công',
+          description: 'Đã đồng bộ dữ liệu từ Supabase thành công.',
+        });
+      } else {
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại kết nối.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error: any) {
+      console.error('Lỗi đồng bộ dữ liệu:', error);
+      toast({
+        title: 'Lỗi',
+        description: `Không thể đồng bộ dữ liệu: ${error.message || 'Lỗi không xác định'}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSyncingFromSupabase(false);
+    }
+  };
   
   // Kiểm tra kết nối và tùy chọn DB khi trang được tải
   useEffect(() => {
@@ -534,6 +631,71 @@ export default function DatabaseStatus() {
               Tất cả các bảng đã được tạo thành công và sẵn sàng sử dụng.
             </AlertDescription>
           </Alert>
+        )}
+        
+        {/* Phần đồng bộ dữ liệu */}
+        {isConnected && Object.values(tableStatus || {}).every(Boolean) && (
+          <div className="mt-6 border rounded-md p-4">
+            <h3 className="text-lg font-medium flex items-center">
+              <RefreshCw className="mr-2 h-5 w-5" />
+              Đồng bộ dữ liệu
+            </h3>
+            
+            <p className="text-sm text-gray-500 mt-1 mb-4">
+              Đồng bộ dữ liệu giữa thiết bị hiện tại và Supabase để sử dụng trên nhiều thiết bị.
+            </p>
+            
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 border rounded-md p-3">
+                <div className="flex items-center mb-2">
+                  <Upload className="h-5 w-5 mr-2 text-blue-600" />
+                  <h4 className="font-medium">Đồng bộ lên Supabase</h4>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Đẩy dữ liệu từ thiết bị này lên Supabase để các thiết bị khác có thể truy cập.
+                </p>
+                <Button 
+                  onClick={syncToSupabase} 
+                  disabled={isSyncingToSupabase || !isConnected}
+                  className="w-full"
+                >
+                  {isSyncingToSupabase ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang đồng bộ...
+                    </>
+                  ) : (
+                    <>Đồng bộ lên Supabase</>
+                  )}
+                </Button>
+              </div>
+              
+              <div className="flex-1 border rounded-md p-3">
+                <div className="flex items-center mb-2">
+                  <Download className="h-5 w-5 mr-2 text-blue-600" />
+                  <h4 className="font-medium">Đồng bộ từ Supabase</h4>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Tải dữ liệu từ Supabase về thiết bị này. Dữ liệu cục bộ hiện tại sẽ bị ghi đè.
+                </p>
+                <Button 
+                  onClick={syncFromSupabase} 
+                  disabled={isSyncingFromSupabase || !isConnected}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {isSyncingFromSupabase ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang đồng bộ...
+                    </>
+                  ) : (
+                    <>Đồng bộ từ Supabase</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
         {/* Phần chuyển đổi loại cơ sở dữ liệu */}
         <div className="mt-6 border rounded-md p-4">
