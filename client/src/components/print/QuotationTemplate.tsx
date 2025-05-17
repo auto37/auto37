@@ -611,7 +611,7 @@ export default function QuotationTemplate({
         </div>
       )}
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html:`
         .quotation-template {
           font-family: 'Helvetica', Arial, sans-serif;
           max-width: 800px;
@@ -621,7 +621,7 @@ export default function QuotationTemplate({
           box-shadow: ${isPrintMode ? 'none' : '0 0 10px rgba(0,0,0,0.1)'};
           background-color: white;
           color: #333;
-        }
+        }`}} />
 
         .print-header {
           display: flex;
@@ -800,7 +800,7 @@ export default function QuotationTemplate({
             display: none;
           }
         }
-      `}</style>
+      `}} />
     </div>
   );
 }

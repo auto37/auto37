@@ -131,8 +131,8 @@ export default function QuotePrint() {
           Quay lại báo giá
         </Button>
         <PrintButton 
-          elementId="invoicePrintTemplate" 
-          fileName={`HoaDon_${quote.code}`}
+          elementId="quotePrintTemplate" 
+          fileName={`BaoGia_${quote.code}`}
           label="Xuất PDF"
         />
        
