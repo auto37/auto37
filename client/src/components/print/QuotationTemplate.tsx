@@ -609,7 +609,7 @@ export default function QuotationTemplate({
             onClick={printToPdf}
             disabled={isGeneratingPdf}
           >
-            {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
+            {isGeneratingPdf ? 'Đang xuất PDF...' : ''}
           </button>
         </div>
       )}

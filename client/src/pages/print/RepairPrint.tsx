@@ -121,6 +121,10 @@ export default function RepairPrint() {
           <i className="fas fa-arrow-left mr-2"></i>
           Quay lại lệnh sửa chữa
         </Button>
+        <PrintButton
+          elementId="repairOrderPrint"
+          fileName={`LenhSuaChua_${repair.code}`}
+          label="In ra PDF"
       </div>
 
       {/* Printable template */}

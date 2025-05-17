@@ -607,7 +607,7 @@ export default function QuyetToanTemplate({
             onClick={printToPdf}
             disabled={isGeneratingPdf}
           >
-            {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
+            {isGeneratingPdf ? 'Đang xuất PDF...' : ''}
           </button>
         </div>
       )}

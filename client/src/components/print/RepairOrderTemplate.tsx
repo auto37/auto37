@@ -606,7 +606,7 @@ export default function RepairOrderTemplate({
             onClick={printToPdf}
             disabled={isGeneratingPdf}
           >
-            {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
+            {isGeneratingPdf ? 'Đang xuất PDF...' : ''}
           </button>
         </div>
       )}

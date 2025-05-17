@@ -133,7 +133,7 @@ export default function QuotePrint() {
         <PrintButton 
           elementId="quotePrintTemplate" 
           fileName={`BaoGia_${quote.code}`}
-          label="Xuất PDF"
+          label="In ra PDF"
         />
        
       </div>
