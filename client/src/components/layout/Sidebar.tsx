@@ -8,7 +8,7 @@ export default function Sidebar() {
   const [iconColor, setIconColor] = useState<string>('#f97316'); // Mặc định màu cam (orange-500)
   const [location] = useLocation();
   
-  // Lấy màu icon từ cài đặt khi component được khởi tạo
+  // Lấy màu icon từ cài đặt khi component được khởi tạo hoặc khi có thay đổi
   useEffect(() => {
     const fetchIconColor = async () => {
       try {
@@ -22,6 +22,14 @@ export default function Sidebar() {
     };
     
     fetchIconColor();
+    
+    // Thiết lập interval để kiểm tra thay đổi trong cài đặt màu sắc
+    const checkSettingsInterval = setInterval(fetchIconColor, 1000);
+    
+    // Cleanup interval khi component unmount
+    return () => {
+      clearInterval(checkSettingsInterval);
+    };
   }, []);
 
   const isActive = (path: string) => {
@@ -34,7 +42,7 @@ export default function Sidebar() {
     >
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         <div className="flex items-center space-x-2 overflow-hidden">
-          <i className="fas fa-car-mechanic text-2xl text-sidebar-primary"></i>
+          <i className="fas fa-car-mechanic text-2xl" style={{ color: iconColor }}></i>
 
           <h1
             className={`text-xl font-bold text-white truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -184,7 +192,7 @@ export default function Sidebar() {
                 isActive("/reports") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-chart-line w-6 text-orange-500"></i>
+              <i className="fas fa-chart-line w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -199,7 +207,7 @@ export default function Sidebar() {
       <div className="border-t border-sidebar-border p-4">
         <Link href="/settings">
           <a className="flex items-center text-gray-400 hover:text-white">
-            <i className="fas fa-cog w-6 text-orange-500"></i>
+            <i className="fas fa-cog w-6" style={{ color: iconColor }}></i>
 
             <span
               className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
