@@ -130,7 +130,11 @@ export default function QuotePrint() {
           <i className="fas fa-arrow-left mr-2"></i>
           Quay lại báo giá
         </Button>
-
+        <PrintButton 
+          elementId="invoicePrintTemplate" 
+          fileName={`HoaDon_${quote.code}`}
+          label="Xuất PDF"
+        />
        
       </div>
 
