@@ -451,6 +451,10 @@ export default function SettingsPage() {
               </div>
             </TabsContent>
             
+            <TabsContent value="database" className="space-y-6">
+              <DatabaseStatus />
+            </TabsContent>
+            
             <TabsContent value="backup" className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Sao Lưu Dữ Liệu</h3>
