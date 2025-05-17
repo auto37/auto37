@@ -125,6 +125,7 @@ export default function RepairPrint() {
           elementId="repairOrderPrint"
           fileName={`LenhSuaChua_${repair.code}`}
           label="In ra PDF"
+        />
       </div>
 
       {/* Printable template */}
