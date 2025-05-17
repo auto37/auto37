@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb } from '@/lib/settings';
 import jsPDF from 'jspdf';
-// Thêm plugin jspdf-autotable
 import 'jspdf-autotable';
 
 // Mở rộng jsPDF để hỗ trợ autoTable
@@ -373,54 +372,54 @@ export default function QuotationTemplate({
   };
 
   return (
-    <div className="quotation-template">
-      <div className="print-header">
-        <div className="garage-info">
-          {logo && <img src={logo} alt="Logo" className="garage-logo" />}
-          <h2>{garageName}</h2>
-          <p>{garageAddress}</p>
-          <p>Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
-          <p>Email: {garageEmail}</p>
+    <div className="bg-white max-w-4xl mx-auto p-6 shadow-md">
+      <div className="flex justify-between mb-6 border-b pb-4">
+        <div>
+          {logo && <img src={logo} alt="Logo" className="h-12 mb-2" />}
+          <h2 className="text-lg font-bold">{garageName}</h2>
+          <p className="text-sm">{garageAddress}</p>
+          <p className="text-sm">Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
+          <p className="text-sm">Email: {garageEmail}</p>
         </div>
-        <div className="invoice-info">
-          <h2>BÁO GIÁ DỊCH VỤ</h2>
-          <p>Số: {invoiceNumber}</p>
-          <p>Ngày: {formatLocalDate(invoiceDate)}</p>
+        <div className="text-right">
+          <h2 className="text-lg font-bold mb-2">BÁO GIÁ DỊCH VỤ</h2>
+          <p className="text-sm">Số: {invoiceNumber}</p>
+          <p className="text-sm">Ngày: {formatLocalDate(invoiceDate)}</p>
         </div>
       </div>
 
-      <div className="customer-vehicle-info">
-        <table>
+      <div className="mb-6">
+        <table className="w-full border-collapse text-sm">
           <tbody>
             <tr>
-              <td className="label">Khách hàng:</td>
-              <td>{customerName}</td>
-              <td className="label">Mã phiếu:</td>
-              <td>{invoiceNumber}</td>
+              <td className="border p-2 bg-gray-100 font-semibold w-32">Khách hàng:</td>
+              <td className="border p-2">{customerName}</td>
+              <td className="border p-2 bg-gray-100 font-semibold w-32">Mã phiếu:</td>
+              <td className="border p-2">{invoiceNumber}</td>
             </tr>
             <tr>
-              <td className="label">Địa chỉ:</td>
-              <td>{customerAddress || '-'}</td>
-              <td className="label">Ngày:</td>
-              <td>{formatLocalDate(invoiceDate)}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Địa chỉ:</td>
+              <td className="border p-2">{customerAddress || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Ngày:</td>
+              <td className="border p-2">{formatLocalDate(invoiceDate)}</td>
             </tr>
             <tr>
-              <td className="label">Biển số:</td>
-              <td>{vehicleLicensePlate}</td>
-              <td className="label">Hãng xe:</td>
-              <td>{vehicleBrand || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Biển số:</td>
+              <td className="border p-2">{vehicleLicensePlate}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Hãng xe:</td>
+              <td className="border p-2">{vehicleBrand || '-'}</td>
             </tr>
             <tr>
-              <td className="label">Loại xe:</td>
-              <td>{vehicleModel || '-'}</td>
-              <td className="label">Số KM:</td>
-              <td>{odometerReading?.toLocaleString() || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Loại xe:</td>
+              <td className="border p-2">{vehicleModel || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Số KM:</td>
+              <td className="border p-2">{odometerReading?.toLocaleString() || '-'}</td>
             </tr>
             <tr>
-              <td className="label">Thợ sửa chữa:</td>
-              <td>{repairTechnician || '-'}</td>
-              <td className="label">Số điện thoại:</td>
-              <td>{customerPhone || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Thợ sửa chữa:</td>
+              <td className="border p-2">{repairTechnician || '-'}</td>
+              <td className="border p-2 bg-gray-100 font-semibold">Số điện thoại:</td>
+              <td className="border p-2">{customerPhone || '-'}</td>
             </tr>
           </tbody>
         </table>
@@ -428,19 +427,19 @@ export default function QuotationTemplate({
 
       {/* Dịch vụ */}
       {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
-        <div className="services-section">
-          <h3>Chi tiết dịch vụ</h3>
-          <table className="items-table">
+        <div className="mb-6">
+          <h3 className="text-base font-semibold mb-2">Chi tiết dịch vụ</h3>
+          <table className="w-full border-collapse text-sm mb-4">
             <thead>
-              <tr>
-                <th>STT</th>
-                <th>Tên dịch vụ</th>
-                <th>ĐVT</th>
-                <th>SL</th>
-                <th>Đơn giá</th>
-                <th>Thành tiền</th>
-                <th>Chiết khấu</th>
-                <th>Thành toán</th>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-left">STT</th>
+                <th className="border p-2 text-left">Tên dịch vụ</th>
+                <th className="border p-2 text-left">ĐVT</th>
+                <th className="border p-2 text-left">SL</th>
+                <th className="border p-2 text-right">Đơn giá</th>
+                <th className="border p-2 text-right">Thành tiền</th>
+                <th className="border p-2 text-right">Chiết khấu</th>
+                <th className="border p-2 text-right">Thành toán</th>
               </tr>
             </thead>
             <tbody>
@@ -448,31 +447,31 @@ export default function QuotationTemplate({
                 .filter(item => item.unit === 'Dịch vụ')
                 .map((item, index) => (
                   <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{item.description}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.quantity}</td>
-                    <td className="number">{item.unitPrice.toLocaleString()}</td>
-                    <td className="number">{item.amount.toLocaleString()}</td>
-                    <td className="number">{(item.discount || 0).toLocaleString()}</td>
-                    <td className="number">{item.total.toLocaleString()}</td>
+                    <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">{item.description}</td>
+                    <td className="border p-2">{item.unit}</td>
+                    <td className="border p-2">{item.quantity}</td>
+                    <td className="border p-2 text-right">{item.unitPrice.toLocaleString()}</td>
+                    <td className="border p-2 text-right">{item.amount.toLocaleString()}</td>
+                    <td className="border p-2 text-right">{(item.discount || 0).toLocaleString()}</td>
+                    <td className="border p-2 text-right">{item.total.toLocaleString()}</td>
                   </tr>
                 ))}
-              <tr className="total-row">
-                <td colSpan={5} className="right">Cộng dịch vụ:</td>
-                <td className="number">
+              <tr className="font-semibold">
+                <td colSpan={5} className="border p-2 text-right bg-gray-100">Cộng dịch vụ:</td>
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit === 'Dịch vụ')
                     .reduce((sum, item) => sum + item.amount, 0)
                     .toLocaleString()}
                 </td>
-                <td className="number">
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit === 'Dịch vụ')
                     .reduce((sum, item) => sum + (item.discount || 0), 0)
                     .toLocaleString()}
                 </td>
-                <td className="number">
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit === 'Dịch vụ')
                     .reduce((sum, item) => sum + item.total, 0)
@@ -486,19 +485,19 @@ export default function QuotationTemplate({
 
       {/* Vật tư */}
       {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
-        <div className="materials-section">
-          <h3>Chi tiết vật tư</h3>
-          <table className="items-table">
+        <div className="mb-6">
+          <h3 className="text-base font-semibold mb-2">Chi tiết vật tư</h3>
+          <table className="w-full border-collapse text-sm mb-4">
             <thead>
-              <tr>
-                <th>STT</th>
-                <th>Tên vật tư</th>
-                <th>ĐVT</th>
-                <th>SL</th>
-                <th>Đơn giá</th>
-                <th>Thành tiền</th>
-                <th>Chiết khấu</th>
-                <th>Thành toán</th>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-left">STT</th>
+                <th className="border p-2 text-left">Tên vật tư</th>
+                <th className="border p-2 text-left">ĐVT</th>
+                <th className="border p-2 text-left">SL</th>
+                <th className="border p-2 text-right">Đơn giá</th>
+                <th className="border p-2 text-right">Thành tiền</th>
+                <th className="border p-2 text-right">Chiết khấu</th>
+                <th className="border p-2 text-right">Thành toán</th>
               </tr>
             </thead>
             <tbody>
@@ -506,31 +505,31 @@ export default function QuotationTemplate({
                 .filter(item => item.unit !== 'Dịch vụ')
                 .map((item, index) => (
                   <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{item.description}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.quantity}</td>
-                    <td className="number">{item.unitPrice.toLocaleString()}</td>
-                    <td className="number">{item.amount.toLocaleString()}</td>
-                    <td className="number">{(item.discount || 0).toLocaleString()}</td>
-                    <td className="number">{item.total.toLocaleString()}</td>
+                    <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">{item.description}</td>
+                    <td className="border p-2">{item.unit}</td>
+                    <td className="border p-2">{item.quantity}</td>
+                    <td className="border p-2 text-right">{item.unitPrice.toLocaleString()}</td>
+                    <td className="border p-2 text-right">{item.amount.toLocaleString()}</td>
+                    <td className="border p-2 text-right">{(item.discount || 0).toLocaleString()}</td>
+                    <td className="border p-2 text-right">{item.total.toLocaleString()}</td>
                   </tr>
                 ))}
-              <tr className="total-row">
-                <td colSpan={5} className="right">Cộng vật tư:</td>
-                <td className="number">
+              <tr className="font-semibold">
+                <td colSpan={5} className="border p-2 text-right bg-gray-100">Cộng vật tư:</td>
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit !== 'Dịch vụ')
                     .reduce((sum, item) => sum + item.amount, 0)
                     .toLocaleString()}
                 </td>
-                <td className="number">
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit !== 'Dịch vụ')
                     .reduce((sum, item) => sum + (item.discount || 0), 0)
                     .toLocaleString()}
                 </td>
-                <td className="number">
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit !== 'Dịch vụ')
                     .reduce((sum, item) => sum + item.total, 0)
@@ -542,13 +541,13 @@ export default function QuotationTemplate({
         </div>
       )}
 
-      <div className="summary-section">
-        <table className="summary-table">
+      <div className="mb-6">
+        <table className="w-full border-collapse text-sm">
           <tbody>
             {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
               <tr>
-                <td className="label">Tổng tiền dịch vụ:</td>
-                <td className="number">
+                <td className="border p-2 bg-gray-100 font-semibold w-40">Tổng tiền dịch vụ:</td>
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit === 'Dịch vụ')
                     .reduce((sum, item) => sum + item.total, 0)
@@ -558,8 +557,8 @@ export default function QuotationTemplate({
             )}
             {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
               <tr>
-                <td className="label">Tổng tiền vật tư:</td>
-                <td className="number">
+                <td className="border p-2 bg-gray-100 font-semibold">Tổng tiền vật tư:</td>
+                <td className="border p-2 text-right">
                   {items
                     .filter(item => item.unit !== 'Dịch vụ')
                     .reduce((sum, item) => sum + item.total, 0)
@@ -569,22 +568,22 @@ export default function QuotationTemplate({
             )}
             {tax !== undefined && tax > 0 && (
               <tr>
-                <td className="label">Thuế VAT:</td>
-                <td className="number">{tax.toLocaleString()}</td>
+                <td className="border p-2 bg-gray-100 font-semibold">Thuế VAT:</td>
+                <td className="border p-2 text-right">{tax.toLocaleString()}</td>
               </tr>
             )}
             {discount !== undefined && discount > 0 && (
               <tr>
-                <td className="label">Chiết khấu:</td>
-                <td className="number">{discount.toLocaleString()}</td>
+                <td className="border p-2 bg-gray-100 font-semibold">Chiết khấu:</td>
+                <td className="border p-2 text-right">{discount.toLocaleString()}</td>
               </tr>
             )}
-            <tr className="total">
-              <td className="label">Phải thanh toán:</td>
-              <td className="number">{total.toLocaleString()}</td>
+            <tr className="text-base font-bold">
+              <td className="border p-2 bg-gray-100">Phải thanh toán:</td>
+              <td className="border p-2 text-right">{total.toLocaleString()}</td>
             </tr>
             <tr>
-              <td colSpan={2} className="words">
+              <td colSpan={2} className="border p-2 bg-gray-50 italic">
                 Bằng chữ: {numberToVietnameseText(total)}
               </td>
             </tr>
@@ -592,215 +591,28 @@ export default function QuotationTemplate({
         </table>
       </div>
 
-      <div className="notes-section">
-        <p className="note">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
-        <p className="note">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
-        {notes && <p className="note">- {notes}</p>}
+      <div className="mb-6 text-sm italic">
+        <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
+        <p className="mb-1">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
+        {notes && <p className="mb-1">- {notes}</p>}
       </div>
 
-      <div className="footer">
-        <p>Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
+      <div className="text-center text-sm">
+        <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
         <p>Liên hệ: {garagePhone} | {garageEmail}</p>
       </div>
 
       {!isPrintMode && (
-        <div className="print-buttons">
-          <button className="print-button" onClick={printToPdf} disabled={isGeneratingPdf}>
+        <div className="mt-6 text-center">
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            onClick={printToPdf}
+            disabled={isGeneratingPdf}
+          >
             {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
           </button>
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{__html:`
-        .quotation-template {
-          font-family: 'Helvetica', Arial, sans-serif;
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 20px;
-          border: ${isPrintMode ? 'none' : '1px solid #ddd'};
-          box-shadow: ${isPrintMode ? 'none' : '0 0 10px rgba(0,0,0,0.1)'};
-          background-color: white;
-          color: #333;
-        }`}} />
-
-        .print-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          border-bottom: 1px solid #eee;
-          padding-bottom: 10px;
-        }
-
-        .garage-logo {
-          max-width: 100px;
-          max-height: 50px;
-          margin-bottom: 10px;
-        }
-
-        .garage-info h2, .invoice-info h2 {
-          margin: 0 0 5px 0;
-          font-size: 16px;
-          font-weight: bold;
-        }
-
-        .garage-info p, .invoice-info p {
-          margin: 2px 0;
-          font-size: 12px;
-        }
-
-        .customer-vehicle-info {
-          margin-bottom: 20px;
-        }
-
-        .customer-vehicle-info table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 12px;
-        }
-
-        .customer-vehicle-info td {
-          padding: 4px;
-          border: 1px solid #ddd;
-        }
-
-        .customer-vehicle-info .label {
-          font-weight: bold;
-          background-color: #f0f0f0;
-          width: 120px;
-        }
-
-        .services-section, .materials-section {
-          margin-bottom: 20px;
-        }
-
-        h3 {
-          font-size: 14px;
-          margin: 10px 0;
-        }
-
-        .items-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 12px;
-          margin-bottom: 20px;
-        }
-
-        .items-table th, .items-table td {
-          padding: 4px;
-          border: 1px solid #ddd;
-          text-align: left;
-        }
-
-        .items-table th {
-          background-color: #f0f0f0;
-          font-weight: bold;
-        }
-
-        .items-table .number {
-          text-align: right;
-        }
-
-        .items-table .right {
-          text-align: right;
-          font-weight: bold;
-          background-color: #f0f0f0;
-        }
-
-        .total-row {
-          font-weight: bold;
-        }
-
-        .summary-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 12px;
-          margin-bottom: 20px;
-        }
-
-        .summary-table td {
-          padding: 4px;
-          border: 1px solid #ddd;
-        }
-
-        .summary-table .label {
-          font-weight: bold;
-          background-color: #f0f0f0;
-          width: 150px;
-        }
-
-        .summary-table .number {
-          text-align: right;
-        }
-
-        .summary-table .total {
-          font-weight: bold;
-          font-size: 14px;
-        }
-
-        .summary-table .words {
-          font-style: italic;
-          padding: 10px;
-          background-color: #f9f9f9;
-        }
-
-        .notes-section {
-          font-size: 11px;
-          margin-bottom: 20px;
-          font-style: italic;
-        }
-
-        .note {
-          margin: 5px 0;
-        }
-
-        .footer {
-          text-align: center;
-          font-size: 12px;
-          margin-top: 20px;
-          padding-top: 10px;
-          border-top: 1px solid #eee;
-        }
-
-        .footer p {
-          margin: 3px 0;
-        }
-
-        .print-buttons {
-          margin-top: 20px;
-          text-align: center;
-        }
-
-        .print-button {
-          background-color: #4CAF50;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          text-align: center;
-          text-decoration: none;
-          display: inline-block;
-          font-size: 14px;
-          margin: 4px 2px;
-          cursor: pointer;
-          border-radius: 4px;
-        }
-
-        .print-button:disabled {
-          background-color: #cccccc;
-          cursor: not-allowed;
-        }
-
-        @media print {
-          .quotation-template {
-            border: none;
-            box-shadow: none;
-            padding: 0;
-          }
-
-          .print-buttons {
-            display: none;
-          }
-        }
-      `}} />
     </div>
   );
 }
