@@ -276,7 +276,7 @@ export default function RepairOrderTemplate({
                 {services.map((item, index) => (
                   <tr key={item.id || index}>
                     <td className="border border-gray-200 p-2 text-center">
-                      {item.stt || index + 1}
+                      {index + 1}
                     </td>
                     <td className="border border-gray-200 p-2">
                       {item.description}
@@ -320,7 +320,7 @@ export default function RepairOrderTemplate({
                 {materials.map((item, index) => (
                   <tr key={item.id || index}>
                     <td className="border border-gray-200 p-2 text-center">
-                      {item.stt || index + 1}
+                      {index + 1}
                     </td>
                     <td className="border border-gray-200 p-2">
                       {item.description}
