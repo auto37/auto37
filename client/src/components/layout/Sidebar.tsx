@@ -174,7 +174,7 @@ export default function Sidebar() {
                 isActive("/invoices") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-receipt w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-file-invoice w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -192,7 +192,7 @@ export default function Sidebar() {
                 isActive("/reports") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-chart-line w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-chart-bar w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
