@@ -10,6 +10,7 @@ export interface Settings {
   garageEmail?: string;
   garageTaxCode?: string;
   logoUrl?: string;
+  iconColor?: string;
   updatedAt: Date;
 }
 
@@ -37,6 +38,7 @@ class SettingsDatabase extends Dexie {
         garageEmail: '',
         garageTaxCode: '',
         logoUrl: '',
+        iconColor: '#f97316', // Màu cam mặc định (orange-500)
         updatedAt: new Date()
       };
       
