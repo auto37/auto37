@@ -19,6 +19,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { 
   AlertCircle,
   Check,
@@ -29,6 +30,7 @@ import {
   Cloud
 } from 'lucide-react';
 import { supabase, isSupabaseInitialized } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export default function DatabaseStatus() {
   const { toast } = useToast();
@@ -41,10 +43,20 @@ export default function DatabaseStatus() {
   const [useSupabase, setUseSupabase] = useState<boolean>(false);
   const [isSwitchingDatabase, setIsSwitchingDatabase] = useState(false);
   
+  // Trạng thái cho phần chỉnh sửa thông tin kết nối
+  const [showEditCredentials, setShowEditCredentials] = useState<boolean>(false);
+  const [supabaseUrl, setSupabaseUrl] = useState<string>('');
+  const [supabaseKey, setSupabaseKey] = useState<string>('');
+  const [isSavingCredentials, setIsSavingCredentials] = useState<boolean>(false);
+  
   // Kiểm tra kết nối và tùy chọn DB khi trang được tải
   useEffect(() => {
     checkConnection();
     loadDatabasePreference();
+    
+    // Khởi tạo giá trị mặc định cho form từ biến môi trường
+    setSupabaseUrl(import.meta.env.VITE_SUPABASE_URL || '');
+    setSupabaseKey(import.meta.env.VITE_SUPABASE_KEY || '');
   }, []);
   
   // Lấy tùy chọn cơ sở dữ liệu từ cài đặt
@@ -166,6 +178,146 @@ export default function DatabaseStatus() {
     }
   };
   
+  // Xử lý khi người dùng lưu thông tin kết nối Supabase
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Kiểm tra đầu vào
+    if (!supabaseUrl || !supabaseKey) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng nhập đầy đủ thông tin kết nối.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Kiểm tra URL hợp lệ
+    try {
+      new URL(supabaseUrl);
+    } catch (error) {
+      toast({
+        title: 'Lỗi',
+        description: 'URL Supabase không hợp lệ. Vui lòng kiểm tra lại.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Kiểm tra API Key có đúng định dạng không
+    if (!supabaseKey.startsWith('eyJ')) {
+      toast({
+        title: 'Cảnh báo',
+        description: 'API Key có vẻ không đúng định dạng. API Key thường bắt đầu bằng "eyJ".',
+        variant: 'default'
+      });
+      // Không dừng lại, chỉ cảnh báo người dùng
+    }
+    
+    setIsSavingCredentials(true);
+    
+    try {
+      // Lưu vào localStorage để sử dụng ngay
+      localStorage.setItem('supabase_url', supabaseUrl);
+      localStorage.setItem('supabase_key', supabaseKey);
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã lưu thông tin kết nối. Hệ thống sẽ kiểm tra kết nối ngay bây giờ.',
+      });
+      
+      // Đóng form
+      setShowEditCredentials(false);
+      
+      // Kiểm tra kết nối với thông tin mới
+      await checkConnectionWithNewCredentials(supabaseUrl, supabaseKey);
+      
+    } catch (error) {
+      console.error('Lỗi khi lưu thông tin kết nối:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể lưu thông tin kết nối. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSavingCredentials(false);
+    }
+  };
+  
+  // Kiểm tra kết nối với thông tin mới
+  const checkConnectionWithNewCredentials = async (url: string, key: string) => {
+    setIsTestingConnection(true);
+    
+    try {
+      toast({
+        title: 'Đang kiểm tra',
+        description: 'Đang thử kết nối với thông tin mới...',
+      });
+      
+      // Tạo client Supabase mới với thông tin vừa nhập
+      const tempClient = createClient(url, key);
+      
+      // Thử truy vấn đơn giản
+      const { error } = await tempClient.from('settings').select('id').limit(1);
+      
+      if (error) {
+        toast({
+          title: 'Lỗi kết nối',
+          description: `Không thể kết nối với thông tin mới: ${error.message}`,
+          variant: 'destructive'
+        });
+        setIsConnected(false);
+        return false;
+      }
+      
+      // Kết nối thành công
+      toast({
+        title: 'Kết nối thành công',
+        description: 'Đã kết nối thành công với Supabase. Vui lòng tải lại trang để áp dụng thay đổi.',
+      });
+      
+      setIsConnected(true);
+      
+      // Kiểm tra các bảng
+      const tables = await checkTablesWithClient(tempClient);
+      setTableStatus(tables);
+      
+      return true;
+    } catch (error: any) {
+      console.error('Lỗi kiểm tra kết nối mới:', error);
+      toast({
+        title: 'Lỗi kết nối',
+        description: `Không thể kết nối: ${error.message || 'Lỗi không xác định'}`,
+        variant: 'destructive'
+      });
+      setIsConnected(false);
+      return false;
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+  
+  // Kiểm tra các bảng với client tạm thời
+  const checkTablesWithClient = async (client: any) => {
+    try {
+      const { data: tables } = await client.rpc('get_tables');
+      const tableNames = ['users', 'settings', 'customers', 'vehicles', 'inventory_categories', 
+                        'inventory_items', 'services', 'quotations', 'quotation_items', 
+                        'repair_orders', 'repair_order_items', 'invoices'];
+      
+      const tableStatus: { [key: string]: boolean } = {};
+      
+      for (const tableName of tableNames) {
+        tableStatus[tableName] = tables.includes(tableName);
+      }
+      
+      return tableStatus;
+    } catch (error) {
+      console.error('Lỗi kiểm tra bảng:', error);
+      return {};
+    }
+  };
+  
   // Hiển thị thông tin kết nối
   const renderConnectionStatus = () => {
     if (isTestingConnection) {
@@ -271,17 +423,92 @@ export default function DatabaseStatus() {
       <CardContent>
         {renderConnectionStatus()}
         
-        <div className="space-y-2">
-          <p className="text-sm text-gray-500">
-            <strong>URL Supabase:</strong> {import.meta.env.VITE_SUPABASE_URL ? 
-              `${import.meta.env.VITE_SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0]}••••••••` : 
-              'Chưa được cấu hình'
-            }
-          </p>
-          <p className="text-sm text-gray-500">
-            <strong>API Key:</strong> {import.meta.env.VITE_SUPABASE_KEY ? '••••••••••••••••••••••••••' : 'Chưa được cấu hình'}
-          </p>
+        <div className="space-y-4 border p-4 rounded-md">
+          <div className="flex items-center justify-between">
+            <h3 className="text-md font-medium">Thông tin kết nối Supabase</h3>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowEditCredentials(true)}
+            >
+              Chỉnh sửa
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500">
+              <strong>URL Supabase:</strong> {import.meta.env.VITE_SUPABASE_URL ? 
+                `${import.meta.env.VITE_SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0]}••••••••` : 
+                'Chưa được cấu hình'
+              }
+            </p>
+            <p className="text-sm text-gray-500">
+              <strong>API Key:</strong> {import.meta.env.VITE_SUPABASE_KEY ? '••••••••••••••••••••••••••' : 'Chưa được cấu hình'}
+            </p>
+          </div>
         </div>
+        
+        {showEditCredentials && (
+          <div className="my-4 border p-4 rounded-md bg-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-md font-medium">Chỉnh sửa thông tin kết nối</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowEditCredentials(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="supabaseUrl">URL Supabase</Label>
+                <Input
+                  id="supabaseUrl"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  placeholder="https://your-project.supabase.co"
+                />
+                <p className="text-xs text-gray-500">
+                  Ví dụ: https://abcdefghijklm.supabase.co
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="supabaseKey">API Key</Label>
+                <Input
+                  id="supabaseKey"
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                  placeholder="eyJhbGci..."
+                  type="password"
+                />
+                <p className="text-xs text-gray-500">
+                  API Key thường bắt đầu bằng "eyJhbGci..."
+                </p>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  disabled={isSavingCredentials}
+                  onClick={() => setShowEditCredentials(false)}
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isSavingCredentials}
+                >
+                  {isSavingCredentials && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Lưu thông tin
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
         
         {renderTableStatus()}
         
