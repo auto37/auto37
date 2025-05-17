@@ -73,6 +73,12 @@ export default function QuoteForm() {
   // State dùng cho form nhập thông tin mới
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState<number>(0);
+  
+  // State cho nhập tay trực tiếp vào bảng
+  const [manualItemType, setManualItemType] = useState<'part' | 'service'>('part');
+  const [manualItemName, setManualItemName] = useState('');
+  const [manualItemQuantity, setManualItemQuantity] = useState<number>(1);
+  const [manualItemPrice, setManualItemPrice] = useState<number>(0);
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isValid }, trigger } = useForm<FormData>({
     resolver: zodResolver(quoteSchema),
@@ -488,6 +494,58 @@ export default function QuoteForm() {
     const updatedItems = [...quoteItems];
     updatedItems.splice(index, 1);
     setQuoteItems(updatedItems);
+  };
+  
+  // Hàm xử lý thêm mục nhập tay trực tiếp vào bảng
+  const handleAddManualItem = () => {
+    // Kiểm tra các giá trị nhập
+    if (!manualItemName.trim()) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng nhập tên mục.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (manualItemQuantity <= 0) {
+      toast({
+        title: 'Lỗi',
+        description: 'Số lượng phải lớn hơn 0.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (manualItemPrice <= 0) {
+      toast({
+        title: 'Lỗi',
+        description: 'Đơn giá phải lớn hơn 0.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Tạo mục mới với ID tạm thời là -1 (không liên kết với kho)
+    const newItem: QuoteItemForm = {
+      type: manualItemType,
+      itemId: -1, // ID = -1 để đánh dấu là mục nhập tay
+      name: manualItemName,
+      quantity: manualItemQuantity,
+      unitPrice: manualItemPrice,
+      total: manualItemPrice * manualItemQuantity
+    };
+    
+    // Thêm vào danh sách và làm mới form nhập
+    setQuoteItems([...quoteItems, newItem]);
+    setManualItemName('');
+    setManualItemQuantity(1);
+    setManualItemPrice(0);
+    
+    toast({
+      title: 'Thành công',
+      description: 'Đã thêm mục mới vào báo giá.',
+    });
   };
 
   const handleUpdateItemQuantity = (index: number, newQuantity: number) => {
@@ -915,25 +973,27 @@ export default function QuoteForm() {
 
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Danh Sách Vật Tư & Dịch Vụ</h3>
-                    {quoteItems.length === 0 ? (
-                      <div className="text-center py-10 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500">Chưa có vật tư hoặc dịch vụ nào trong báo giá</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Loại</TableHead>
+                            <TableHead>Tên</TableHead>
+                            <TableHead>Đơn Giá</TableHead>
+                            <TableHead className="w-24">Số Lượng</TableHead>
+                            <TableHead>Thành Tiền</TableHead>
+                            <TableHead className="text-right">Thao Tác</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {quoteItems.length === 0 ? (
                             <TableRow>
-                              <TableHead>Loại</TableHead>
-                              <TableHead>Tên</TableHead>
-                              <TableHead>Đơn Giá</TableHead>
-                              <TableHead className="w-24">Số Lượng</TableHead>
-                              <TableHead>Thành Tiền</TableHead>
-                              <TableHead className="text-right">Thao Tác</TableHead>
+                              <TableCell colSpan={6} className="text-center py-4">
+                                <p className="text-gray-500">Chưa có vật tư hoặc dịch vụ nào trong báo giá</p>
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {quoteItems.map((item, index) => (
+                          ) : (
+                            quoteItems.map((item, index) => (
                               <TableRow key={index}>
                                 <TableCell>
                                   {item.type === 'part' ? 'Vật tư' : 'Dịch vụ'}
@@ -962,11 +1022,68 @@ export default function QuoteForm() {
                                   </Button>
                                 </TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
+                            ))
+                          )}
+                          {/* Dòng nhập tay trực tiếp vào bảng */}
+                          <TableRow className="bg-gray-50">
+                            <TableCell>
+                              <Select
+                                value={manualItemType}
+                                onValueChange={(value) => setManualItemType(value as 'part' | 'service')}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Loại" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="part">Vật tư</SelectItem>
+                                  <SelectItem value="service">Dịch vụ</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="text"
+                                placeholder="Nhập tên"
+                                value={manualItemName}
+                                onChange={(e) => setManualItemName(e.target.value)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="Đơn giá"
+                                value={manualItemPrice || ''}
+                                onChange={(e) => setManualItemPrice(parseFloat(e.target.value) || 0)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={manualItemQuantity || 1}
+                                onChange={(e) => setManualItemQuantity(parseInt(e.target.value) || 1)}
+                                className="w-20"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {formatCurrency((manualItemPrice || 0) * (manualItemQuantity || 1))}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddManualItem}
+                                className="text-green-600 hover:text-green-800"
+                                disabled={!manualItemName.trim() || manualItemPrice <= 0 || manualItemQuantity <= 0}
+                              >
+                                <i className="fas fa-plus mr-1"></i> Thêm
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
 
                     <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                       <h3 className="text-lg font-semibold mb-2">Tổng Cộng</h3>
