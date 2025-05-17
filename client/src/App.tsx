@@ -53,7 +53,7 @@ function App() {
           {/* Các trang chính với Layout */}
           <Route path="/:rest*">
             {params => (
-              !params.rest?.startsWith("auth/") && (
+              !params["rest*"]?.startsWith("auth/") && (
                 <Layout>
                   <Switch>
                     <Route path="/" component={Dashboard} />
