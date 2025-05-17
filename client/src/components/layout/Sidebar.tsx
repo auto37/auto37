@@ -66,7 +66,7 @@ export default function Sidebar() {
             <a
               className={isActive("/") ? "sidebar-link-active" : "sidebar-link"}
             >
-              <i className="fas fa-tachometer-alt w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-gauge w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -102,7 +102,7 @@ export default function Sidebar() {
                 isActive("/inventory") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-boxes-stacked w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-box w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -120,7 +120,7 @@ export default function Sidebar() {
                 isActive("/services") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-screwdriver-wrench w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-wrench w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -138,7 +138,7 @@ export default function Sidebar() {
                 isActive("/quotes") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-file-invoice-dollar w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-file w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -156,7 +156,7 @@ export default function Sidebar() {
                 isActive("/repairs") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-clipboard-list w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-clipboard w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
