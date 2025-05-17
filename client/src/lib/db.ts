@@ -29,6 +29,12 @@ class GarageDexie extends Dexie {
   repairOrderItems!: Table<RepairOrderItem>;
   invoices!: Table<Invoice>;
 
+  // Sự kiện thay đổi dữ liệu
+  private triggerDataChange() {
+    // Phát sự kiện thay đổi dữ liệu để đồng bộ với Supabase
+    window.dispatchEvent(new CustomEvent('data-changed'));
+  }
+
   constructor() {
     super('garageDatabase');
     
@@ -130,6 +136,177 @@ class GarageDexie extends Dexie {
 }
 
 export const db = new GarageDexie();
+
+// Hook vào sự kiện thêm, sửa, xóa để kích hoạt đồng bộ dữ liệu
+// Khách hàng
+db.customers.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.customers.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.customers.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Xe
+db.vehicles.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.vehicles.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.vehicles.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Danh mục kho
+db.inventoryCategories.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.inventoryCategories.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.inventoryCategories.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Vật tư phụ tùng
+db.inventoryItems.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.inventoryItems.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.inventoryItems.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Dịch vụ
+db.services.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.services.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.services.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Báo giá
+db.quotations.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.quotations.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.quotations.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Chi tiết báo giá
+db.quotationItems.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.quotationItems.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.quotationItems.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Lệnh sửa chữa
+db.repairOrders.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.repairOrders.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.repairOrders.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Chi tiết lệnh sửa chữa
+db.repairOrderItems.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.repairOrderItems.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.repairOrderItems.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+
+// Hóa đơn
+db.invoices.hook('creating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.invoices.hook('updating', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
+db.invoices.hook('deleting', function() {
+  this.onsuccess = function() {
+    db.triggerDataChange();
+  };
+});
 
 // Initialize some sample data for development if needed
 const initializeData = async () => {
