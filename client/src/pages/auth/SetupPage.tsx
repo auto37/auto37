@@ -41,13 +41,29 @@ export function SetupPage() {
   const [, setLocation] = useLocation();
 
   // Sử dụng React Query để tạo tài khoản admin
-  const setupMutation = useMutation({
+  const setupMutation = useMutation<any, Error, SetupAdminData>({
     mutationFn: async (data: SetupAdminData) => {
-      return apiRequest<any>({
-        url: "/api/setup/admin",
-        method: "POST",
-        body: data,
-      });
+      try {
+        const response = await fetch("/api/setup/admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Tạo tài khoản thất bại");
+        }
+        
+        return await response.json();
+      } catch (error) {
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("Đã xảy ra lỗi khi tạo tài khoản admin");
+      }
     },
     onSuccess: () => {
       setIsLoading(false);
