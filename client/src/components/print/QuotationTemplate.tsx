@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb } from '@/lib/settings';
 import jsPDF from 'jspdf';
-// @ts-ignore
+// Thêm plugin jspdf-autotable
 import 'jspdf-autotable';
+
+// Mở rộng jsPDF để hỗ trợ autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+    lastAutoTable: any;
+  }
+}
 
 interface QuotationItem {
   description: string;
@@ -188,7 +196,6 @@ export default function QuotationTemplate({
       checkPageBreak(40);
 
       // Customer and Vehicle Info Table
-      // @ts-ignore - autoTable is provided by jspdf-autotable plugin
       pdf.autoTable({
         startY: yPosition,
         body: [
@@ -212,7 +219,6 @@ export default function QuotationTemplate({
         pdf.text('Chi tiết dịch vụ', margin, yPosition);
         yPosition += 5;
 
-        // @ts-ignore - autoTable is provided by jspdf-autotable plugin
         pdf.autoTable({
           startY: yPosition,
           head: [['STT', 'Tên dịch vụ', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
@@ -257,7 +263,6 @@ export default function QuotationTemplate({
         pdf.text('Chi tiết vật tư', margin, yPosition);
         yPosition += 5;
 
-        // @ts-ignore - autoTable is provided by jspdf-autotable plugin
         pdf.autoTable({
           startY: yPosition,
           head: [['STT', 'Tên vật tư', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
@@ -311,7 +316,6 @@ export default function QuotationTemplate({
       }
       summaryData.push(['Phải thanh toán:', total.toLocaleString()]);
 
-      // @ts-ignore - autoTable is provided by jspdf-autotable plugin
       pdf.autoTable({
         startY: yPosition,
         body: summaryData,
@@ -367,4 +371,436 @@ export default function QuotationTemplate({
       setIsGeneratingPdf(false);
     }
   };
+
+  return (
+    <div className="quotation-template">
+      <div className="print-header">
+        <div className="garage-info">
+          {logo && <img src={logo} alt="Logo" className="garage-logo" />}
+          <h2>{garageName}</h2>
+          <p>{garageAddress}</p>
+          <p>Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
+          <p>Email: {garageEmail}</p>
+        </div>
+        <div className="invoice-info">
+          <h2>BÁO GIÁ DỊCH VỤ</h2>
+          <p>Số: {invoiceNumber}</p>
+          <p>Ngày: {formatLocalDate(invoiceDate)}</p>
+        </div>
+      </div>
+
+      <div className="customer-vehicle-info">
+        <table>
+          <tbody>
+            <tr>
+              <td className="label">Khách hàng:</td>
+              <td>{customerName}</td>
+              <td className="label">Mã phiếu:</td>
+              <td>{invoiceNumber}</td>
+            </tr>
+            <tr>
+              <td className="label">Địa chỉ:</td>
+              <td>{customerAddress || '-'}</td>
+              <td className="label">Ngày:</td>
+              <td>{formatLocalDate(invoiceDate)}</td>
+            </tr>
+            <tr>
+              <td className="label">Biển số:</td>
+              <td>{vehicleLicensePlate}</td>
+              <td className="label">Hãng xe:</td>
+              <td>{vehicleBrand || '-'}</td>
+            </tr>
+            <tr>
+              <td className="label">Loại xe:</td>
+              <td>{vehicleModel || '-'}</td>
+              <td className="label">Số KM:</td>
+              <td>{odometerReading?.toLocaleString() || '-'}</td>
+            </tr>
+            <tr>
+              <td className="label">Thợ sửa chữa:</td>
+              <td>{repairTechnician || '-'}</td>
+              <td className="label">Số điện thoại:</td>
+              <td>{customerPhone || '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Dịch vụ */}
+      {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
+        <div className="services-section">
+          <h3>Chi tiết dịch vụ</h3>
+          <table className="items-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Tên dịch vụ</th>
+                <th>ĐVT</th>
+                <th>SL</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+                <th>Chiết khấu</th>
+                <th>Thành toán</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items
+                .filter(item => item.unit === 'Dịch vụ')
+                .map((item, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{item.description}</td>
+                    <td>{item.unit}</td>
+                    <td>{item.quantity}</td>
+                    <td className="number">{item.unitPrice.toLocaleString()}</td>
+                    <td className="number">{item.amount.toLocaleString()}</td>
+                    <td className="number">{(item.discount || 0).toLocaleString()}</td>
+                    <td className="number">{item.total.toLocaleString()}</td>
+                  </tr>
+                ))}
+              <tr className="total-row">
+                <td colSpan={5} className="right">Cộng dịch vụ:</td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit === 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.amount, 0)
+                    .toLocaleString()}
+                </td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit === 'Dịch vụ')
+                    .reduce((sum, item) => sum + (item.discount || 0), 0)
+                    .toLocaleString()}
+                </td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit === 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.total, 0)
+                    .toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Vật tư */}
+      {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
+        <div className="materials-section">
+          <h3>Chi tiết vật tư</h3>
+          <table className="items-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Tên vật tư</th>
+                <th>ĐVT</th>
+                <th>SL</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+                <th>Chiết khấu</th>
+                <th>Thành toán</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items
+                .filter(item => item.unit !== 'Dịch vụ')
+                .map((item, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{item.description}</td>
+                    <td>{item.unit}</td>
+                    <td>{item.quantity}</td>
+                    <td className="number">{item.unitPrice.toLocaleString()}</td>
+                    <td className="number">{item.amount.toLocaleString()}</td>
+                    <td className="number">{(item.discount || 0).toLocaleString()}</td>
+                    <td className="number">{item.total.toLocaleString()}</td>
+                  </tr>
+                ))}
+              <tr className="total-row">
+                <td colSpan={5} className="right">Cộng vật tư:</td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit !== 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.amount, 0)
+                    .toLocaleString()}
+                </td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit !== 'Dịch vụ')
+                    .reduce((sum, item) => sum + (item.discount || 0), 0)
+                    .toLocaleString()}
+                </td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit !== 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.total, 0)
+                    .toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="summary-section">
+        <table className="summary-table">
+          <tbody>
+            {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
+              <tr>
+                <td className="label">Tổng tiền dịch vụ:</td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit === 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.total, 0)
+                    .toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
+              <tr>
+                <td className="label">Tổng tiền vật tư:</td>
+                <td className="number">
+                  {items
+                    .filter(item => item.unit !== 'Dịch vụ')
+                    .reduce((sum, item) => sum + item.total, 0)
+                    .toLocaleString()}
+                </td>
+              </tr>
+            )}
+            {tax !== undefined && tax > 0 && (
+              <tr>
+                <td className="label">Thuế VAT:</td>
+                <td className="number">{tax.toLocaleString()}</td>
+              </tr>
+            )}
+            {discount !== undefined && discount > 0 && (
+              <tr>
+                <td className="label">Chiết khấu:</td>
+                <td className="number">{discount.toLocaleString()}</td>
+              </tr>
+            )}
+            <tr className="total">
+              <td className="label">Phải thanh toán:</td>
+              <td className="number">{total.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="words">
+                Bằng chữ: {numberToVietnameseText(total)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="notes-section">
+        <p className="note">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
+        <p className="note">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
+        {notes && <p className="note">- {notes}</p>}
+      </div>
+
+      <div className="footer">
+        <p>Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
+        <p>Liên hệ: {garagePhone} | {garageEmail}</p>
+      </div>
+
+      {!isPrintMode && (
+        <div className="print-buttons">
+          <button className="print-button" onClick={printToPdf} disabled={isGeneratingPdf}>
+            {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
+          </button>
+        </div>
+      )}
+
+      <style jsx>{`
+        .quotation-template {
+          font-family: 'Helvetica', Arial, sans-serif;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+          border: ${isPrintMode ? 'none' : '1px solid #ddd'};
+          box-shadow: ${isPrintMode ? 'none' : '0 0 10px rgba(0,0,0,0.1)'};
+          background-color: white;
+          color: #333;
+        }
+
+        .print-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 10px;
+        }
+
+        .garage-logo {
+          max-width: 100px;
+          max-height: 50px;
+          margin-bottom: 10px;
+        }
+
+        .garage-info h2, .invoice-info h2 {
+          margin: 0 0 5px 0;
+          font-size: 16px;
+          font-weight: bold;
+        }
+
+        .garage-info p, .invoice-info p {
+          margin: 2px 0;
+          font-size: 12px;
+        }
+
+        .customer-vehicle-info {
+          margin-bottom: 20px;
+        }
+
+        .customer-vehicle-info table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+
+        .customer-vehicle-info td {
+          padding: 4px;
+          border: 1px solid #ddd;
+        }
+
+        .customer-vehicle-info .label {
+          font-weight: bold;
+          background-color: #f0f0f0;
+          width: 120px;
+        }
+
+        .services-section, .materials-section {
+          margin-bottom: 20px;
+        }
+
+        h3 {
+          font-size: 14px;
+          margin: 10px 0;
+        }
+
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+          margin-bottom: 20px;
+        }
+
+        .items-table th, .items-table td {
+          padding: 4px;
+          border: 1px solid #ddd;
+          text-align: left;
+        }
+
+        .items-table th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+
+        .items-table .number {
+          text-align: right;
+        }
+
+        .items-table .right {
+          text-align: right;
+          font-weight: bold;
+          background-color: #f0f0f0;
+        }
+
+        .total-row {
+          font-weight: bold;
+        }
+
+        .summary-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+          margin-bottom: 20px;
+        }
+
+        .summary-table td {
+          padding: 4px;
+          border: 1px solid #ddd;
+        }
+
+        .summary-table .label {
+          font-weight: bold;
+          background-color: #f0f0f0;
+          width: 150px;
+        }
+
+        .summary-table .number {
+          text-align: right;
+        }
+
+        .summary-table .total {
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        .summary-table .words {
+          font-style: italic;
+          padding: 10px;
+          background-color: #f9f9f9;
+        }
+
+        .notes-section {
+          font-size: 11px;
+          margin-bottom: 20px;
+          font-style: italic;
+        }
+
+        .note {
+          margin: 5px 0;
+        }
+
+        .footer {
+          text-align: center;
+          font-size: 12px;
+          margin-top: 20px;
+          padding-top: 10px;
+          border-top: 1px solid #eee;
+        }
+
+        .footer p {
+          margin: 3px 0;
+        }
+
+        .print-buttons {
+          margin-top: 20px;
+          text-align: center;
+        }
+
+        .print-button {
+          background-color: #4CAF50;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 14px;
+          margin: 4px 2px;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+
+        .print-button:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
+        }
+
+        @media print {
+          .quotation-template {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+          }
+
+          .print-buttons {
+            display: none;
+          }
+        }
+      `}</style>
+    </div>
+  );
 }
