@@ -2,12 +2,81 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb } from '@/lib/settings';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Import jspdf-autotable for table rendering
+// @ts-ignore
+import 'jspdf-autotable';
 
-// ... (Keep your existing interfaces and numberToVietnameseText function unchanged)
+interface QuotationItem {
+  description: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  discount?: number;
+  total: number;
+}
 
-// Add this to your imports at the top
-import autoTable from 'jspdf-autotable';
+interface QuotationTemplateProps {
+  customerName: string;
+  customerAddress?: string;
+  customerPhone?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleLicensePlate: string;
+  invoiceNumber: string;
+  invoiceDate: Date;
+  repairTechnician?: string;
+  odometerReading?: number;
+  items: QuotationItem[];
+  subtotal: number;
+  tax?: number;
+  discount?: number;
+  total: number;
+  notes?: string;
+  isPrintMode?: boolean;
+}
+
+const numberToVietnameseText = (number: number): string => {
+  if (number < 0) return 'Số âm không hợp lệ';
+  const units = ['', 'nghìn', 'triệu', 'tỷ'];
+  const numbers = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+
+  const readThreeDigits = (num: number): string => {
+    const hundreds = Math.floor(num / 100);
+    const tens = Math.floor((num % 100) / 10);
+    const ones = num % 10;
+    let str = '';
+    if (hundreds > 0) str += `${numbers[hundreds]} trăm `;
+    if (tens > 1) {
+      str += `${numbers[tens]} mươi `;
+      if (ones > 0) str += numbers[ones];
+    } else if (tens === 1) {
+      str += 'mười ';
+      if (ones > 0) str += numbers[ones];
+    } else if (ones > 0) {
+      str += numbers[ones];
+    } else if (str === '' && num === 0) {
+      str = numbers[0];
+    }
+    return str.trim();
+  };
+
+  if (number === 0) return 'Không đồng';
+  let str = '';
+  let unitIndex = 0;
+  while (number > 0) {
+    const threeDigits = number % 1000;
+    if (threeDigits > 0) {
+      const threeDigitsStr = readThreeDigits(threeDigits);
+      if (threeDigitsStr) {
+        str = `${threeDigitsStr} ${units[unitIndex]} ${str}`.trim();
+      }
+    }
+    number = Math.floor(number / 1000);
+    unitIndex++;
+  }
+  str = `${str} đồng`.replace(/\s+/g, ' ');
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
 export default function QuotationTemplate({
   customerName,
@@ -119,7 +188,8 @@ export default function QuotationTemplate({
       checkPageBreak(40);
 
       // Customer and Vehicle Info Table
-      autoTable(pdf, {
+      // @ts-ignore - autoTable is provided by jspdf-autotable plugin
+      pdf.autoTable({
         startY: yPosition,
         body: [
           ['Khách hàng:', customerName, 'Mã phiếu:', invoiceNumber],
@@ -142,7 +212,8 @@ export default function QuotationTemplate({
         pdf.text('Chi tiết dịch vụ', margin, yPosition);
         yPosition += 5;
 
-        autoTable(pdf, {
+        // @ts-ignore - autoTable is provided by jspdf-autotable plugin
+        pdf.autoTable({
           startY: yPosition,
           head: [['STT', 'Tên dịch vụ', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
           body: [
@@ -186,7 +257,8 @@ export default function QuotationTemplate({
         pdf.text('Chi tiết vật tư', margin, yPosition);
         yPosition += 5;
 
-        autoTable(pdf, {
+        // @ts-ignore - autoTable is provided by jspdf-autotable plugin
+        pdf.autoTable({
           startY: yPosition,
           head: [['STT', 'Tên vật tư', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
           body: [
@@ -239,7 +311,8 @@ export default function QuotationTemplate({
       }
       summaryData.push(['Phải thanh toán:', total.toLocaleString()]);
 
-      autoTable(pdf, {
+      // @ts-ignore - autoTable is provided by jspdf-autotable plugin
+      pdf.autoTable({
         startY: yPosition,
         body: summaryData,
         theme: 'grid',
@@ -294,6 +367,4 @@ export default function QuotationTemplate({
       setIsGeneratingPdf(false);
     }
   };
-
-  // ... (Keep the rest of your component JSX unchanged, as it remains the same for display purposes)
 }
