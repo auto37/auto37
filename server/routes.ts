@@ -1,15 +1,297 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertUserSchema } from "@shared/schema";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import session from "express-session";
+import { z } from "zod";
+
+// Type định nghĩa cho người dùng đã xác thực
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      username: string;
+      fullName: string;
+      role: string;
+    }
+  }
+}
+
+// Hàm khởi tạo passport
+function initializePassport(app: Express) {
+  // Sử dụng Local Strategy để xác thực người dùng
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          return done(null, false, { message: "Tài khoản không tồn tại" });
+        }
+
+        const isValid = await storage.validatePassword(user, password);
+        if (!isValid) {
+          return done(null, false, { message: "Mật khẩu không chính xác" });
+        }
+
+        // Cập nhật thời gian đăng nhập cuối
+        await storage.updateUser(user.id, { lastLogin: new Date() });
+
+        // Chỉ trả về thông tin cần thiết, không bao gồm password
+        return done(null, {
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName,
+          role: user.role
+        });
+      } catch (error) {
+        return done(error);
+      }
+    })
+  );
+
+  // Lưu thông tin người dùng vào session
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  // Lấy thông tin người dùng từ session
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(null, false);
+      }
+      
+      // Chỉ trả về thông tin cần thiết
+      done(null, {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        role: user.role
+      });
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  // Cấu hình session
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "your-secret-key",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 1 ngày
+        secure: process.env.NODE_ENV === "production"
+      }
+    })
+  );
+
+  // Khởi tạo Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+}
+
+// Middleware kiểm tra quyền admin
+function isAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Chưa đăng nhập" });
+  }
+
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Không có quyền thực hiện" });
+  }
+
+  next();
+}
+
+// Middleware kiểm tra đã đăng nhập
+function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Chưa đăng nhập" });
+  }
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Khởi tạo Passport
+  initializePassport(app);
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Endpoint đăng nhập
+  app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
+    res.json({ 
+      success: true, 
+      user: req.user 
+    });
+  });
+
+  // Endpoint đăng xuất
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Lỗi khi đăng xuất" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Endpoint kiểm tra trạng thái đăng nhập
+  app.get("/api/auth/status", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({ 
+        isAuthenticated: true, 
+        user: req.user 
+      });
+    } else {
+      res.json({ isAuthenticated: false });
+    }
+  });
+
+  // Endpoint đăng ký người dùng mới (chỉ admin)
+  app.post("/api/users", isAdmin, async (req, res) => {
+    try {
+      // Validate dữ liệu đầu vào
+      const userSchema = insertUserSchema.extend({
+        confirmPassword: z.string()
+      }).refine((data) => data.password === data.confirmPassword, {
+        message: "Mật khẩu xác nhận không khớp",
+        path: ["confirmPassword"],
+      });
+      
+      const userData = userSchema.parse(req.body);
+      
+      // Kiểm tra xem username đã tồn tại chưa
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Tên đăng nhập đã tồn tại" });
+      }
+      
+      // Tạo người dùng mới
+      const newUser = await storage.createUser(userData);
+      
+      // Không trả về mật khẩu
+      const { password, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Lỗi khi tạo người dùng:", error);
+        res.status(500).json({ error: "Lỗi khi tạo người dùng" });
+      }
+    }
+  });
+
+  // Endpoint lấy danh sách người dùng (chỉ admin)
+  app.get("/api/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.listUsers();
+      // Loại bỏ password khỏi response
+      const safeUsers = users.map(({ password, ...user }) => user);
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách người dùng:", error);
+      res.status(500).json({ error: "Lỗi khi lấy danh sách người dùng" });
+    }
+  });
+
+  // Endpoint cập nhật thông tin người dùng
+  app.put("/api/users/:id", isAuthenticated, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    
+    // Chỉ admin hoặc chính người dùng đó mới có thể cập nhật
+    if (req.user?.id !== userId && req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Không có quyền thực hiện" });
+    }
+    
+    try {
+      const updateData = req.body;
+      
+      // Nếu không phải admin mà cố thay đổi role
+      if (req.user?.role !== "admin" && updateData.role) {
+        delete updateData.role;
+      }
+      
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Không tìm thấy người dùng" });
+      }
+      
+      // Không trả về mật khẩu
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật người dùng:", error);
+      res.status(500).json({ error: "Lỗi khi cập nhật người dùng" });
+    }
+  });
+
+  // Endpoint xóa người dùng (chỉ admin)
+  app.delete("/api/users/:id", isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    
+    // Không cho phép xóa chính mình
+    if (req.user?.id === userId) {
+      return res.status(400).json({ error: "Không thể xóa tài khoản đang sử dụng" });
+    }
+    
+    try {
+      const success = await storage.deleteUser(userId);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Không tìm thấy người dùng" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Lỗi khi xóa người dùng:", error);
+      res.status(500).json({ error: "Lỗi khi xóa người dùng" });
+    }
+  });
+
+  // Endpoint tạo tài khoản admin đầu tiên (chỉ sử dụng nếu chưa có admin nào)
+  app.post("/api/setup/admin", async (req, res) => {
+    try {
+      // Kiểm tra xem đã có admin nào chưa
+      const users = await storage.listUsers();
+      const adminExists = users.some(user => user.role === "admin");
+      
+      if (adminExists) {
+        return res.status(400).json({ error: "Admin đã tồn tại" });
+      }
+      
+      // Validate dữ liệu đầu vào
+      const adminSchema = insertUserSchema.extend({
+        confirmPassword: z.string()
+      }).refine((data) => data.password === data.confirmPassword, {
+        message: "Mật khẩu xác nhận không khớp",
+        path: ["confirmPassword"],
+      });
+      
+      const adminData = adminSchema.parse(req.body);
+      
+      // Tạo tài khoản admin
+      const admin = await storage.createUser({
+        ...adminData,
+        role: "admin"
+      });
+      
+      // Không trả về mật khẩu
+      const { password, ...adminWithoutPassword } = admin;
+      res.status(201).json(adminWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Lỗi khi tạo tài khoản admin:", error);
+        res.status(500).json({ error: "Lỗi khi tạo tài khoản admin" });
+      }
+    }
+  });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }

@@ -30,7 +30,7 @@ class GarageDexie extends Dexie {
   invoices!: Table<Invoice>;
 
   // Sự kiện thay đổi dữ liệu
-  private triggerDataChange() {
+  triggerDataChange() {
     // Phát sự kiện thay đổi dữ liệu để đồng bộ với Supabase
     window.dispatchEvent(new CustomEvent('data-changed'));
   }

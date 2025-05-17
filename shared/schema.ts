@@ -2,16 +2,26 @@ import { pgTable, text, serial, integer, boolean, timestamp, real, date } from "
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Base User schema - maintained for compatibility
+// User schema with roles and status
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  fullName: text("full_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  role: text("role").notNull().default("user"), // "admin", "user", "technician", "manager"
+  isActive: boolean("is_active").notNull().default(true),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  lastLogin: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
