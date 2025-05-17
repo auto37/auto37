@@ -25,7 +25,7 @@ import { formatCurrency } from '@/lib/utils';
 
 const quoteItemSchema = z.object({
   type: z.enum(['part', 'service']),
-  itemId: z.number().int().positive(),
+  itemId: z.number().int(), // Cho phép itemId = -1 cho mục nhập tay
   name: z.string().min(1),
   quantity: z.number().int().positive(),
   unitPrice: z.number().positive(),
