@@ -20,7 +20,7 @@ export interface IStorage {
 
 // Kết nối đến cơ sở dữ liệu Postgres từ Supabase
 const sql = neon(process.env.DATABASE_URL || "");
-export const db = drizzle(sql);
+export const db = drizzle(sql, { logger: true });
 
 // Lớp quản lý người dùng trong Postgres
 export class PostgresStorage implements IStorage {
