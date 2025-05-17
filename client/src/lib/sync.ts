@@ -443,6 +443,7 @@ class DataSynchronizer {
           await this.clearLocalTable(tableName);
           
           // Chuyển đổi dữ liệu và thêm vào IndexedDB
+          let dataCount = 0;
           try {
             let localData: any[] = [];
             if (tableName === 'customers') {
@@ -470,12 +471,12 @@ class DataSynchronizer {
               throw new Error(`Không có xử lý cho bảng ${tableName}`);
             }
             await this.addToLocalDb(tableName, localData);
+            dataCount = localData.length;
+            console.log(`Đã đồng bộ ${dataCount} bản ghi từ bảng ${tableName} về local`);
           } catch (error) {
             console.error(`Lỗi khi xử lý dữ liệu cho bảng ${tableName}:`, error);
             throw error;
           }
-          
-          console.log(`Đã đồng bộ ${localData.length} bản ghi từ bảng ${tableName} về local`);
         }
       }
 
