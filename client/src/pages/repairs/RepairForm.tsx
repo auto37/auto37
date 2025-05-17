@@ -26,7 +26,7 @@ import { formatCurrency, formatDate, calculateTotals } from '@/lib/utils';
 
 const repairItemSchema = z.object({
   type: z.enum(['part', 'service']),
-  itemId: z.number().int().positive(),
+  itemId: z.number().int(), // Cho phép itemId = -1 cho mục nhập thủ công
   name: z.string().min(1),
   quantity: z.number().int().positive(),
   unitPrice: z.number().positive(),
