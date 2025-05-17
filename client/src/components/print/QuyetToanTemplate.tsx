@@ -268,7 +268,7 @@ export default function QuyetToanTemplate({
                     .filter(item => item.unit === 'Dịch vụ')
                     .map((item, index) => (
                       <tr key={item.id || index}>
-                        <td className="border border-gray-200 p-2 text-center">{item.stt || index + 1}</td>
+                        <td className="border border-gray-200 p-2 text-center">{index + 1}</td>
                         <td className="border border-gray-200 p-2">{item.description}</td>
                         <td className="border border-gray-200 p-2 text-center">{item.unit}</td>
                         <td className="border border-gray-200 p-2 text-center">{item.quantity}</td>
@@ -304,7 +304,7 @@ export default function QuyetToanTemplate({
                     .filter(item => item.unit !== 'Dịch vụ')
                     .map((item, index) => (
                       <tr key={item.id || index}>
-                        <td className="border border-gray-200 p-2 text-center">{item.stt || index + 1}</td>
+                        <td className="border border-gray-200 p-2 text-center">{index + 1}</td>
                         <td className="border border-gray-200 p-2">{item.description}</td>
                         <td className="border border-gray-200 p-2 text-center">{item.unit}</td>
                         <td className="border border-gray-200 p-2 text-center">{item.quantity}</td>
