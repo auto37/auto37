@@ -8,11 +8,18 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || null;
 // Kiểm tra URL có hợp lệ không
 function isValidUrl(url: string | null): boolean {
   if (!url) return false;
+  
+  // Kiểm tra nếu URL là JWT token (bắt đầu bằng eyJ), có thể người dùng đã nhầm lẫn URL và API key
+  if (url.startsWith('eyJ')) {
+    console.error('URL không hợp lệ! Có vẻ như bạn đã nhập API key vào trường URL. URL Supabase cần bắt đầu bằng https://');
+    return false;
+  }
+  
   try {
     new URL(url);
     return true;
   } catch (err) {
-    console.error('Invalid Supabase URL:', url);
+    console.error('URL Supabase không hợp lệ:', url);
     return false;
   }
 }

@@ -34,14 +34,17 @@ class SettingsDatabase extends Dexie {
 
   // Lấy cài đặt hiện tại
   async getSettings(): Promise<Settings> {
-    // Nếu có kết nối Supabase, sử dụng Supabase
+    // Chỉ sử dụng Supabase nếu có kết nối
     if (USE_SUPABASE) {
       try {
+        // Thử lấy cài đặt từ Supabase
         const settings = await supabaseSettingsService.getSettings();
         return settings;
       } catch (error) {
         console.error('Lỗi khi lấy cài đặt từ Supabase:', error);
         console.log('Fallback sang IndexedDB...');
+        // Sau khi có lỗi, tắt tùy chọn sử dụng Supabase cho session này
+        (window as any).DISABLE_SUPABASE = true;
       }
     }
     
