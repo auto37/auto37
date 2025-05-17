@@ -128,6 +128,27 @@ export default function DatabaseStatus() {
       );
     }
     
+    // Kiểm tra xem biến môi trường đã được cấu hình chưa
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_KEY) {
+      return (
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-500 mr-2" />
+          <AlertTitle className="text-amber-700">Thiếu thông tin kết nối</AlertTitle>
+          <AlertDescription className="text-amber-600">
+            Biến môi trường Supabase chưa được cấu hình. Vui lòng thiết lập VITE_SUPABASE_URL và VITE_SUPABASE_KEY trong môi trường.
+            <div className="mt-2">
+              <p className="font-medium">Hướng dẫn thiết lập:</p>
+              <ol className="list-decimal list-inside mt-1 space-y-1 text-sm">
+                <li>Truy cập Replit {'->'} Tools {'->'} Secrets</li>
+                <li>Thêm VITE_SUPABASE_URL và VITE_SUPABASE_KEY từ tài khoản Supabase</li>
+                <li>Khởi động lại ứng dụng sau khi thêm secrets</li>
+              </ol>
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
     return (
       <Alert className="mb-4 bg-red-50 border-red-200">
         <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
@@ -187,10 +208,13 @@ export default function DatabaseStatus() {
         
         <div className="space-y-2">
           <p className="text-sm text-gray-500">
-            <strong>URL Supabase:</strong> {import.meta.env.VITE_SUPABASE_URL?.replace(/^https?:\/\//, '').split('.')[0]}••••••••
+            <strong>URL Supabase:</strong> {import.meta.env.VITE_SUPABASE_URL ? 
+              `${import.meta.env.VITE_SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0]}••••••••` : 
+              'Chưa được cấu hình'
+            }
           </p>
           <p className="text-sm text-gray-500">
-            <strong>API Key:</strong> ••••••••••••••••••••••••••
+            <strong>API Key:</strong> {import.meta.env.VITE_SUPABASE_KEY ? '••••••••••••••••••••••••••' : 'Chưa được cấu hình'}
           </p>
         </div>
         

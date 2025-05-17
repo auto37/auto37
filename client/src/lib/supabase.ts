@@ -2,11 +2,23 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // URL và khóa API từ biến môi trường (sẽ cần được cấu hình)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || null;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || null;
 
-// Tạo client Supabase nếu có đủ thông tin
-export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0) 
+// Kiểm tra URL có hợp lệ không
+function isValidUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch (err) {
+    console.error('Invalid Supabase URL:', url);
+    return false;
+  }
+}
+
+// Tạo client Supabase nếu có đủ thông tin và URL hợp lệ
+export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey && isValidUrl(supabaseUrl))
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
