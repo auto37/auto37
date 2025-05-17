@@ -110,7 +110,8 @@ export default function SettingsPage() {
         garageAddress: settings.garageAddress,
         garagePhone: settings.garagePhone,
         garageEmail: settings.garageEmail,
-        garageTaxCode: settings.garageTaxCode
+        garageTaxCode: settings.garageTaxCode,
+        iconColor: settings.iconColor
       });
       
       // Nếu có logo mới, lưu logo
@@ -392,31 +393,55 @@ export default function SettingsPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Cài Đặt In Ấn</h3>
+                  <h3 className="text-lg font-semibold">Cài Đặt Hiển Thị</h3>
                   <div className="p-4 border rounded-md space-y-4">
-                    <p className="text-sm text-gray-500">
-                      Các tùy chọn hiển thị khi in ấn báo giá, hóa đơn và báo cáo.
-                    </p>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="checkbox" 
-                          id="showLogo" 
-                          className="h-4 w-4 rounded border-gray-300"
-                          checked
-                        />
-                        <Label htmlFor="showLogo" className="cursor-pointer">Hiển thị logo trên tài liệu in</Label>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="iconColor">Màu Biểu Tượng (Icon)</Label>
+                        <div className="flex items-center gap-4">
+                          <Input 
+                            id="iconColor" 
+                            name="iconColor"
+                            type="color"
+                            value={settings.iconColor || '#f97316'} 
+                            onChange={handleInputChange}
+                            className="w-16 h-10 p-1 cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm">
+                              Màu hiển thị cho các biểu tượng trong thanh bên
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div className="space-y-4 mt-4">
+                      <h4 className="text-md font-medium">Cài Đặt In Ấn</h4>
+                      <p className="text-sm text-gray-500">
+                        Các tùy chọn hiển thị khi in ấn báo giá, hóa đơn và báo cáo.
+                      </p>
                       
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="checkbox" 
-                          id="showContactInfo" 
-                          className="h-4 w-4 rounded border-gray-300"
-                          checked
-                        />
-                        <Label htmlFor="showContactInfo" className="cursor-pointer">Hiển thị thông tin liên hệ</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="showLogo" 
+                            className="h-4 w-4 rounded border-gray-300"
+                            checked
+                          />
+                          <Label htmlFor="showLogo" className="cursor-pointer">Hiển thị logo trên tài liệu in</Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            id="showContactInfo" 
+                            className="h-4 w-4 rounded border-gray-300"
+                            checked
+                          />
+                          <Label htmlFor="showContactInfo" className="cursor-pointer">Hiển thị thông tin liên hệ</Label>
+                        </div>
                       </div>
                     </div>
                   </div>

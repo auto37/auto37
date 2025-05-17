@@ -1,11 +1,28 @@
 import { useSidebar } from "@/context/SidebarContext";
-
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { settingsDb, Settings } from "@/lib/settings";
 
 export default function Sidebar() {
   const { isExpanded, toggleSidebar } = useSidebar();
-
+  const [iconColor, setIconColor] = useState<string>('#f97316'); // Mặc định màu cam (orange-500)
   const [location] = useLocation();
+  
+  // Lấy màu icon từ cài đặt khi component được khởi tạo
+  useEffect(() => {
+    const fetchIconColor = async () => {
+      try {
+        const settings = await settingsDb.getSettings();
+        if (settings.iconColor) {
+          setIconColor(settings.iconColor);
+        }
+      } catch (error) {
+        console.error("Error fetching icon color:", error);
+      }
+    };
+    
+    fetchIconColor();
+  }, []);
 
   const isActive = (path: string) => {
     return location === path || location.startsWith(`${path}/`);
@@ -41,7 +58,7 @@ export default function Sidebar() {
             <a
               className={isActive("/") ? "sidebar-link-active" : "sidebar-link"}
             >
-              <i className="fas fa-tachometer-alt w-6 text-orange-500"></i>
+              <i className="fas fa-tachometer-alt w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -59,7 +76,7 @@ export default function Sidebar() {
                 isActive("/customers") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-users w-6 text-orange-500"></i>
+              <i className="fas fa-users w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -77,7 +94,7 @@ export default function Sidebar() {
                 isActive("/inventory") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-boxes-stacked w-6 text-orange-500"></i>
+              <i className="fas fa-boxes-stacked w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -95,7 +112,7 @@ export default function Sidebar() {
                 isActive("/services") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-screwdriver-wrench w-6 text-orange-500"></i>
+              <i className="fas fa-screwdriver-wrench w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -113,7 +130,7 @@ export default function Sidebar() {
                 isActive("/quotes") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-file-invoice-dollar w-6 text-orange-500"></i>
+              <i className="fas fa-file-invoice-dollar w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -131,7 +148,7 @@ export default function Sidebar() {
                 isActive("/repairs") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-clipboard-list w-6 text-orange-500"></i>
+              <i className="fas fa-clipboard-list w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -149,7 +166,7 @@ export default function Sidebar() {
                 isActive("/invoices") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-receipt w-6 text-orange-500"></i>
+              <i className="fas fa-receipt w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
