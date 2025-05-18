@@ -252,18 +252,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint kiểm tra xem cần thiết lập admin không
-  app.get("/api/setup/admin", async (req, res) => {
-    try {
-      const users = await storage.listUsers();
-      const adminExists = users.some(user => user.role === "admin");
-      res.json({ needsSetup: !adminExists });
-    } catch (error) {
-      console.error("Lỗi khi kiểm tra trạng thái admin:", error);
-      res.status(500).json({ error: "Lỗi khi kiểm tra trạng thái admin" });
-    }
-  });
-  
   // Endpoint tạo tài khoản admin đầu tiên (chỉ sử dụng nếu chưa có admin nào)
   app.post("/api/setup/admin", async (req, res) => {
     try {

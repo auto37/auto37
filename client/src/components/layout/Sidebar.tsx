@@ -42,7 +42,7 @@ export default function Sidebar() {
     >
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         <div className="flex items-center space-x-2 overflow-hidden">
-          <i className="fas fa-car text-2xl" style={{ color: iconColor }}></i>
+          <i className="fas fa-car-mechanic text-2xl" style={{ color: iconColor }}></i>
 
           <h1
             className={`text-xl font-bold text-white truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -66,7 +66,7 @@ export default function Sidebar() {
             <a
               className={isActive("/") ? "sidebar-link-active" : "sidebar-link"}
             >
-              <i className="fas fa-gauge w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-tachometer-alt w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -102,7 +102,7 @@ export default function Sidebar() {
                 isActive("/inventory") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-box w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-boxes-stacked w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -120,7 +120,7 @@ export default function Sidebar() {
                 isActive("/services") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-wrench w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-screwdriver-wrench w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -138,7 +138,7 @@ export default function Sidebar() {
                 isActive("/quotes") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-file w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-file-invoice-dollar w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -156,7 +156,7 @@ export default function Sidebar() {
                 isActive("/repairs") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-clipboard w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-clipboard-list w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -174,7 +174,7 @@ export default function Sidebar() {
                 isActive("/invoices") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-file-invoice w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-receipt w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}
@@ -192,7 +192,7 @@ export default function Sidebar() {
                 isActive("/reports") ? "sidebar-link-active" : "sidebar-link"
               }
             >
-              <i className="fas fa-chart-bar w-6" style={{ color: iconColor }}></i>
+              <i className="fas fa-chart-line w-6" style={{ color: iconColor }}></i>
 
               <span
                 className={`ml-2 truncate whitespace-nowrap ${!isExpanded && "opacity-0"}`}

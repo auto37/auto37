@@ -1,6 +1,6 @@
 import { users, type User, type InsertUser } from "@shared/schema";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { neon } from '@neondatabase/serverless';
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -19,8 +19,7 @@ export interface IStorage {
 }
 
 // Kết nối đến cơ sở dữ liệu Postgres từ Supabase
-const connectionString = process.env.DATABASE_URL || "";
-const sql = postgres(connectionString);
+const sql = neon(process.env.DATABASE_URL || "");
 export const db = drizzle(sql);
 
 // Lớp quản lý người dùng trong Postgres
