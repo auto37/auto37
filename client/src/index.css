@@ -161,7 +161,8 @@ body {
     page-break-after: auto;
   }
 }
-  
+
+@layer components {
   .form-footer {
     @apply flex justify-end space-x-3 pt-6;
   }

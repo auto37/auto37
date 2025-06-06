@@ -152,8 +152,8 @@ export default function QuyetToanTemplate({
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let yPosition = margin;
+      const margin = 20;
+      let yPosition = margin + 15; // Start lower to create balanced top margin
 
       // Helper function to check if we need a new page
       const checkPageBreak = (requiredHeight: number) => {
