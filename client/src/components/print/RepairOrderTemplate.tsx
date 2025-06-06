@@ -4,7 +4,6 @@ import { settingsDb } from '@/lib/settings';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-// Mở rộng jsPDF để hỗ trợ autoTable
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => any;
@@ -48,44 +47,64 @@ const numberToVietnameseText = (number: number): string => {
   const numbers = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
 
   const readThreeDigits = (num: number): string => {
+    if (num === 0) return '';
+    
+    let result = '';
     const hundreds = Math.floor(num / 100);
     const tens = Math.floor((num % 100) / 10);
     const ones = num % 10;
-    let str = '';
-    if (hundreds > 0) str += `${numbers[hundreds]} trăm `;
-    if (tens > 1) {
-      str += `${numbers[tens]} mươi `;
-      if (ones > 0) str += numbers[ones];
-    } else if (tens === 1) {
-      str += 'mười ';
-      if (ones > 0) str += numbers[ones];
-    } else if (ones > 0) {
-      str += numbers[ones];
-    } else if (str === '' && num === 0) {
-      str = numbers[0];
+
+    if (hundreds > 0) {
+      result += numbers[hundreds] + ' trăm';
+      if (tens > 0 || ones > 0) result += ' ';
     }
-    return str.trim();
+
+    if (tens > 1) {
+      result += numbers[tens] + ' mười';
+      if (ones > 0) result += ' ' + numbers[ones];
+    } else if (tens === 1) {
+      result += 'mười';
+      if (ones > 0) result += ' ' + numbers[ones];
+    } else if (ones > 0 && hundreds > 0) {
+      result += 'lẻ ' + numbers[ones];
+    } else if (ones > 0) {
+      result += numbers[ones];
+    }
+
+    return result;
   };
 
   if (number === 0) return 'Không đồng';
-  let str = '';
+
+  let result = '';
   let unitIndex = 0;
+
   while (number > 0) {
-    const threeDigits = number % 1000;
-    if (threeDigits > 0) {
-      const threeDigitsStr = readThreeDigits(threeDigits);
-      if (threeDigitsStr) {
-        str = `${threeDigitsStr} ${units[unitIndex]} ${str}`.trim();
+    const group = number % 1000;
+    if (group > 0) {
+      const groupText = readThreeDigits(group);
+      if (unitIndex > 0) {
+        result = groupText + ' ' + units[unitIndex] + (result ? ' ' + result : '');
+      } else {
+        result = groupText;
       }
     }
     number = Math.floor(number / 1000);
     unitIndex++;
   }
-  str = `${str} đồng`.replace(/\s+/g, ' ');
-  return str.charAt(0).toUpperCase() + str.slice(1);
+
+  return result.charAt(0).toUpperCase() + result.slice(1) + ' đồng';
 };
 
-export default function RepairOrderTemplate({
+const formatLocalDate = (date: Date): string => {
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};
+
+export function RepairOrderTemplate({
   customerName,
   customerAddress,
   customerPhone,
@@ -139,35 +158,15 @@ export default function RepairOrderTemplate({
     fetchSettings();
   }, []);
 
-  const formatLocalDate = (date: Date): string => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
   const printToPdf = async () => {
     setIsGeneratingPdf(true);
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 15;
       let yPosition = margin;
 
-      // Helper function to check if we need a new page
-      const checkPageBreak = (requiredHeight: number) => {
-        if (yPosition + requiredHeight > pageHeight - margin) {
-          pdf.addPage();
-          yPosition = margin;
-        }
-      };
-
-      // Fonts and styling
-      pdf.setFont('helvetica');
-      pdf.setFontSize(12);
-
-      // Header với logo lớn hơn và bố cục đẹp hơn
+      // Logo and Header
       if (logo) {
         try {
           const img = new Image();
@@ -175,226 +174,119 @@ export default function RepairOrderTemplate({
           await new Promise((resolve) => {
             img.onload = resolve;
           });
-          // Logo lớn hơn: 50x25 thay vì 30x15
-          pdf.addImage(img, 'PNG', margin, yPosition, 50, 25);
+          pdf.addImage(img, 'PNG', margin, yPosition, 40, 20);
         } catch (error) {
           console.warn('Error loading logo:', error);
         }
-        yPosition += 30; // Tăng khoảng cách để phù hợp với logo lớn hơn
       }
 
-      // Tiêu đề garage với font lớn hơn
+      // Company info
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(garageName, margin + 50, yPosition + 8);
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Địa chỉ: ${garageAddress}`, margin + 50, yPosition + 15);
+      pdf.text(`Tel: ${garagePhone} | Email: ${garageEmail}`, margin + 50, yPosition + 20);
+
+      // Document title
       pdf.setFontSize(18);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(garageName.toUpperCase(), margin, yPosition);
+      pdf.text('LỆNH SỬA CHỮA', pageWidth / 2, yPosition + 35, { align: 'center' });
       
-      // Thông tin garage với khoảng cách hợp lý
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
-      yPosition += 8;
-      pdf.text(`Địa chỉ: ${garageAddress}`, margin, yPosition);
-      yPosition += 6;
-      pdf.text(`Điện thoại: ${garagePhone} | MST: ${garageTaxCode}`, margin, yPosition);
-      yPosition += 6;
-      pdf.text(`Email: ${garageEmail}`, margin, yPosition);
+      pdf.text(`Số: ${invoiceNumber}`, pageWidth - margin - 40, yPosition + 45);
+      pdf.text(`Ngày: ${formatLocalDate(invoiceDate)}`, pageWidth - margin - 40, yPosition + 52);
 
-      // Right-aligned header với font lớn hơn
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('LỆNH SỬA CHỮA', pageWidth - margin - 65, margin + 10);
-      
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Số: ${invoiceNumber}`, pageWidth - margin - 65, margin + 20);
-      pdf.text(`Ngày: ${formatLocalDate(invoiceDate)}`, pageWidth - margin - 65, margin + 28);
-      yPosition += 15;
+      yPosition += 65;
 
-      checkPageBreak(40);
-
-      // Customer and Vehicle Info Table
+      // Customer info
       pdf.autoTable({
         startY: yPosition,
         body: [
-          ['Khách hàng:', customerName, 'Mã phiếu:', invoiceNumber],
-          ['Địa chỉ:', customerAddress || '-', 'Ngày:', formatLocalDate(invoiceDate)],
-          ['Biển số:', vehicleLicensePlate, 'Hãng xe:', vehicleBrand || '-'],
-          ['Loại xe:', vehicleModel || '-', 'Số KM:', odometerReading?.toLocaleString() || '-'],
-          ['Thợ sửa chữa:', repairTechnician || '-', 'Số điện thoại:', customerPhone || '-'],
+          ['Khách hàng:', customerName, 'Biển số xe:', vehicleLicensePlate],
+          ['Địa chỉ:', customerAddress || '', 'Hãng xe:', vehicleBrand || ''],
+          ['Điện thoại:', customerPhone || '', 'Model:', vehicleModel || ''],
+          ['Thợ sửa chữa:', repairTechnician || '', 'Số KM:', odometerReading?.toLocaleString() || ''],
         ],
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 35 } },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [245, 245, 245], cellWidth: 30 },
+          2: { fontStyle: 'bold', fillColor: [245, 245, 245], cellWidth: 30 }
+        },
       });
+
       yPosition = (pdf as any).lastAutoTable.finalY + 10;
 
-      // Services Table
-      const services = items.filter((item) => item.unit === 'Dịch vụ');
-      if (services.length > 0) {
-        checkPageBreak(20);
-        pdf.setFontSize(12);
-        pdf.text('Chi tiết dịch vụ', margin, yPosition);
-        yPosition += 5;
-
-        pdf.autoTable({
-          startY: yPosition,
-          head: [['STT', 'Tên dịch vụ', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
-          body: [
-            ...services.map((item, index) => [
-              index + 1,
-              item.description,
-              item.unit,
-              item.quantity,
-              item.unitPrice.toLocaleString(),
-              item.amount.toLocaleString(),
-              (item.discount || 0).toLocaleString(),
-              item.total.toLocaleString(),
-            ]),
-            [
-              { content: 'Cộng dịch vụ:', colSpan: 5, styles: { halign: 'right', fillColor: [240, 240, 240] } },
-              services.reduce((sum, item) => sum + item.total, 0).toLocaleString(),
-              services.reduce((sum, item) => sum + (item.discount || 0), 0).toLocaleString(),
-              services.reduce((sum, item) => sum + item.total, 0).toLocaleString(),
-            ],
-          ],
-          theme: 'grid',
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [200, 200, 200] },
-          columnStyles: {
-            0: { cellWidth: 10 },
-            3: { cellWidth: 10 },
-            4: { halign: 'right', cellWidth: 20 },
-            5: { halign: 'right', cellWidth: 20 },
-            6: { halign: 'right', cellWidth: 15 },
-            7: { halign: 'right', cellWidth: 20 },
-          },
-        });
-        yPosition = (pdf as any).lastAutoTable.finalY + 10;
-      }
-
-      // Materials Table
-      const materials = items.filter((item) => item.unit !== 'Dịch vụ');
-      if (materials.length > 0) {
-        checkPageBreak(20);
-        pdf.setFontSize(12);
-        pdf.text('Chi tiết vật tư', margin, yPosition);
-        yPosition += 5;
-
-        pdf.autoTable({
-          startY: yPosition,
-          head: [['STT', 'Tên vật tư', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
-          body: [
-            ...materials.map((item, index) => [
-              index + 1,
-              item.description,
-              item.unit,
-              item.quantity,
-              item.unitPrice.toLocaleString(),
-              item.amount.toLocaleString(),
-              (item.discount || 0).toLocaleString(),
-              item.total.toLocaleString(),
-            ]),
-            [
-              { content: 'Cộng vật tư:', colSpan: 5, styles: { halign: 'right', fillColor: [240, 240, 240] } },
-              materials.reduce((sum, item) => sum + item.total, 0).toLocaleString(),
-              materials.reduce((sum, item) => sum + (item.discount || 0), 0).toLocaleString(),
-              materials.reduce((sum, item) => sum + item.total, 0).toLocaleString(),
-            ],
-          ],
-          theme: 'grid',
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [200, 200, 200] },
-          columnStyles: {
-            0: { cellWidth: 10 },
-            3: { cellWidth: 10 },
-            4: { halign: 'right', cellWidth: 20 },
-            5: { halign: 'right', cellWidth: 20 },
-            6: { halign: 'right', cellWidth: 15 },
-            7: { halign: 'right', cellWidth: 20 },
-          },
-        });
-        yPosition = (pdf as any).lastAutoTable.finalY + 10;
-      }
-
-      // Summary Table
-      checkPageBreak(40);
-      const summaryData = [];
-      if (services.length > 0) {
-        summaryData.push(['Tổng tiền dịch vụ:', services.reduce((sum, item) => sum + item.total, 0).toLocaleString()]);
-      }
-      if (materials.length > 0) {
-        summaryData.push(['Tổng tiền vật tư:', materials.reduce((sum, item) => sum + item.total, 0).toLocaleString()]);
-      }
-      if (tax !== undefined && tax > 0) {
-        summaryData.push(['Thuế VAT:', tax.toLocaleString()]);
-      }
-      if (discount !== undefined && discount > 0) {
-        summaryData.push(['Chiết khấu:', discount.toLocaleString()]);
-      }
-      summaryData.push(['Phải thanh toán:', total.toLocaleString()]);
+      // Items table
+      const tableData = items.map((item, index) => [
+        index + 1,
+        item.description,
+        item.unit,
+        item.quantity,
+        item.unitPrice.toLocaleString(),
+        item.amount.toLocaleString()
+      ]);
 
       pdf.autoTable({
         startY: yPosition,
-        body: summaryData,
-        theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2 },
+        head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
+        body: tableData,
+        theme: 'striped',
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 50 },
-          1: { halign: 'right' },
-        },
+          0: { cellWidth: 15, halign: 'center' },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 20, halign: 'center' },
+          3: { cellWidth: 15, halign: 'center' },
+          4: { cellWidth: 25, halign: 'right' },
+          5: { cellWidth: 25, halign: 'right' }
+        }
       });
+
       yPosition = (pdf as any).lastAutoTable.finalY + 10;
 
-      // Amount in Words
-      checkPageBreak(10);
+      // Summary
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Tổng cộng: ${total.toLocaleString()} VNĐ`, pageWidth - margin - 50, yPosition, { align: 'right' });
+      
+      yPosition += 8;
       pdf.setFontSize(10);
-      pdf.text(`Bằng chữ (VNĐ): ${numberToVietnameseText(total)}`, margin, yPosition);
-      yPosition += 10;
-
-      // Notes
-      checkPageBreak(20);
-      pdf.setFontSize(8);
       pdf.setFont('helvetica', 'italic');
-      if (notes) {
-        pdf.text(`Ghi chú: ${notes}`, margin, yPosition);
-        yPosition += 5;
-      }
-      yPosition += 10;
+      pdf.text(`Bằng chữ: ${numberToVietnameseText(total)}`, margin, yPosition);
 
-      // Bank Information
+      yPosition += 15;
+
+      // Bank info
       if (bankName && bankAccount) {
-        checkPageBreak(20);
-        pdf.setFontSize(10);
+        pdf.setFontSize(11);
         pdf.setFont('helvetica', 'bold');
         pdf.text('THÔNG TIN THANH TOÁN:', margin, yPosition);
         yPosition += 6;
         
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
+        pdf.setFontSize(10);
         pdf.text(`Ngân hàng: ${bankName}`, margin, yPosition);
         yPosition += 4;
-        pdf.text(`Số tài khoản: ${bankAccount}`, margin, yPosition);
-        yPosition += 4;
+        pdf.text(`Số TK: ${bankAccount}`, margin, yPosition);
         if (bankOwner) {
-          pdf.text(`Chủ tài khoản: ${bankOwner}`, margin, yPosition);
           yPosition += 4;
+          pdf.text(`Chủ TK: ${bankOwner}`, margin, yPosition);
         }
-        if (bankBranch) {
-          pdf.text(`Chi nhánh: ${bankBranch}`, margin, yPosition);
-          yPosition += 4;
-        }
-        yPosition += 6;
+        yPosition += 8;
       }
 
       // Footer
-      checkPageBreak(10);
-      pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
-      pdf.text(`Cảm ơn quý khách đã sử dụng dịch vụ của ${garageName}!`, pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 5;
-      pdf.text(`Liên hệ: ${garagePhone} | ${garageEmail}`, pageWidth / 2, yPosition, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Cảm ơn quý khách hàng!`, pageWidth / 2, yPosition + 10, { align: 'center' });
 
-      // Save PDF
-      pdf.save(`LenhSuaChua_${invoiceNumber}.pdf`);
+      pdf.save(`Lenh_sua_chua_${invoiceNumber}.pdf`);
       toast({
         title: 'Thành công',
         description: 'Đã xuất file PDF thành công.',
@@ -403,7 +295,7 @@ export default function RepairOrderTemplate({
       console.error('Error generating PDF:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể tạo file PDF. Vui lòng thử lại.',
+        description: 'Không thể xuất file PDF.',
         variant: 'destructive',
       });
     } finally {
@@ -412,218 +304,71 @@ export default function RepairOrderTemplate({
   };
 
   return (
-    <div className="bg-white max-w-4xl mx-auto p-6 shadow-md">
-      <div className="flex justify-between mb-8 border-b-2 pb-6">
-        <div className="flex-1">
-          {logo && <img src={logo} alt="Logo" className="h-20 mb-4" />}
-          <h2 className="text-2xl font-bold mb-2">{garageName}</h2>
-          <p className="text-base mb-1">{garageAddress}</p>
-          <p className="text-base mb-1">Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
-          <p className="text-base">Email: {garageEmail}</p>
+    <div className="max-w-4xl mx-auto p-6 bg-white">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-center space-x-4">
+          {logo && <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{garageName}</h1>
+            <p className="text-sm text-gray-600">{garageAddress}</p>
+            <p className="text-sm text-gray-600">Tel: {garagePhone} | Email: {garageEmail}</p>
+            <p className="text-sm text-gray-600">MST: {garageTaxCode}</p>
+          </div>
         </div>
-        <div className="text-right flex-shrink-0 ml-8">
-          <h2 className="text-2xl font-bold mb-4 text-green-600">LỆNH SỬA CHỮA</h2>
-          <p className="text-base mb-1">Số: <span className="font-semibold">{invoiceNumber}</span></p>
-          <p className="text-base">Ngày: <span className="font-semibold">{formatLocalDate(invoiceDate)}</span></p>
+        <div className="text-right">
+          <h2 className="text-2xl font-bold text-green-600 mb-2">LỆNH SỬA CHỮA</h2>
+          <p className="text-sm"><strong>Số:</strong> {invoiceNumber}</p>
+          <p className="text-sm"><strong>Ngày:</strong> {formatLocalDate(invoiceDate)}</p>
         </div>
       </div>
 
-      <div className="mb-6">
-        <table className="w-full border-collapse text-sm">
-          <tbody>
-            <tr>
-              <td className="border p-2 bg-gray-100 font-semibold w-32">Khách hàng:</td>
-              <td className="border p-2">{customerName}</td>
-              <td className="border p-2 bg-gray-100 font-semibold w-32">Mã phiếu:</td>
-              <td className="border p-2">{invoiceNumber}</td>
-            </tr>
-            <tr>
-              <td className="border p-2 bg-gray-100 font-semibold">Địa chỉ:</td>
-              <td className="border p-2">{customerAddress || '-'}</td>
-              <td className="border p-2 bg-gray-100 font-semibold">Ngày:</td>
-              <td className="border p-2">{formatLocalDate(invoiceDate)}</td>
-            </tr>
-            <tr>
-              <td className="border p-2 bg-gray-100 font-semibold">Biển số:</td>
-              <td className="border p-2">{vehicleLicensePlate}</td>
-              <td className="border p-2 bg-gray-100 font-semibold">Hãng xe:</td>
-              <td className="border p-2">{vehicleBrand || '-'}</td>
-            </tr>
-            <tr>
-              <td className="border p-2 bg-gray-100 font-semibold">Loại xe:</td>
-              <td className="border p-2">{vehicleModel || '-'}</td>
-              <td className="border p-2 bg-gray-100 font-semibold">Số KM:</td>
-              <td className="border p-2">{odometerReading?.toLocaleString() || '-'}</td>
-            </tr>
-            <tr>
-              <td className="border p-2 bg-gray-100 font-semibold">Thợ sửa chữa:</td>
-              <td className="border p-2">{repairTechnician || '-'}</td>
-              <td className="border p-2 bg-gray-100 font-semibold">Số điện thoại:</td>
-              <td className="border p-2">{customerPhone || '-'}</td>
-            </tr>
-          </tbody>
-        </table>
+      {/* Customer Info */}
+      <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        <div>
+          <p><strong>Khách hàng:</strong> {customerName}</p>
+          <p><strong>Địa chỉ:</strong> {customerAddress || ''}</p>
+          <p><strong>Điện thoại:</strong> {customerPhone || ''}</p>
+          <p><strong>Thợ sửa chữa:</strong> {repairTechnician || ''}</p>
+        </div>
+        <div>
+          <p><strong>Biển số xe:</strong> {vehicleLicensePlate}</p>
+          <p><strong>Hãng xe:</strong> {vehicleBrand || ''}</p>
+          <p><strong>Model:</strong> {vehicleModel || ''}</p>
+          <p><strong>Số KM:</strong> {odometerReading?.toLocaleString() || ''}</p>
+        </div>
       </div>
 
-      {/* Dịch vụ */}
-      {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-base font-semibold mb-2">Chi tiết dịch vụ</h3>
-          <table className="w-full border-collapse text-sm mb-4">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left">STT</th>
-                <th className="border p-2 text-left">Tên dịch vụ</th>
-                <th className="border p-2 text-left">ĐVT</th>
-                <th className="border p-2 text-left">SL</th>
-                <th className="border p-2 text-right">Đơn giá</th>
-                <th className="border p-2 text-right">Thành tiền</th>
-                <th className="border p-2 text-right">Chiết khấu</th>
-                <th className="border p-2 text-right">Thành toán</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items
-                .filter(item => item.unit === 'Dịch vụ')
-                .map((item, index) => (
-                  <tr key={index}>
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2">{item.description}</td>
-                    <td className="border p-2">{item.unit}</td>
-                    <td className="border p-2">{item.quantity}</td>
-                    <td className="border p-2 text-right">{item.unitPrice.toLocaleString()}</td>
-                    <td className="border p-2 text-right">{item.amount.toLocaleString()}</td>
-                    <td className="border p-2 text-right">{(item.discount || 0).toLocaleString()}</td>
-                    <td className="border p-2 text-right">{item.total.toLocaleString()}</td>
-                  </tr>
-                ))}
-              <tr className="font-semibold">
-                <td colSpan={5} className="border p-2 text-right bg-gray-100">Cộng dịch vụ:</td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit === 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.amount, 0)
-                    .toLocaleString()}
-                </td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit === 'Dịch vụ')
-                    .reduce((sum, item) => sum + (item.discount || 0), 0)
-                    .toLocaleString()}
-                </td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit === 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.total, 0)
-                    .toLocaleString()}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Vật tư */}
-      {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-base font-semibold mb-2">Chi tiết vật tư</h3>
-          <table className="w-full border-collapse text-sm mb-4">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left">STT</th>
-                <th className="border p-2 text-left">Tên vật tư</th>
-                <th className="border p-2 text-left">ĐVT</th>
-                <th className="border p-2 text-left">SL</th>
-                <th className="border p-2 text-right">Đơn giá</th>
-                <th className="border p-2 text-right">Thành tiền</th>
-                <th className="border p-2 text-right">Chiết khấu</th>
-                <th className="border p-2 text-right">Thành toán</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items
-                .filter(item => item.unit !== 'Dịch vụ')
-                .map((item, index) => (
-                  <tr key={index}>
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2">{item.description}</td>
-                    <td className="border p-2">{item.unit}</td>
-                    <td className="border p-2">{item.quantity}</td>
-                    <td className="border p-2 text-right">{item.unitPrice.toLocaleString()}</td>
-                    <td className="border p-2 text-right">{item.amount.toLocaleString()}</td>
-                    <td className="border p-2 text-right">{(item.discount || 0).toLocaleString()}</td>
-                    <td className="border p-2 text-right">{item.total.toLocaleString()}</td>
-                  </tr>
-                ))}
-              <tr className="font-semibold">
-                <td colSpan={5} className="border p-2 text-right bg-gray-100">Cộng vật tư:</td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit !== 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.amount, 0)
-                    .toLocaleString()}
-                </td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit !== 'Dịch vụ')
-                    .reduce((sum, item) => sum + (item.discount || 0), 0)
-                    .toLocaleString()}
-                </td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit !== 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.total, 0)
-                    .toLocaleString()}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-
+      {/* Items Table */}
       <div className="mb-6">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 p-2 text-center">STT</th>
+              <th className="border border-gray-300 p-2 text-left">Nội dung</th>
+              <th className="border border-gray-300 p-2 text-center">ĐVT</th>
+              <th className="border border-gray-300 p-2 text-center">SL</th>
+              <th className="border border-gray-300 p-2 text-right">Đơn giá</th>
+              <th className="border border-gray-300 p-2 text-right">Thành tiền</th>
+            </tr>
+          </thead>
           <tbody>
-            {items.filter(item => item.unit === 'Dịch vụ').length > 0 && (
-              <tr>
-                <td className="border p-2 bg-gray-100 font-semibold w-40">Tổng tiền dịch vụ:</td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit === 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.total, 0)
-                    .toLocaleString()}
-                </td>
+            {items.map((item, index) => (
+              <tr key={index}>
+                <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
+                <td className="border border-gray-300 p-2">{item.description}</td>
+                <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
+                <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toLocaleString()}</td>
+                <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
               </tr>
-            )}
-            {items.filter(item => item.unit !== 'Dịch vụ').length > 0 && (
-              <tr>
-                <td className="border p-2 bg-gray-100 font-semibold">Tổng tiền vật tư:</td>
-                <td className="border p-2 text-right">
-                  {items
-                    .filter(item => item.unit !== 'Dịch vụ')
-                    .reduce((sum, item) => sum + item.total, 0)
-                    .toLocaleString()}
-                </td>
-              </tr>
-            )}
-            {tax !== undefined && tax > 0 && (
-              <tr>
-                <td className="border p-2 bg-gray-100 font-semibold">Thuế VAT:</td>
-                <td className="border p-2 text-right">{tax.toLocaleString()}</td>
-              </tr>
-            )}
-            {discount !== undefined && discount > 0 && (
-              <tr>
-                <td className="border p-2 bg-gray-100 font-semibold">Chiết khấu:</td>
-                <td className="border p-2 text-right">{discount.toLocaleString()}</td>
-              </tr>
-            )}
-            <tr className="text-base font-bold">
-              <td className="border p-2 bg-gray-100">Phải thanh toán:</td>
-              <td className="border p-2 text-right">{total.toLocaleString()}</td>
+            ))}
+            <tr className="bg-gray-100 font-bold">
+              <td colSpan={5} className="border border-gray-300 p-2 text-right">Tổng cộng:</td>
+              <td className="border border-gray-300 p-2 text-right">{total.toLocaleString()}</td>
             </tr>
             <tr>
-              <td colSpan={2} className="border p-2 bg-gray-50 italic">
+              <td colSpan={6} className="border border-gray-300 p-2 italic">
                 Bằng chữ: {numberToVietnameseText(total)}
               </td>
             </tr>
@@ -661,7 +406,7 @@ export default function RepairOrderTemplate({
             onClick={printToPdf}
             disabled={isGeneratingPdf}
           >
-            {isGeneratingPdf ? 'Đang xuất PDF...' : ''}
+            {isGeneratingPdf ? 'Đang xuất PDF...' : 'Xuất PDF'}
           </button>
         </div>
       )}
