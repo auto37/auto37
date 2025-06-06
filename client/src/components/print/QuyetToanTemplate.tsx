@@ -111,6 +111,10 @@ export default function QuyetToanTemplate({
   const [garagePhone, setGaragePhone] = useState<string>('0987654321');
   const [garageEmail, setGarageEmail] = useState<string>('auto37@gmail.com');
   const [garageTaxCode, setGarageTaxCode] = useState<string>('0123456789');
+  const [bankName, setBankName] = useState<string>('');
+  const [bankAccount, setBankAccount] = useState<string>('');
+  const [bankOwner, setBankOwner] = useState<string>('');
+  const [bankBranch, setBankBranch] = useState<string>('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {

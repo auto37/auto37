@@ -363,9 +363,35 @@ export default function QuotationTemplate({
       }
       yPosition += 10;
 
+      // Bank Information
+      if (bankName && bankAccount) {
+        checkPageBreak(20);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('THÔNG TIN THANH TOÁN:', margin, yPosition);
+        yPosition += 6;
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.text(`Ngân hàng: ${bankName}`, margin, yPosition);
+        yPosition += 4;
+        pdf.text(`Số tài khoản: ${bankAccount}`, margin, yPosition);
+        yPosition += 4;
+        if (bankOwner) {
+          pdf.text(`Chủ tài khoản: ${bankOwner}`, margin, yPosition);
+          yPosition += 4;
+        }
+        if (bankBranch) {
+          pdf.text(`Chi nhánh: ${bankBranch}`, margin, yPosition);
+          yPosition += 4;
+        }
+        yPosition += 6;
+      }
+
       // Footer
       checkPageBreak(10);
       pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
       pdf.text(`Cảm ơn quý khách đã sử dụng dịch vụ của ${garageName}!`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 5;
       pdf.text(`Liên hệ: ${garagePhone} | ${garageEmail}`, pageWidth / 2, yPosition, { align: 'center' });
@@ -613,6 +639,18 @@ export default function QuotationTemplate({
         <p className="mb-1">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
         {notes && <p className="mb-1">- {notes}</p>}
       </div>
+
+      {bankName && bankAccount && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <h4 className="font-bold text-base mb-2 text-blue-800">THÔNG TIN THANH TOÁN:</h4>
+          <div className="text-sm space-y-1">
+            <p><span className="font-semibold">Ngân hàng:</span> {bankName}</p>
+            <p><span className="font-semibold">Số tài khoản:</span> {bankAccount}</p>
+            {bankOwner && <p><span className="font-semibold">Chủ tài khoản:</span> {bankOwner}</p>}
+            {bankBranch && <p><span className="font-semibold">Chi nhánh:</span> {bankBranch}</p>}
+          </div>
+        </div>
+      )}
 
       <div className="text-center text-sm">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>

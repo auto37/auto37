@@ -111,6 +111,10 @@ export default function RepairOrderTemplate({
   const [garagePhone, setGaragePhone] = useState<string>('0987654321');
   const [garageEmail, setGarageEmail] = useState<string>('auto37@gmail.com');
   const [garageTaxCode, setGarageTaxCode] = useState<string>('0123456789');
+  const [bankName, setBankName] = useState<string>('');
+  const [bankAccount, setBankAccount] = useState<string>('');
+  const [bankOwner, setBankOwner] = useState<string>('');
+  const [bankBranch, setBankBranch] = useState<string>('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
@@ -123,6 +127,10 @@ export default function RepairOrderTemplate({
         if (settings.garagePhone) setGaragePhone(settings.garagePhone);
         if (settings.garageEmail) setGarageEmail(settings.garageEmail);
         if (settings.garageTaxCode) setGarageTaxCode(settings.garageTaxCode);
+        if (settings.bankName) setBankName(settings.bankName);
+        if (settings.bankAccount) setBankAccount(settings.bankAccount);
+        if (settings.bankOwner) setBankOwner(settings.bankOwner);
+        if (settings.bankBranch) setBankBranch(settings.bankBranch);
       } catch (error) {
         console.error('Error fetching settings:', error);
       }
@@ -352,9 +360,35 @@ export default function RepairOrderTemplate({
       }
       yPosition += 10;
 
+      // Bank Information
+      if (bankName && bankAccount) {
+        checkPageBreak(20);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('THÔNG TIN THANH TOÁN:', margin, yPosition);
+        yPosition += 6;
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.text(`Ngân hàng: ${bankName}`, margin, yPosition);
+        yPosition += 4;
+        pdf.text(`Số tài khoản: ${bankAccount}`, margin, yPosition);
+        yPosition += 4;
+        if (bankOwner) {
+          pdf.text(`Chủ tài khoản: ${bankOwner}`, margin, yPosition);
+          yPosition += 4;
+        }
+        if (bankBranch) {
+          pdf.text(`Chi nhánh: ${bankBranch}`, margin, yPosition);
+          yPosition += 4;
+        }
+        yPosition += 6;
+      }
+
       // Footer
       checkPageBreak(10);
       pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
       pdf.text(`Cảm ơn quý khách đã sử dụng dịch vụ của ${garageName}!`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 5;
       pdf.text(`Liên hệ: ${garagePhone} | ${garageEmail}`, pageWidth / 2, yPosition, { align: 'center' });
@@ -600,6 +634,18 @@ export default function RepairOrderTemplate({
       {notes && (
         <div className="mb-6 text-sm italic">
           <p className="mb-1">Ghi chú: {notes}</p>
+        </div>
+      )}
+
+      {bankName && bankAccount && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+          <h4 className="font-bold text-base mb-2 text-green-800">THÔNG TIN THANH TOÁN:</h4>
+          <div className="text-sm space-y-1">
+            <p><span className="font-semibold">Ngân hàng:</span> {bankName}</p>
+            <p><span className="font-semibold">Số tài khoản:</span> {bankAccount}</p>
+            {bankOwner && <p><span className="font-semibold">Chủ tài khoản:</span> {bankOwner}</p>}
+            {bankBranch && <p><span className="font-semibold">Chi nhánh:</span> {bankBranch}</p>}
+          </div>
         </div>
       )}
 
