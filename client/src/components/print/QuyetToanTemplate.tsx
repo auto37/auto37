@@ -127,6 +127,10 @@ export default function QuyetToanTemplate({
         if (settings.garagePhone) setGaragePhone(settings.garagePhone);
         if (settings.garageEmail) setGarageEmail(settings.garageEmail);
         if (settings.garageTaxCode) setGarageTaxCode(settings.garageTaxCode);
+        if (settings.bankName) setBankName(settings.bankName);
+        if (settings.bankAccount) setBankAccount(settings.bankAccount);
+        if (settings.bankOwner) setBankOwner(settings.bankOwner);
+        if (settings.bankBranch) setBankBranch(settings.bankBranch);
       } catch (error) {
         console.error('Error fetching settings:', error);
       }
@@ -358,9 +362,35 @@ export default function QuyetToanTemplate({
       }
       yPosition += 10;
 
+      // Bank Information
+      if (bankName && bankAccount) {
+        checkPageBreak(20);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('THÔNG TIN THANH TOÁN:', margin, yPosition);
+        yPosition += 6;
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.text(`Ngân hàng: ${bankName}`, margin, yPosition);
+        yPosition += 4;
+        pdf.text(`Số tài khoản: ${bankAccount}`, margin, yPosition);
+        yPosition += 4;
+        if (bankOwner) {
+          pdf.text(`Chủ tài khoản: ${bankOwner}`, margin, yPosition);
+          yPosition += 4;
+        }
+        if (bankBranch) {
+          pdf.text(`Chi nhánh: ${bankBranch}`, margin, yPosition);
+          yPosition += 4;
+        }
+        yPosition += 6;
+      }
+
       // Footer
       checkPageBreak(10);
       pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
       pdf.text(`Cảm ơn quý khách đã sử dụng dịch vụ của ${garageName}!`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 5;
       pdf.text(`Liên hệ: ${garagePhone} | ${garageEmail}`, pageWidth / 2, yPosition, { align: 'center' });
@@ -607,6 +637,18 @@ export default function QuyetToanTemplate({
         <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
         {notes && <p className="mb-1">- {notes}</p>}
       </div>
+
+      {bankName && bankAccount && (
+        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-md">
+          <h4 className="font-bold text-base mb-2 text-purple-800">THÔNG TIN THANH TOÁN:</h4>
+          <div className="text-sm space-y-1">
+            <p><span className="font-semibold">Ngân hàng:</span> {bankName}</p>
+            <p><span className="font-semibold">Số tài khoản:</span> {bankAccount}</p>
+            {bankOwner && <p><span className="font-semibold">Chủ tài khoản:</span> {bankOwner}</p>}
+            {bankBranch && <p><span className="font-semibold">Chi nhánh:</span> {bankBranch}</p>}
+          </div>
+        </div>
+      )}
 
       <div className="text-center text-sm">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
