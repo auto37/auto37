@@ -152,14 +152,16 @@ export default function QuotationTemplate({
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-      let yPosition = margin + 15; // Start lower to create balanced top margin
+      const margin = 25;
+      const topMargin = 35; // Larger top margin for better balance
+      const bottomMargin = 25;
+      let yPosition = topMargin;
 
       // Helper function to check if we need a new page
       const checkPageBreak = (requiredHeight: number) => {
-        if (yPosition + requiredHeight > pageHeight - margin) {
+        if (yPosition + requiredHeight > pageHeight - bottomMargin) {
           pdf.addPage();
-          yPosition = margin;
+          yPosition = topMargin; // Use consistent top margin on new pages
         }
       };
 
