@@ -152,8 +152,8 @@ export default function QuotationTemplate({
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let yPosition = margin;
+      const margin = 20;
+      let yPosition = margin + 15; // Start lower to create balanced top margin
 
       // Helper function to check if we need a new page
       const checkPageBreak = (requiredHeight: number) => {
@@ -415,8 +415,8 @@ export default function QuotationTemplate({
   };
 
   return (
-    <div className="bg-white max-w-4xl mx-auto p-6 shadow-md">
-      <div className="flex justify-between mb-8 border-b-2 pb-6">
+    <div className="bg-white max-w-4xl mx-auto p-8 shadow-md" style={{ marginTop: '3rem', marginBottom: '3rem' }}>
+      <div className="flex justify-between mb-6 border-b-2 pb-4">
         <div className="flex-1">
           {logo && <img src={logo} alt="Logo" className="h-20 mb-4" />}
           <h2 className="text-2xl font-bold mb-2">{garageName}</h2>

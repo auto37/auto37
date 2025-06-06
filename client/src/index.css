@@ -117,6 +117,50 @@ body {
   .form-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 gap-6;
   }
+}
+
+/* Print styles for better layout balance */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .bg-white {
+    background: white !important;
+    box-shadow: none !important;
+  }
+  
+  /* Add top margin to push content down from top edge */
+  .max-w-4xl {
+    margin-top: 2cm !important;
+    margin-bottom: 1cm !important;
+    padding-top: 1.5cm !important;
+    padding-bottom: 1.5cm !important;
+    padding-left: 1cm !important;
+    padding-right: 1cm !important;
+  }
+  
+  /* Hide print buttons when printing */
+  button {
+    display: none !important;
+  }
+  
+  /* Ensure proper page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* Optimize table spacing for print */
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
   
   .form-footer {
     @apply flex justify-end space-x-3 pt-6;
