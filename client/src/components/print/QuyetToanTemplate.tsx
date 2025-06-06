@@ -159,7 +159,7 @@ export default function QuyetToanTemplate({
       pdf.setFont('helvetica');
       pdf.setFontSize(12);
 
-      // Header
+      // Header với logo lớn hơn và bố cục đẹp hơn
       if (logo) {
         try {
           const img = new Image();
@@ -167,30 +167,39 @@ export default function QuyetToanTemplate({
           await new Promise((resolve) => {
             img.onload = resolve;
           });
-          pdf.addImage(img, 'PNG', margin, yPosition, 30, 15);
+          // Logo lớn hơn: 50x25 thay vì 30x15
+          pdf.addImage(img, 'PNG', margin, yPosition, 50, 25);
         } catch (error) {
           console.warn('Error loading logo:', error);
         }
-        yPosition += 20;
+        yPosition += 30; // Tăng khoảng cách để phù hợp với logo lớn hơn
       }
 
-      pdf.setFontSize(16);
+      // Tiêu đề garage với font lớn hơn
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
       pdf.text(garageName.toUpperCase(), margin, yPosition);
-      pdf.setFontSize(10);
-      yPosition += 5;
+      
+      // Thông tin garage với khoảng cách hợp lý
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      yPosition += 8;
       pdf.text(`Địa chỉ: ${garageAddress}`, margin, yPosition);
-      yPosition += 5;
+      yPosition += 6;
       pdf.text(`Điện thoại: ${garagePhone} | MST: ${garageTaxCode}`, margin, yPosition);
-      yPosition += 5;
+      yPosition += 6;
       pdf.text(`Email: ${garageEmail}`, margin, yPosition);
 
-      // Right-aligned header
-      pdf.setFontSize(16);
-      pdf.text('QUYẾT TOÁN DỊCH VỤ', pageWidth - margin - 50, margin);
-      pdf.setFontSize(10);
-      pdf.text(`Số: ${invoiceNumber}`, pageWidth - margin - 50, margin + 5);
-      pdf.text(`Ngày: ${formatLocalDate(invoiceDate)}`, pageWidth - margin - 50, margin + 10);
-      yPosition += 10;
+      // Right-aligned header với font lớn hơn
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('QUYẾT TOÁN DỊCH VỤ', pageWidth - margin - 75, margin + 10);
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Số: ${invoiceNumber}`, pageWidth - margin - 75, margin + 20);
+      pdf.text(`Ngày: ${formatLocalDate(invoiceDate)}`, pageWidth - margin - 75, margin + 28);
+      yPosition += 15;
 
       checkPageBreak(40);
 
@@ -205,8 +214,8 @@ export default function QuyetToanTemplate({
           ['Thợ sửa chữa:', repairTechnician || '-', 'Số điện thoại:', customerPhone || '-'],
         ],
         theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2 },
-        columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 30 } },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 35 } },
       });
       yPosition = (pdf as any).lastAutoTable.finalY + 10;
 
@@ -372,18 +381,18 @@ export default function QuyetToanTemplate({
 
   return (
     <div className="bg-white max-w-4xl mx-auto p-6 shadow-md">
-      <div className="flex justify-between mb-6 border-b pb-4">
-        <div>
-          {logo && <img src={logo} alt="Logo" className="h-12 mb-2" />}
-          <h2 className="text-lg font-bold">{garageName}</h2>
-          <p className="text-sm">{garageAddress}</p>
-          <p className="text-sm">Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
-          <p className="text-sm">Email: {garageEmail}</p>
+      <div className="flex justify-between mb-8 border-b-2 pb-6">
+        <div className="flex-1">
+          {logo && <img src={logo} alt="Logo" className="h-20 mb-4" />}
+          <h2 className="text-2xl font-bold mb-2">{garageName}</h2>
+          <p className="text-base mb-1">{garageAddress}</p>
+          <p className="text-base mb-1">Điện thoại: {garagePhone} | MST: {garageTaxCode}</p>
+          <p className="text-base">Email: {garageEmail}</p>
         </div>
-        <div className="text-right">
-          <h2 className="text-lg font-bold mb-2">QUYẾT TOÁN DỊCH VỤ</h2>
-          <p className="text-sm">Số: {invoiceNumber}</p>
-          <p className="text-sm">Ngày: {formatLocalDate(invoiceDate)}</p>
+        <div className="text-right flex-shrink-0 ml-8">
+          <h2 className="text-2xl font-bold mb-4 text-purple-600">QUYẾT TOÁN DỊCH VỤ</h2>
+          <p className="text-base mb-1">Số: <span className="font-semibold">{invoiceNumber}</span></p>
+          <p className="text-base">Ngày: <span className="font-semibold">{formatLocalDate(invoiceDate)}</span></p>
         </div>
       </div>
 
