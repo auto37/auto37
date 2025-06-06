@@ -14,6 +14,10 @@ export interface Settings {
   logoUrl?: string;
   iconColor?: string;
   useSupabase?: boolean; // Tùy chọn sử dụng Supabase
+  bankName?: string; // Tên ngân hàng
+  bankAccount?: string; // Số tài khoản
+  bankOwner?: string; // Tên chủ tài khoản
+  bankBranch?: string; // Chi nhánh ngân hàng
   updatedAt: Date;
 }
 
@@ -67,6 +71,10 @@ class SettingsDatabase extends Dexie {
         garageTaxCode: '',
         logoUrl: '',
         iconColor: '#f97316', // Màu cam mặc định (orange-500)
+        bankName: '',
+        bankAccount: '',
+        bankOwner: '',
+        bankBranch: '',
         updatedAt: new Date()
       };
       

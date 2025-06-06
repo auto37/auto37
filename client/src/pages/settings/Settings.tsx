@@ -20,6 +20,10 @@ export default function SettingsPage() {
     garageEmail: '',
     garageTaxCode: '',
     logoUrl: '',
+    bankName: '',
+    bankAccount: '',
+    bankOwner: '',
+    bankBranch: '',
     updatedAt: new Date()
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -295,6 +299,7 @@ export default function SettingsPage() {
           <Tabs defaultValue="garage">
             <TabsList className="mb-4">
               <TabsTrigger value="garage">Thông Tin Gara</TabsTrigger>
+              <TabsTrigger value="bank">Thông Tin Ngân Hàng</TabsTrigger>
               <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
               <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
               <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
@@ -358,6 +363,61 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+            </TabsContent>
+            
+            <TabsContent value="bank" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="bankName">Tên Ngân Hàng</Label>
+                  <Input 
+                    id="bankName" 
+                    name="bankName"
+                    value={settings.bankName || ''}
+                    onChange={handleInputChange}
+                    placeholder="VD: Ngân hàng TMCP Đầu tư và Phát triển Việt Nam"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bankAccount">Số Tài Khoản</Label>
+                  <Input 
+                    id="bankAccount" 
+                    name="bankAccount"
+                    value={settings.bankAccount || ''}
+                    onChange={handleInputChange}
+                    placeholder="VD: 1234567890123"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bankOwner">Tên Chủ Tài Khoản</Label>
+                  <Input 
+                    id="bankOwner" 
+                    name="bankOwner"
+                    value={settings.bankOwner || ''}
+                    onChange={handleInputChange}
+                    placeholder="VD: NGUYEN VAN A"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bankBranch">Chi Nhánh</Label>
+                  <Input 
+                    id="bankBranch" 
+                    name="bankBranch"
+                    value={settings.bankBranch || ''}
+                    onChange={handleInputChange}
+                    placeholder="VD: Chi nhánh Hà Nội"
+                  />
+                </div>
+              </div>
+              
+              <Alert>
+                <AlertTitle>Lưu ý</AlertTitle>
+                <AlertDescription>
+                  Thông tin ngân hàng sẽ được hiển thị trên các phiếu báo giá, lệnh sửa chữa và hóa đơn quyết toán để khách hàng có thể thực hiện thanh toán.
+                </AlertDescription>
+              </Alert>
             </TabsContent>
             
             <TabsContent value="appearance" className="space-y-6">

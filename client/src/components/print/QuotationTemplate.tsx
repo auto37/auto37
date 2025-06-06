@@ -111,6 +111,10 @@ export default function QuotationTemplate({
   const [garagePhone, setGaragePhone] = useState<string>('0987654321');
   const [garageEmail, setGarageEmail] = useState<string>('auto37@gmail.com');
   const [garageTaxCode, setGarageTaxCode] = useState<string>('0123456789');
+  const [bankName, setBankName] = useState<string>('');
+  const [bankAccount, setBankAccount] = useState<string>('');
+  const [bankOwner, setBankOwner] = useState<string>('');
+  const [bankBranch, setBankBranch] = useState<string>('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
@@ -123,6 +127,10 @@ export default function QuotationTemplate({
         if (settings.garagePhone) setGaragePhone(settings.garagePhone);
         if (settings.garageEmail) setGarageEmail(settings.garageEmail);
         if (settings.garageTaxCode) setGarageTaxCode(settings.garageTaxCode);
+        if (settings.bankName) setBankName(settings.bankName);
+        if (settings.bankAccount) setBankAccount(settings.bankAccount);
+        if (settings.bankOwner) setBankOwner(settings.bankOwner);
+        if (settings.bankBranch) setBankBranch(settings.bankBranch);
       } catch (error) {
         console.error('Error fetching settings:', error);
       }
