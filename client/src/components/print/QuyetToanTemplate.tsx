@@ -206,16 +206,24 @@ export default function QuyetToanTemplate({
       pdf.autoTable({
         startY: yPosition,
         body: [
-          ['Khách hàng:', customerName, 'Biển số xe:', vehicleLicensePlate],
-          ['Địa chỉ:', customerAddress || '', 'Hãng xe:', vehicleBrand || ''],
-          ['Điện thoại:', customerPhone || '', 'Model:', vehicleModel || ''],
-          ['Thợ sửa chữa:', repairTechnician || '', 'Số KM:', odometerReading?.toLocaleString() || ''],
+          ['Khách hàng:', customerName, 'Mã phiếu:', invoiceNumber],
+          ['Địa chỉ:', customerAddress || '', 'Ngày:', formatLocalDate(invoiceDate)],
+          ['Biển số:', vehicleLicensePlate, 'Hãng xe:', vehicleBrand || ''],
+          ['Loại xe:', vehicleModel || '', 'Số KM:', odometerReading?.toLocaleString() || '0'],
+          ['Thợ sửa chữa:', repairTechnician || '-', 'Số điện thoại:', customerPhone || '']
         ],
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 3 },
+        styles: { 
+          fontSize: 10, 
+          cellPadding: 3,
+          fillColor: [50, 50, 50],
+          textColor: [255, 255, 255]
+        },
         columnStyles: {
-          0: { fontStyle: 'bold', fillColor: [245, 245, 245], cellWidth: 30 },
-          2: { fontStyle: 'bold', fillColor: [245, 245, 245], cellWidth: 30 }
+          0: { fontStyle: 'bold', cellWidth: 25 },
+          1: { cellWidth: 60 },
+          2: { fontStyle: 'bold', cellWidth: 25 },
+          3: { cellWidth: 60 }
         },
       });
 
@@ -328,10 +336,31 @@ export default function QuyetToanTemplate({
         yPosition += 8;
       }
 
-      // Footer
+      // Notes section
       pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text('- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.', margin, yPosition);
+      yPosition += 6;
+      pdf.text('- Hóa đơn có giá trị trong vòng 7 ngày kể từ ngày 06/06/2025.', margin, yPosition);
+      
+      yPosition += 20;
+
+      // Footer message
+      pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Cảm ơn quý khách hàng!`, pageWidth / 2, yPosition + 10, { align: 'center' });
+      pdf.text(`Cảm ơn quý khách đã sử dụng dịch vụ của ${garageName}!`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 6;
+      pdf.text(`Liên hệ: ${garagePhone} - ${garageEmail} | ${garageEmail}`, pageWidth / 2, yPosition, { align: 'center' });
+
+      yPosition += 20;
+
+      // Signature section
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Người lập hóa đơn', pageWidth - margin - 50, yPosition, { align: 'center' });
+      yPosition += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('(Ký và ghi rõ họ tên)', pageWidth - margin - 50, yPosition, { align: 'center' });
 
       pdf.save(`Quyet_toan_${invoiceNumber}.pdf`);
       toast({
@@ -370,20 +399,42 @@ export default function QuyetToanTemplate({
         </div>
       </div>
 
-      {/* Customer Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        <div>
-          <p><strong>Khách hàng:</strong> {customerName}</p>
-          <p><strong>Địa chỉ:</strong> {customerAddress || ''}</p>
-          <p><strong>Điện thoại:</strong> {customerPhone || ''}</p>
-          <p><strong>Thợ sửa chữa:</strong> {repairTechnician || ''}</p>
-        </div>
-        <div>
-          <p><strong>Biển số xe:</strong> {vehicleLicensePlate}</p>
-          <p><strong>Hãng xe:</strong> {vehicleBrand || ''}</p>
-          <p><strong>Model:</strong> {vehicleModel || ''}</p>
-          <p><strong>Số KM:</strong> {odometerReading?.toLocaleString() || ''}</p>
-        </div>
+      {/* Customer Info - Dark styled table */}
+      <div className="mb-6">
+        <table className="w-full border-collapse border border-gray-300">
+          <tbody>
+            <tr className="bg-gray-800 text-white">
+              <td className="border border-gray-300 p-3 font-bold">Khách hàng:</td>
+              <td className="border border-gray-300 p-3">{customerName}</td>
+              <td className="border border-gray-300 p-3 font-bold">Mã phiếu:</td>
+              <td className="border border-gray-300 p-3">{invoiceNumber}</td>
+            </tr>
+            <tr className="bg-gray-800 text-white">
+              <td className="border border-gray-300 p-3 font-bold">Địa chỉ:</td>
+              <td className="border border-gray-300 p-3">{customerAddress || ''}</td>
+              <td className="border border-gray-300 p-3 font-bold">Ngày:</td>
+              <td className="border border-gray-300 p-3">{formatLocalDate(invoiceDate)}</td>
+            </tr>
+            <tr className="bg-gray-800 text-white">
+              <td className="border border-gray-300 p-3 font-bold">Biển số:</td>
+              <td className="border border-gray-300 p-3">{vehicleLicensePlate}</td>
+              <td className="border border-gray-300 p-3 font-bold">Hãng xe:</td>
+              <td className="border border-gray-300 p-3">{vehicleBrand || ''}</td>
+            </tr>
+            <tr className="bg-gray-800 text-white">
+              <td className="border border-gray-300 p-3 font-bold">Loại xe:</td>
+              <td className="border border-gray-300 p-3">{vehicleModel || ''}</td>
+              <td className="border border-gray-300 p-3 font-bold">Số KM:</td>
+              <td className="border border-gray-300 p-3">{odometerReading?.toLocaleString() || '0'}</td>
+            </tr>
+            <tr className="bg-gray-800 text-white">
+              <td className="border border-gray-300 p-3 font-bold">Thợ sửa chữa:</td>
+              <td className="border border-gray-300 p-3">{repairTechnician || '-'}</td>
+              <td className="border border-gray-300 p-3 font-bold">Số điện thoại:</td>
+              <td className="border border-gray-300 p-3">{customerPhone || ''}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Items Tables - Separate Materials and Services */}
@@ -488,6 +539,7 @@ export default function QuyetToanTemplate({
 
       <div className="mb-6 text-sm italic">
         <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
+        <p className="mb-1">- Hóa đơn có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
         {notes && <p className="mb-1">- {notes}</p>}
       </div>
 
@@ -503,9 +555,19 @@ export default function QuyetToanTemplate({
         </div>
       )}
 
-      <div className="text-center text-sm">
+      {/* Footer message */}
+      <div className="text-center text-sm mb-6">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
-        <p>Liên hệ: {garagePhone} | {garageEmail}</p>
+        <p>Liên hệ: {garagePhone} - {garageEmail} | {garageEmail}</p>
+      </div>
+
+      {/* Signature section */}
+      <div className="flex justify-end mb-6">
+        <div className="text-center">
+          <p className="font-bold mb-2">Người lập hóa đơn</p>
+          <p className="text-sm italic">(Ký và ghi rõ họ tên)</p>
+          <div className="w-32 h-16 border-b border-gray-400 mt-4"></div>
+        </div>
       </div>
 
       {!isPrintMode && (

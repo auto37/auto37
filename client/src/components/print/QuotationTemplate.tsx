@@ -555,31 +555,41 @@ export default function QuotationTemplate({
           
           return services.length > 0 ? (
             <div className="mb-6">
-              <h3 className="text-lg font-bold mb-3 text-green-600">DỊCH VỤ</h3>
+              <h3 className="text-lg font-bold mb-3">Chi tiết dịch vụ</h3>
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
-                  <tr className="bg-gray-100">
+                  <tr className="bg-gray-800 text-white">
                     <th className="border border-gray-300 p-2 text-center">STT</th>
-                    <th className="border border-gray-300 p-2 text-left">Nội dung</th>
+                    <th className="border border-gray-300 p-2 text-left">Tên dịch vụ</th>
                     <th className="border border-gray-300 p-2 text-center">ĐVT</th>
                     <th className="border border-gray-300 p-2 text-center">SL</th>
                     <th className="border border-gray-300 p-2 text-right">Đơn giá</th>
                     <th className="border border-gray-300 p-2 text-right">Thành tiền</th>
+                    <th className="border border-gray-300 p-2 text-center">Chiết khấu</th>
+                    <th className="border border-gray-300 p-2 text-right">Thành toán</th>
                   </tr>
                 </thead>
                 <tbody>
                   {services.map((item, index) => (
-                    <tr key={index}>
+                    <tr key={index} className="bg-gray-800 text-white">
                       <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
                       <td className="border border-gray-300 p-2">{item.description}</td>
                       <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
                       <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
                       <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toLocaleString()}</td>
                       <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
+                      <td className="border border-gray-300 p-2 text-center">0</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
                     </tr>
                   ))}
-                  <tr className="bg-green-50 font-bold">
-                    <td colSpan={5} className="border border-gray-300 p-2 text-right">Tổng dịch vụ:</td>
+                  <tr className="bg-gray-800 text-white font-bold">
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2">Cộng dịch vụ:</td>
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">{servicesTotal.toLocaleString()}</td>
+                    <td className="border border-gray-300 p-2 text-center">0</td>
                     <td className="border border-gray-300 p-2 text-right">{servicesTotal.toLocaleString()}</td>
                   </tr>
                 </tbody>
@@ -589,12 +599,31 @@ export default function QuotationTemplate({
         })()}
 
         {/* Total Summary */}
-        <div className="bg-gray-100 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-lg font-bold">TỔNG CỘNG:</span>
-            <span className="text-lg font-bold text-red-600">{total.toLocaleString()} VNĐ</span>
-          </div>
-          <div className="text-sm italic text-gray-600">
+        <div className="mb-6">
+          {(() => {
+            const materials = items.filter(item => item.unit === 'Cái');
+            const services = items.filter(item => item.unit === 'Dịch vụ');
+            const materialsTotal = materials.reduce((sum, item) => sum + item.amount, 0);
+            const servicesTotal = services.reduce((sum, item) => sum + item.amount, 0);
+
+            return (
+              <div className="space-y-2 text-right font-bold">
+                <div className="flex justify-between">
+                  <span>Tổng tiền dịch vụ:</span>
+                  <span>{servicesTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tổng tiền vật tư:</span>
+                  <span>{materialsTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-lg">
+                  <span>Phải thanh toán:</span>
+                  <span>{total.toLocaleString()}</span>
+                </div>
+              </div>
+            );
+          })()}
+          <div className="text-sm italic text-gray-600 mt-3">
             Bằng chữ: {numberToVietnameseText(total)}
           </div>
         </div>
@@ -618,9 +647,25 @@ export default function QuotationTemplate({
         </div>
       )}
 
-      <div className="text-center text-sm">
+      {/* Notes section */}
+      <div className="mb-6 text-sm italic">
+        <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
+        <p className="mb-1">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
+      </div>
+
+      {/* Footer message */}
+      <div className="text-center text-sm mb-6">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
-        <p>Liên hệ: {garagePhone} | {garageEmail}</p>
+        <p>Liên hệ: {garagePhone} - {garageEmail} | {garageEmail}</p>
+      </div>
+
+      {/* Signature section */}
+      <div className="flex justify-end mb-6">
+        <div className="text-center">
+          <p className="font-bold mb-2">Người lập báo giá</p>
+          <p className="text-sm italic">(Ký và ghi rõ họ tên)</p>
+          <div className="w-32 h-16 border-b border-gray-400 mt-4"></div>
+        </div>
       </div>
 
       {!isPrintMode && (
