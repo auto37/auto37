@@ -270,14 +270,11 @@ export default function QuyetToanTemplate({
           styles: { 
             fontSize: 8,
             cellPadding: 1.5,
-            fillColor: [50, 50, 50],
-            textColor: [255, 255, 255],
             lineWidth: 0.1
           },
           headStyles: { 
-            fillColor: [50, 50, 50], 
+            fillColor: [240, 240, 240], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255],
             fontSize: 8
           },
           columnStyles: {
@@ -325,14 +322,11 @@ export default function QuyetToanTemplate({
           styles: { 
             fontSize: 8,
             cellPadding: 1.5,
-            fillColor: [50, 50, 50],
-            textColor: [255, 255, 255],
             lineWidth: 0.1
           },
           headStyles: { 
-            fillColor: [50, 50, 50], 
+            fillColor: [240, 240, 240], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255],
             fontSize: 8
           },
           columnStyles: {

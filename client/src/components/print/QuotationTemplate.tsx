@@ -268,16 +268,13 @@ export default function QuotationTemplate({
           body: materialsData,
           theme: 'grid',
           styles: { 
-            fontSize: 8, // Giảm font size để tối ưu 
+            fontSize: 8,
             cellPadding: 1.5,
-            fillColor: [50, 50, 50],
-            textColor: [255, 255, 255],
-            lineWidth: 0.1 // Giảm độ dày đường viền
+            lineWidth: 0.1
           },
           headStyles: { 
-            fillColor: [50, 50, 50], 
+            fillColor: [240, 240, 240], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255],
             fontSize: 8
           },
           columnStyles: {
@@ -325,14 +322,11 @@ export default function QuotationTemplate({
           styles: { 
             fontSize: 8,
             cellPadding: 1.5,
-            fillColor: [50, 50, 50],
-            textColor: [255, 255, 255],
             lineWidth: 0.1
           },
           headStyles: { 
-            fillColor: [50, 50, 50], 
+            fillColor: [240, 240, 240], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255],
             fontSize: 8
           },
           columnStyles: {
