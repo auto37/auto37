@@ -220,34 +220,81 @@ export default function QuotationTemplate({
 
       yPosition = (pdf as any).lastAutoTable.finalY + 10;
 
-      // Items table
-      const tableData = items.map((item, index) => [
-        index + 1,
-        item.description,
-        item.unit,
-        item.quantity,
-        item.unitPrice.toLocaleString(),
-        item.amount.toLocaleString()
-      ]);
+      // Separate items by type
+      const materials = items.filter(item => item.unit === 'Cái');
+      const services = items.filter(item => item.unit === 'Dịch vụ');
 
-      pdf.autoTable({
-        startY: yPosition,
-        head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
-        body: tableData,
-        theme: 'striped',
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
-        columnStyles: {
-          0: { cellWidth: 15, halign: 'center' },
-          1: { cellWidth: 'auto' },
-          2: { cellWidth: 20, halign: 'center' },
-          3: { cellWidth: 15, halign: 'center' },
-          4: { cellWidth: 25, halign: 'right' },
-          5: { cellWidth: 25, halign: 'right' }
-        }
-      });
+      // Materials table
+      if (materials.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('VẬT TƯ', margin, yPosition);
+        yPosition += 8;
 
-      yPosition = (pdf as any).lastAutoTable.finalY + 10;
+        const materialsData = materials.map((item, index) => [
+          index + 1,
+          item.description,
+          item.unit,
+          item.quantity,
+          item.unitPrice.toLocaleString(),
+          item.amount.toLocaleString()
+        ]);
+
+        pdf.autoTable({
+          startY: yPosition,
+          head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
+          body: materialsData,
+          theme: 'striped',
+          styles: { fontSize: 9, cellPadding: 2 },
+          headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 15, halign: 'center' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 15, halign: 'center' },
+            4: { cellWidth: 25, halign: 'right' },
+            5: { cellWidth: 25, halign: 'right' }
+          }
+        });
+
+        yPosition = (pdf as any).lastAutoTable.finalY + 15;
+      }
+
+      // Services table
+      if (services.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('DỊCH VỤ', margin, yPosition);
+        yPosition += 8;
+
+        const servicesData = services.map((item, index) => [
+          index + 1,
+          item.description,
+          item.unit,
+          item.quantity,
+          item.unitPrice.toLocaleString(),
+          item.amount.toLocaleString()
+        ]);
+
+        pdf.autoTable({
+          startY: yPosition,
+          head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
+          body: servicesData,
+          theme: 'striped',
+          styles: { fontSize: 9, cellPadding: 2 },
+          headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 15, halign: 'center' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 15, halign: 'center' },
+            4: { cellWidth: 25, halign: 'right' },
+            5: { cellWidth: 25, halign: 'right' }
+          }
+        });
+
+        yPosition = (pdf as any).lastAutoTable.finalY + 10;
+      }
 
       // Summary
       pdf.setFontSize(12);
@@ -336,41 +383,98 @@ export default function QuotationTemplate({
         </div>
       </div>
 
-      {/* Items Table */}
+      {/* Items Tables - Separate Materials and Services */}
       <div className="mb-6">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 p-2 text-center">STT</th>
-              <th className="border border-gray-300 p-2 text-left">Nội dung</th>
-              <th className="border border-gray-300 p-2 text-center">ĐVT</th>
-              <th className="border border-gray-300 p-2 text-center">SL</th>
-              <th className="border border-gray-300 p-2 text-right">Đơn giá</th>
-              <th className="border border-gray-300 p-2 text-right">Thành tiền</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
-                <td className="border border-gray-300 p-2">{item.description}</td>
-                <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
-                <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
-                <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toLocaleString()}</td>
-                <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
-              </tr>
-            ))}
-            <tr className="bg-gray-100 font-bold">
-              <td colSpan={5} className="border border-gray-300 p-2 text-right">Tổng cộng:</td>
-              <td className="border border-gray-300 p-2 text-right">{total.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td colSpan={6} className="border border-gray-300 p-2 italic">
-                Bằng chữ: {numberToVietnameseText(total)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Materials Table */}
+        {(() => {
+          const materials = items.filter(item => item.unit === 'Cái');
+          const materialsTotal = materials.reduce((sum, item) => sum + item.amount, 0);
+          
+          return materials.length > 0 ? (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-3 text-blue-600">VẬT TƯ</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-center">STT</th>
+                    <th className="border border-gray-300 p-2 text-left">Nội dung</th>
+                    <th className="border border-gray-300 p-2 text-center">ĐVT</th>
+                    <th className="border border-gray-300 p-2 text-center">SL</th>
+                    <th className="border border-gray-300 p-2 text-right">Đơn giá</th>
+                    <th className="border border-gray-300 p-2 text-right">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {materials.map((item, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
+                      <td className="border border-gray-300 p-2">{item.description}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toLocaleString()}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-blue-50 font-bold">
+                    <td colSpan={5} className="border border-gray-300 p-2 text-right">Tổng vật tư:</td>
+                    <td className="border border-gray-300 p-2 text-right">{materialsTotal.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Services Table */}
+        {(() => {
+          const services = items.filter(item => item.unit === 'Dịch vụ');
+          const servicesTotal = services.reduce((sum, item) => sum + item.amount, 0);
+          
+          return services.length > 0 ? (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-3 text-green-600">DỊCH VỤ</h3>
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-center">STT</th>
+                    <th className="border border-gray-300 p-2 text-left">Nội dung</th>
+                    <th className="border border-gray-300 p-2 text-center">ĐVT</th>
+                    <th className="border border-gray-300 p-2 text-center">SL</th>
+                    <th className="border border-gray-300 p-2 text-right">Đơn giá</th>
+                    <th className="border border-gray-300 p-2 text-right">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((item, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
+                      <td className="border border-gray-300 p-2">{item.description}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toLocaleString()}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-green-50 font-bold">
+                    <td colSpan={5} className="border border-gray-300 p-2 text-right">Tổng dịch vụ:</td>
+                    <td className="border border-gray-300 p-2 text-right">{servicesTotal.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Total Summary */}
+        <div className="bg-gray-100 p-4 rounded-lg">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-lg font-bold">TỔNG CỘNG:</span>
+            <span className="text-lg font-bold text-red-600">{total.toLocaleString()} VNĐ</span>
+          </div>
+          <div className="text-sm italic text-gray-600">
+            Bằng chữ: {numberToVietnameseText(total)}
+          </div>
+        </div>
       </div>
 
       {notes && (
