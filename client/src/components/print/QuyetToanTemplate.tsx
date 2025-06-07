@@ -161,10 +161,10 @@ export default function QuyetToanTemplate({
   const printToPdf = async () => {
     setIsGeneratingPdf(true);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF('p', 'mm', 'a4', true); // Enable compression
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 15;
-      let yPosition = margin;
+      let yPosition = margin + 20; // Hạ xuống 2cm (20mm)
 
       // Logo and Header
       if (logo) {
@@ -174,7 +174,14 @@ export default function QuyetToanTemplate({
           await new Promise((resolve) => {
             img.onload = resolve;
           });
-          pdf.addImage(img, 'PNG', margin, yPosition, 40, 20);
+          // Compress and optimize image
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 200; // Reduce resolution
+          canvas.height = 100;
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressedImage = canvas.toDataURL('image/jpeg', 0.7); // JPEG with 70% quality
+          pdf.addImage(compressedImage, 'JPEG', margin, yPosition, 40, 20);
         } catch (error) {
           console.warn('Error loading logo:', error);
         }
@@ -362,6 +369,14 @@ export default function QuyetToanTemplate({
       pdf.setFont('helvetica', 'normal');
       pdf.text('(Ký và ghi rõ họ tên)', pageWidth - margin - 50, yPosition, { align: 'center' });
 
+      // Optimize PDF before saving
+      pdf.setProperties({
+        title: `Hóa đơn ${invoiceNumber}`,
+        subject: 'Hóa đơn quyết toán',
+        creator: garageName
+      });
+
+      // Compress and save
       pdf.save(`Quyet_toan_${invoiceNumber}.pdf`);
       toast({
         title: 'Thành công',

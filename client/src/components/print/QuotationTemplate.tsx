@@ -161,10 +161,10 @@ export default function QuotationTemplate({
   const printToPdf = async () => {
     setIsGeneratingPdf(true);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF('p', 'mm', 'a4', true); // Enable compression
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 15;
-      let yPosition = margin;
+      let yPosition = margin + 20; // Hạ xuống 2cm (20mm)
 
       // Logo and Header
       if (logo) {
@@ -174,7 +174,14 @@ export default function QuotationTemplate({
           await new Promise((resolve) => {
             img.onload = resolve;
           });
-          pdf.addImage(img, 'PNG', margin, yPosition, 40, 20);
+          // Compress and optimize image
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 200; // Reduce resolution
+          canvas.height = 100;
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressedImage = canvas.toDataURL('image/jpeg', 0.7); // JPEG with 70% quality
+          pdf.addImage(compressedImage, 'JPEG', margin, yPosition, 40, 20);
         } catch (error) {
           console.warn('Error loading logo:', error);
         }
@@ -261,25 +268,27 @@ export default function QuotationTemplate({
           body: materialsData,
           theme: 'grid',
           styles: { 
-            fontSize: 9, 
-            cellPadding: 2,
+            fontSize: 8, // Giảm font size để tối ưu 
+            cellPadding: 1.5,
             fillColor: [50, 50, 50],
-            textColor: [255, 255, 255]
+            textColor: [255, 255, 255],
+            lineWidth: 0.1 // Giảm độ dày đường viền
           },
           headStyles: { 
             fillColor: [50, 50, 50], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255]
+            textColor: [255, 255, 255],
+            fontSize: 8
           },
           columnStyles: {
-            0: { cellWidth: 15, halign: 'center' },
-            1: { cellWidth: 50 },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 15, halign: 'center' },
-            4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 25, halign: 'right' },
-            6: { cellWidth: 20, halign: 'center' },
-            7: { cellWidth: 25, halign: 'right' }
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 18, halign: 'center' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 22, halign: 'right' },
+            5: { cellWidth: 22, halign: 'right' },
+            6: { cellWidth: 18, halign: 'center' },
+            7: { cellWidth: 22, halign: 'right' }
           }
         });
 
@@ -421,6 +430,14 @@ export default function QuotationTemplate({
       pdf.setFont('helvetica', 'normal');
       pdf.text('(Ký và ghi rõ họ tên)', pageWidth - margin - 50, yPosition, { align: 'center' });
 
+      // Optimize PDF before saving
+      pdf.setProperties({
+        title: `Báo giá ${invoiceNumber}`,
+        subject: 'Báo giá dịch vụ',
+        creator: garageName
+      });
+
+      // Compress and save
       pdf.save(`Bao_gia_${invoiceNumber}.pdf`);
       toast({
         title: 'Thành công',
