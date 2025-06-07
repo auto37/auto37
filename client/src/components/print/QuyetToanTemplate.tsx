@@ -104,7 +104,7 @@ const formatLocalDate = (date: Date): string => {
   }).format(date);
 };
 
-export function QuyetToanTemplate({
+export default function QuyetToanTemplate({
   customerName,
   customerAddress,
   customerPhone,
