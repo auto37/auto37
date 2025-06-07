@@ -323,25 +323,27 @@ export default function QuotationTemplate({
           body: servicesData,
           theme: 'grid',
           styles: { 
-            fontSize: 9, 
-            cellPadding: 2,
+            fontSize: 8,
+            cellPadding: 1.5,
             fillColor: [50, 50, 50],
-            textColor: [255, 255, 255]
+            textColor: [255, 255, 255],
+            lineWidth: 0.1
           },
           headStyles: { 
             fillColor: [50, 50, 50], 
             fontStyle: 'bold',
-            textColor: [255, 255, 255]
+            textColor: [255, 255, 255],
+            fontSize: 8
           },
           columnStyles: {
-            0: { cellWidth: 15, halign: 'center' },
-            1: { cellWidth: 50 },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 15, halign: 'center' },
-            4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 25, halign: 'right' },
-            6: { cellWidth: 20, halign: 'center' },
-            7: { cellWidth: 25, halign: 'right' }
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 18, halign: 'center' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 22, halign: 'right' },
+            5: { cellWidth: 22, halign: 'right' },
+            6: { cellWidth: 18, halign: 'center' },
+            7: { cellWidth: 22, halign: 'right' }
           }
         });
 

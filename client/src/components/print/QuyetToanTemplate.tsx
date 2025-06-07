@@ -244,7 +244,7 @@ export default function QuyetToanTemplate({
       if (materials.length > 0) {
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('VẬT TƯ', margin, yPosition);
+        pdf.text('Chi tiết vật tư', margin, yPosition);
         yPosition += 8;
 
         const materialsData = materials.map((item, index) => [
@@ -253,23 +253,42 @@ export default function QuyetToanTemplate({
           item.unit,
           item.quantity,
           item.unitPrice.toLocaleString(),
+          item.amount.toLocaleString(),
+          '0', // Chiết khấu
           item.amount.toLocaleString()
         ]);
 
+        // Add total row
+        const materialsTotal = materials.reduce((sum, item) => sum + item.amount, 0);
+        materialsData.push(['', 'Cộng vật tư:', '', '', '', materialsTotal.toLocaleString(), '0', materialsTotal.toLocaleString()]);
+
         pdf.autoTable({
           startY: yPosition,
-          head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
+          head: [['STT', 'Tên vật tư', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
           body: materialsData,
-          theme: 'striped',
-          styles: { fontSize: 9, cellPadding: 2 },
-          headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+          theme: 'grid',
+          styles: { 
+            fontSize: 8,
+            cellPadding: 1.5,
+            fillColor: [50, 50, 50],
+            textColor: [255, 255, 255],
+            lineWidth: 0.1
+          },
+          headStyles: { 
+            fillColor: [50, 50, 50], 
+            fontStyle: 'bold',
+            textColor: [255, 255, 255],
+            fontSize: 8
+          },
           columnStyles: {
-            0: { cellWidth: 15, halign: 'center' },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 15, halign: 'center' },
-            4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 25, halign: 'right' }
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 18, halign: 'center' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 22, halign: 'right' },
+            5: { cellWidth: 22, halign: 'right' },
+            6: { cellWidth: 18, halign: 'center' },
+            7: { cellWidth: 22, halign: 'right' }
           }
         });
 
@@ -280,7 +299,7 @@ export default function QuyetToanTemplate({
       if (services.length > 0) {
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('DỊCH VỤ', margin, yPosition);
+        pdf.text('Chi tiết dịch vụ', margin, yPosition);
         yPosition += 8;
 
         const servicesData = services.map((item, index) => [
@@ -289,35 +308,79 @@ export default function QuyetToanTemplate({
           item.unit,
           item.quantity,
           item.unitPrice.toLocaleString(),
+          item.amount.toLocaleString(),
+          '0', // Chiết khấu
           item.amount.toLocaleString()
         ]);
 
+        // Add total row
+        const servicesTotal = services.reduce((sum, item) => sum + item.amount, 0);
+        servicesData.push(['', 'Cộng dịch vụ:', '', '', '', servicesTotal.toLocaleString(), '0', servicesTotal.toLocaleString()]);
+
         pdf.autoTable({
           startY: yPosition,
-          head: [['STT', 'Nội dung', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền']],
+          head: [['STT', 'Tên dịch vụ', 'ĐVT', 'SL', 'Đơn giá', 'Thành tiền', 'Chiết khấu', 'Thành toán']],
           body: servicesData,
-          theme: 'striped',
-          styles: { fontSize: 9, cellPadding: 2 },
-          headStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+          theme: 'grid',
+          styles: { 
+            fontSize: 8,
+            cellPadding: 1.5,
+            fillColor: [50, 50, 50],
+            textColor: [255, 255, 255],
+            lineWidth: 0.1
+          },
+          headStyles: { 
+            fillColor: [50, 50, 50], 
+            fontStyle: 'bold',
+            textColor: [255, 255, 255],
+            fontSize: 8
+          },
           columnStyles: {
-            0: { cellWidth: 15, halign: 'center' },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 15, halign: 'center' },
-            4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 25, halign: 'right' }
+            0: { cellWidth: 12, halign: 'center' },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 18, halign: 'center' },
+            3: { cellWidth: 12, halign: 'center' },
+            4: { cellWidth: 22, halign: 'right' },
+            5: { cellWidth: 22, halign: 'right' },
+            6: { cellWidth: 18, halign: 'center' },
+            7: { cellWidth: 22, halign: 'right' }
           }
         });
 
         yPosition = (pdf as any).lastAutoTable.finalY + 10;
       }
 
-      // Summary
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`Tổng cộng: ${total.toLocaleString()} VNĐ`, pageWidth - margin - 50, yPosition, { align: 'right' });
+      // Summary totals table
+      const materialsTotal = materials.reduce((sum, item) => sum + item.amount, 0);
+      const servicesTotal = services.reduce((sum, item) => sum + item.amount, 0);
+
+      const summaryData = [
+        ['Tổng tiền dịch vụ:', '', '', '', '', servicesTotal.toLocaleString()],
+        ['Tổng tiền vật tư:', '', '', '', '', materialsTotal.toLocaleString()],
+        ['Phải thanh toán:', '', '', '', '', total.toLocaleString()]
+      ];
+
+      pdf.autoTable({
+        startY: yPosition,
+        body: summaryData,
+        theme: 'plain',
+        styles: { 
+          fontSize: 10,
+          cellPadding: 2,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 30, halign: 'right' }
+        }
+      });
+
+      yPosition = (pdf as any).lastAutoTable.finalY + 5;
       
-      yPosition += 8;
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'italic');
       pdf.text(`Bằng chữ: ${numberToVietnameseText(total)}`, margin, yPosition);
