@@ -13,7 +13,7 @@ export default function PrintLayout({
   children,
   onPrint,
   onBack,
-  printButtonLabel = 'Xuất PDF',
+  
   showBackButton = true
 }: PrintLayoutProps) {
   return (

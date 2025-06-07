@@ -460,7 +460,8 @@ export default function QuotationTemplate({
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{garageName}</h1>
             <p className="text-sm text-gray-600">{garageAddress}</p>
-            <p className="text-sm text-gray-600">Tel: {garagePhone} | Email: {garageEmail}</p>
+            <p className="text-sm text-gray-600">Tel: {garagePhone}</p>
+            <p className="text-sm text-gray-600">Email: {garageEmail}</p>
             <p className="text-sm text-gray-600">MST: {garageTaxCode}</p>
           </div>
         </div>
@@ -665,21 +666,22 @@ export default function QuotationTemplate({
         <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
         <p className="mb-1">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
       </div>
-
-      {/* Footer message */}
-      <div className="text-center text-sm mb-6">
-        <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
-        <p>Liên hệ: {garagePhone} - {garageEmail} | {garageEmail}</p>
-      </div>
-
-      {/* Signature section */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-1">
         <div className="text-center">
           <p className="font-bold mb-2">Người lập báo giá</p>
           <p className="text-sm italic">(Ký và ghi rõ họ tên)</p>
           <div className="w-32 h-16 border-b border-gray-400 mt-4"></div>
         </div>
       </div>
+
+      {/* Footer message */}
+      <div className="text-center text-sm mb-6">
+        <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
+        <p>Mọi thắc mắc xin liên hệ: {garagePhone} - {garageEmail}</p>
+      </div>
+
+      {/* Signature section */}
+     
 
       {!isPrintMode && (
         <div className="mt-6 text-center">
