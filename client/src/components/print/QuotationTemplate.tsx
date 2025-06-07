@@ -104,7 +104,7 @@ const formatLocalDate = (date: Date): string => {
   }).format(date);
 };
 
-export function QuotationTemplate({
+export default function QuotationTemplate({
   customerName,
   customerAddress,
   customerPhone,

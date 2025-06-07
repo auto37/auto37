@@ -104,7 +104,7 @@ const formatLocalDate = (date: Date): string => {
   }).format(date);
 };
 
-export function RepairOrderTemplate({
+export default function RepairOrderTemplate({
   customerName,
   customerAddress,
   customerPhone,
