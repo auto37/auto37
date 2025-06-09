@@ -2,7 +2,7 @@ import { users, type User, type InsertUser } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neon } from '@neondatabase/serverless';
 import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // Số vòng hash password
 const SALT_ROUNDS = 10;
