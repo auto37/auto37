@@ -192,3 +192,50 @@ export function calculateTotals(items: { quantity: number, unitPrice: number, to
     total: subtotal 
   };
 }
+
+export function numberToVietnameseText(amount: number): string {
+  const ones = [
+    '', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín',
+    'mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm',
+    'mười sáu', 'mười bảy', 'mười tám', 'mười chín'
+  ];
+  
+  const tens = [
+    '', '', 'hai mười', 'ba mười', 'bốn mười', 'năm mười',
+    'sáu mười', 'bảy mười', 'tám mười', 'chín mười'
+  ];
+  
+  if (amount === 0) return 'không đồng';
+  
+  if (amount < 0) return 'âm ' + numberToVietnameseText(-amount);
+  
+  if (amount < 20) return ones[amount] + ' đồng';
+  
+  if (amount < 100) {
+    const ten = Math.floor(amount / 10);
+    const one = amount % 10;
+    return (tens[ten] + (one ? ' ' + ones[one] : '')) + ' đồng';
+  }
+  
+  if (amount < 1000) {
+    const hundred = Math.floor(amount / 100);
+    const remainder = amount % 100;
+    return ones[hundred] + ' trăm' + (remainder ? ' ' + numberToVietnameseText(remainder).replace(' đồng', '') : '') + ' đồng';
+  }
+  
+  if (amount < 1000000) {
+    const thousand = Math.floor(amount / 1000);
+    const remainder = amount % 1000;
+    return numberToVietnameseText(thousand).replace(' đồng', '') + ' nghìn' + (remainder ? ' ' + numberToVietnameseText(remainder).replace(' đồng', '') : '') + ' đồng';
+  }
+  
+  if (amount < 1000000000) {
+    const million = Math.floor(amount / 1000000);
+    const remainder = amount % 1000000;
+    return numberToVietnameseText(million).replace(' đồng', '') + ' triệu' + (remainder ? ' ' + numberToVietnameseText(remainder).replace(' đồng', '') : '') + ' đồng';
+  }
+  
+  const billion = Math.floor(amount / 1000000000);
+  const remainder = amount % 1000000000;
+  return numberToVietnameseText(billion).replace(' đồng', '') + ' tỷ' + (remainder ? ' ' + numberToVietnameseText(remainder).replace(' đồng', '') : '') + ' đồng';
+}

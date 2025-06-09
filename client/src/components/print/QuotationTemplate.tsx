@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { settingsDb } from '@/lib/settings';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { settingsDb, Settings } from '@/lib/settings';
+import PDFDownloadButton from '@/components/ui/PDFDownloadButton';
 
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => any;
-    lastAutoTable: any;
-  }
-}
+
 
 interface QuotationItem {
   description: string;
@@ -666,6 +660,7 @@ export default function QuotationTemplate({
         <p className="mb-1">- Giá trên chưa bao gồm VAT. Nếu cần hóa đơn GTGT, xin vui lòng thông báo trước.</p>
         <p className="mb-1">- Báo giá có giá trị trong vòng 7 ngày kể từ ngày {formatLocalDate(invoiceDate)}.</p>
       </div>
+       {/* Signature section */}
       <div className="flex justify-end mb-1">
         <div className="text-center">
           <p className="font-bold mb-2">Người lập báo giá</p>
@@ -677,10 +672,10 @@ export default function QuotationTemplate({
       {/* Footer message */}
       <div className="text-center text-sm mb-6">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
-        <p>Mọi thắc mắc xin liên hệ: {garagePhone} - {garageEmail}</p>
+       
       </div>
 
-      {/* Signature section */}
+     
      
 
       {!isPrintMode && (
