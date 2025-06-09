@@ -10,7 +10,8 @@ import { startAutoSync } from "./lib/auto-sync";
 import "./lib/db";
 
 // Đăng ký Service Worker để hỗ trợ chế độ Offline
-registerServiceWorker();
+// Temporarily disabled for StackBlitz compatibility
+// registerServiceWorker();
 
 // Thiết lập phát hiện trạng thái kết nối
 setupOfflineDetection();
