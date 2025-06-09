@@ -677,7 +677,7 @@ export default function QuotationTemplate({
       {/* Footer message */}
       <div className="text-center text-sm mb-6">
         <p className="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của {garageName}!</p>
-        <p>Mọi thắc mắc xin liên hệ: {garagePhone} - {garageEmail}</p>
+        
       </div>
 
       {/* Signature section */}
