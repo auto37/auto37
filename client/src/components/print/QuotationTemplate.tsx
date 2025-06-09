@@ -164,7 +164,7 @@ export default function QuotationTemplate({
       const pdf = new jsPDF('p', 'mm', 'a4', true); // Enable compression
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 15;
-      let yPosition = margin + 20; // Hạ xuống 2cm (20mm)
+      let yPosition = margin + 40; // Hạ xuống 2cm (20mm)
 
       // Logo and Header
       if (logo) {
