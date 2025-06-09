@@ -9,7 +9,7 @@ interface PrintButtonProps {
   label?: string;
 }
 
-export default function PrintButton({ elementId, fileName, label = 'Xuất PDF' }: PrintButtonProps) {
+export default function PrintButton({ elementId, fileName, label = '' }: PrintButtonProps) {
   const { toast } = useToast();
 
   const handlePrint = async () => {
