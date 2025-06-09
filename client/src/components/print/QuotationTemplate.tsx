@@ -126,13 +126,13 @@ export default function QuotationTemplate({
   const { toast } = useToast();
   const [logo, setLogo] = useState<string>('');
   const [garageName, setGarageName] = useState<string>('AUTO37 GARAGE');
-  const [garageAddress, setGarageAddress] = useState<string>('Số 74 Trần Phú, P.Mộ Lao, TP.Hà Đông, HN');
-  const [garagePhone, setGaragePhone] = useState<string>('0987654321');
+  const [garageAddress, setGarageAddress] = useState<string>('Khối 4 Thị Trấn Cầu Giát');
+  const [garagePhone, setGaragePhone] = useState<string>('0962.589.850 | 0866.396.796');
   const [garageEmail, setGarageEmail] = useState<string>('auto37@gmail.com');
-  const [garageTaxCode, setGarageTaxCode] = useState<string>('0123456789');
-  const [bankName, setBankName] = useState<string>('');
-  const [bankAccount, setBankAccount] = useState<string>('');
-  const [bankOwner, setBankOwner] = useState<string>('');
+  const [garageTaxCode, setGarageTaxCode] = useState<string>('');
+  const [bankName, setBankName] = useState<string>('Ngân Hàng Quân đội MB ');
+  const [bankAccount, setBankAccount] = useState<string>('235898385');
+  const [bankOwner, setBankOwner] = useState<string>('HO TRONG CUONG');
   const [bankBranch, setBankBranch] = useState<string>('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
