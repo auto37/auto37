@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
-import PDFDownloadButton from '@/components/ui/PDFDownloadButton';
 import { formatCurrency } from '@/lib/utils';
 
 interface InvoiceItem {
@@ -85,29 +84,6 @@ export default function QuyetToanTemplate({
 
     fetchSettings();
   }, []);
-
-  // Transform items for PDF
-  const pdfItems = items.map(item => ({
-    name: item.description,
-    unit: item.unit,
-    quantity: item.quantity,
-    unitPrice: item.unitPrice,
-    total: item.total,
-  }));
-
-  // Create customer and vehicle objects
-  const customer = {
-    name: customerName,
-    phone: customerPhone,
-    address: customerAddress,
-  };
-
-  const vehicle = {
-    licensePlate: vehicleLicensePlate,
-    brand: vehicleBrand,
-    model: vehicleModel,
-    year: undefined,
-  };
 
   const formatLocalDate = (date: Date): string => {
     return new Intl.DateTimeFormat('vi-VN', {
@@ -291,25 +267,6 @@ export default function QuyetToanTemplate({
           <i className="fas fa-print mr-2"></i>
           In tài liệu
         </button>
-        
-        <PDFDownloadButton
-          title="HÓA ĐƠN QUYẾT TOÁN"
-          code={invoiceNumber}
-          date={invoiceDate}
-          customer={customer}
-          vehicle={vehicle}
-          items={pdfItems}
-          subtotal={subtotal}
-          tax={tax}
-          total={total}
-          settings={settings}
-          notes={notes}
-          type="invoice"
-          fileName={`Hoa_don_${invoiceNumber}.pdf`}
-        >
-          <i className="fas fa-file-pdf mr-2"></i>
-          Tải PDF
-        </PDFDownloadButton>
       </div>
 
       {/* Print Preview */}
