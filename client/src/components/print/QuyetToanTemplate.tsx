@@ -106,7 +106,7 @@ export default function QuyetToanTemplate({
 
   if (isPrintMode) {
     return (
-      <div id="invoice-print" className="bg-white p-8 max-w-4xl mx-auto font-sans text-sm">
+      <div id="invoice-print\" className="bg-white p-8 max-w-4xl mx-auto font-sans text-sm">
         {/* Header */}
         <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
           {settings.logoUrl && (
