@@ -2,7 +2,7 @@ import { users, type User, type InsertUser } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { neon } from '@neondatabase/serverless';
 import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // Số vòng hash password
 const SALT_ROUNDS = 10;
@@ -18,13 +18,20 @@ export interface IStorage {
   validatePassword(user: User, password: string): Promise<boolean>;
 }
 
-// Kết nối đến cơ sở dữ liệu Postgres từ Supabase
-const sql = neon(process.env.DATABASE_URL || "");
-export const db = drizzle(sql);
+// Kết nối đến cơ sở dữ liệu Postgres từ Supabase (chỉ khi có DATABASE_URL)
+let db: any = null;
+if (process.env.DATABASE_URL) {
+  const sql = neon(process.env.DATABASE_URL);
+  db = drizzle(sql);
+}
 
 // Lớp quản lý người dùng trong Postgres
 export class PostgresStorage implements IStorage {
-  constructor() {}
+  constructor() {
+    if (!db) {
+      throw new Error("Database connection not available");
+    }
+  }
 
   async getUser(id: number): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
