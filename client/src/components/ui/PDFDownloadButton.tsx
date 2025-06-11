@@ -50,10 +50,12 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; padding: 20px; max-width: 210mm; margin: 0 auto; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .logo { width: 50px; height: 50px; object-fit: contain; }
-            .company-info { flex: 1; margin-left: 15px; }
-            .company-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 3px solid #000; padding-bottom: 15px; background-color: #f8f9fa; padding: 15px; }
+            .logo { width: 60px; height: 60px; object-fit: contain; }
+            .company-info { flex: 1; margin-left: 20px; }
+            .company-name { font-size: 20px; font-weight: bold; margin-bottom: 8px; color: #1a1a1a; text-transform: uppercase; }
+            .company-details { font-size: 12px; line-height: 1.6; }
+            .company-details div { margin-bottom: 3px; }
             .title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; text-transform: uppercase; }
             .info-section { margin-bottom: 15px; }
             .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -72,7 +74,10 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             .signatures { display: flex; justify-content: space-between; margin-top: 30px; }
             .signature { text-align: center; width: 30%; font-size: 10px; }
             .signature-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 3px; }
-            .bank-info { margin: 15px 0; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 10px; }
+            .bank-info { margin: 20px 0; padding: 15px; background-color: #e8f4fd; border: 2px solid #2563eb; border-radius: 5px; font-size: 11px; }
+            .bank-info strong { color: #1d4ed8; font-size: 12px; margin-bottom: 8px; display: block; }
+            .bank-info .bank-row { margin-bottom: 5px; }
+            .bank-info .bank-label { font-weight: bold; display: inline-block; width: 90px; }
             .thank-you { text-align: center; margin-top: 20px; color: #666; font-size: 10px; }
             @media print { 
               body { margin: 0; padding: 10mm; } 
@@ -85,12 +90,12 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="Logo" class="logo">` : ''}
             <div class="company-info">
               <div class="company-name">${settings.garageName}</div>
-              ${settings.garageAddress ? `<div>Địa chỉ: ${settings.garageAddress}</div>` : ''}
-              <div>
-                ${settings.garagePhone ? `ĐT: ${settings.garagePhone}` : ''}
-                ${settings.garageEmail ? ` - Email: ${settings.garageEmail}` : ''}
+              <div class="company-details">
+                ${settings.garageAddress ? `<div><strong>Địa chỉ:</strong> ${settings.garageAddress}</div>` : ''}
+                ${settings.garagePhone ? `<div><strong>Điện thoại:</strong> ${settings.garagePhone}</div>` : ''}
+                ${settings.garageEmail ? `<div><strong>Email:</strong> ${settings.garageEmail}</div>` : ''}
+                ${settings.garageTaxCode ? `<div><strong>Mã số thuế:</strong> ${settings.garageTaxCode}</div>` : ''}
               </div>
-              ${settings.garageTaxCode ? `<div>Mã số thuế: ${settings.garageTaxCode}</div>` : ''}
             </div>
           </div>
 
@@ -168,11 +173,11 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
 
           ${settings.bankName && settings.bankAccount ? `
             <div class="bank-info">
-              <strong>THÔNG TIN THANH TOÁN:</strong><br>
-              Ngân hàng: ${settings.bankName}<br>
-              Số TK: ${settings.bankAccount}<br>
-              ${settings.bankOwner ? `Chủ TK: ${settings.bankOwner}<br>` : ''}
-              ${settings.bankBranch ? `Chi nhánh: ${settings.bankBranch}` : ''}
+              <strong>THÔNG TIN THANH TOÁN</strong>
+              <div class="bank-row"><span class="bank-label">Ngân hàng:</span> ${settings.bankName}</div>
+              <div class="bank-row"><span class="bank-label">Số tài khoản:</span> ${settings.bankAccount}</div>
+              ${settings.bankOwner ? `<div class="bank-row"><span class="bank-label">Chủ tài khoản:</span> ${settings.bankOwner}</div>` : ''}
+              ${settings.bankBranch ? `<div class="bank-row"><span class="bank-label">Chi nhánh:</span> ${settings.bankBranch}</div>` : ''}
             </div>
           ` : ''}
 
