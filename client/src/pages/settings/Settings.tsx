@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import DatabaseStatus from './DatabaseStatus';
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -512,7 +512,15 @@ export default function SettingsPage() {
             </TabsContent>
             
             <TabsContent value="database" className="space-y-6">
-              <DatabaseStatus />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Cơ Sở Dữ Liệu</h3>
+                <Alert>
+                  <AlertTitle>Thông tin</AlertTitle>
+                  <AlertDescription>
+                    Hệ thống đang sử dụng PostgreSQL database được cung cấp bởi Replit.
+                  </AlertDescription>
+                </Alert>
+              </div>
             </TabsContent>
             
             <TabsContent value="backup" className="space-y-6">
