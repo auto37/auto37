@@ -24,6 +24,10 @@ export default function SettingsPage() {
     bankAccount: '',
     bankOwner: '',
     bankBranch: '',
+    supabaseUrl: '',
+    supabaseKey: '',
+    supabaseEnabled: false,
+    lastSyncTime: undefined,
     updatedAt: new Date()
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -301,6 +305,7 @@ export default function SettingsPage() {
               <TabsTrigger value="garage">Thông Tin Gara</TabsTrigger>
               <TabsTrigger value="bank">Thông Tin Ngân Hàng</TabsTrigger>
               <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
+              <TabsTrigger value="supabase">Supabase</TabsTrigger>
               <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
               <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
             </TabsList>

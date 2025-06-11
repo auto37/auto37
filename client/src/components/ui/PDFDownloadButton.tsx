@@ -55,7 +55,7 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             .header-right { text-align: right; }
             .doc-info { font-size: 14px; line-height: 1.6; }
             .doc-info strong { font-weight: bold; }
-            .logo { width: 80px; height: 80px; object-fit: contain; border: 1px solid #ddd; padding: 5px; background: white; }
+            .logo { width: 120px; height: 120px; object-fit: contain; border: 1px solid #ddd; padding: 5px; background: white; }
             .company-info { flex: 1; margin-left: 20px; }
             .company-name { font-size: 20px; font-weight: bold; margin-bottom: 8px; color: #1a1a1a; text-transform: uppercase; }
             .company-details { font-size: 12px; line-height: 1.6; }

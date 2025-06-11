@@ -14,6 +14,10 @@ export interface Settings {
   bankAccount?: string; // Số tài khoản
   bankOwner?: string; // Tên chủ tài khoản
   bankBranch?: string; // Chi nhánh ngân hàng
+  supabaseUrl?: string; // Supabase URL
+  supabaseKey?: string; // Supabase Anon Key
+  supabaseEnabled?: boolean; // Bật/tắt đồng bộ Supabase
+  lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
 }
 
@@ -46,6 +50,10 @@ class SettingsDatabase extends Dexie {
         bankAccount: '',
         bankOwner: '',
         bankBranch: '',
+        supabaseUrl: '',
+        supabaseKey: '',
+        supabaseEnabled: false,
+        lastSyncTime: undefined,
         updatedAt: new Date()
       };
       
