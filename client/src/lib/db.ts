@@ -11,11 +11,7 @@ import {
   RepairOrderItem,
   Invoice
 } from './types';
-import { supabaseCustomerService } from './supabase-services/customers';
-import { supabase } from './supabase';
-
-// Kiểm tra xem có kết nối Supabase hay không
-const USE_SUPABASE = true; // Mặc định sử dụng Supabase
+// Database wrapper for IndexedDB storage
 
 class GarageDexie extends Dexie {
   customers!: Table<Customer>;
