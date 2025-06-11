@@ -269,15 +269,7 @@ export default function RepairOrderTemplate({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <button
-          onClick={() => window.print()}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          <i className="fas fa-print mr-2"></i>
-          In tài liệu
-        </button>
-        
+      <div className="flex gap-4 print:hidden">
         <PDFDownloadButton
           title="LỆNH SỬA CHỮA"
           code={invoiceNumber}

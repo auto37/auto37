@@ -243,7 +243,7 @@ export default function QuotationTemplate({
   return (
     <div className="space-y-4">
       {/* PDF Download Button - Only show in preview mode */}
-      <div className="flex gap-4 no-print" style={{ '@media print': { display: 'none' } }}>
+      <div className="flex gap-4 print:hidden">
         <PDFDownloadButton
           title="BÁO GIÁ DỊCH VỤ"
           code={invoiceNumber}
