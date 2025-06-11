@@ -49,7 +49,7 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
           <title>${title}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; padding: 15mm; margin: 0; width: 210mm; min-height: 297mm; }
+            body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; padding: 15mm 20mm; margin: 0; width: 210mm; min-height: 297mm; box-sizing: border-box; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 3px solid #000; padding-bottom: 15px; background-color: #f8f9fa; padding: 15px; }
             .logo { width: 60px; height: 60px; object-fit: contain; }
             .company-info { flex: 1; margin-left: 20px; }
@@ -80,8 +80,8 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             .bank-info .bank-label { font-weight: bold; display: inline-block; width: 90px; }
             .thank-you { text-align: center; margin-top: 20px; color: #666; font-size: 10px; }
             @media print { 
-              @page { margin: 10mm; size: A4; }
-              body { margin: 0; padding: 0; width: 100%; max-width: none; } 
+              @page { margin: 15mm; size: A4; }
+              body { margin: 0; padding: 10mm 15mm; width: 100%; max-width: none; } 
               .no-print { display: none !important; }
             }
           </style>
