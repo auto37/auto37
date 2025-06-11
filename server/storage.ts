@@ -1,6 +1,5 @@
 import { users, type User, type InsertUser } from "@shared/schema";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { neon } from '@neondatabase/serverless';
+import { db } from "./db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -18,19 +17,10 @@ export interface IStorage {
   validatePassword(user: User, password: string): Promise<boolean>;
 }
 
-// Kết nối đến cơ sở dữ liệu Postgres từ Supabase (chỉ khi có DATABASE_URL)
-let db: any = null;
-if (process.env.DATABASE_URL) {
-  const sql = neon(process.env.DATABASE_URL);
-  db = drizzle(sql);
-}
-
 // Lớp quản lý người dùng trong Postgres
 export class PostgresStorage implements IStorage {
   constructor() {
-    if (!db) {
-      throw new Error("Database connection not available");
-    }
+    // Database connection is handled by db import
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -112,7 +102,18 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user: User = { ...insertUser, id };
+    const now = new Date();
+    const user: User = { 
+      ...insertUser, 
+      id,
+      email: insertUser.email || null,
+      phone: insertUser.phone || null,
+      role: insertUser.role || "user",
+      isActive: insertUser.isActive ?? true,
+      lastLogin: null,
+      createdAt: now,
+      updatedAt: now
+    };
     this.users.set(id, user);
     return user;
   }
