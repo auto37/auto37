@@ -121,8 +121,8 @@ export default function QuotePrint() {
 
   return (
     <div className="py-4">
-      {/* Back button */}
-      <div className="container mx-auto mb-4 flex justify-between">
+      {/* Back button - Hidden when printing */}
+      <div className="container mx-auto mb-4 flex justify-between print:hidden">
         <Button 
           variant="outline" 
           onClick={() => navigate(`/quotes/${quote.id}`)}
