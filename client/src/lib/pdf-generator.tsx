@@ -202,7 +202,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>
-        {settings.logoUrl && (
+        {settings.logoUrl && settings.logoUrl.trim() !== '' && (
           <Image style={styles.logo} src={settings.logoUrl} />
         )}
         <View style={styles.companyInfo}>

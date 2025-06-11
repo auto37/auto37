@@ -24,9 +24,18 @@ function isValidUrl(url: string | null): boolean {
   }
 }
 
+// Kiểm tra xem cả URL và key có hợp lệ không
+function hasValidCredentials(): boolean {
+  return !!(supabaseUrl && 
+           supabaseKey && 
+           supabaseUrl.trim() !== '' && 
+           supabaseKey.trim() !== '' && 
+           isValidUrl(supabaseUrl));
+}
+
 // Tạo client Supabase nếu có đủ thông tin và URL hợp lệ
-export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey && isValidUrl(supabaseUrl))
-  ? createClient(supabaseUrl, supabaseKey)
+export const supabase: SupabaseClient | null = hasValidCredentials()
+  ? createClient(supabaseUrl!, supabaseKey!)
   : null;
 
 // Kiểm tra xem Supabase đã được khởi tạo chưa
@@ -35,7 +44,7 @@ export const isSupabaseInitialized = !!supabase;
 // Kiểm tra kết nối Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
   if (!supabase) {
-    console.error('Lỗi kết nối Supabase: Không có thông tin kết nối');
+    console.error('Lỗi kết nối Supabase: Không có thông tin kết nối hoặc thông tin không hợp lệ');
     return false;
   }
   
