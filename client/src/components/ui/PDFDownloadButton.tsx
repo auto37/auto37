@@ -49,7 +49,7 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
           <title>${title}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; padding: 20px; max-width: 210mm; margin: 0 auto; }
+            body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; padding: 15mm; margin: 0; width: 210mm; min-height: 297mm; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 3px solid #000; padding-bottom: 15px; background-color: #f8f9fa; padding: 15px; }
             .logo { width: 60px; height: 60px; object-fit: contain; }
             .company-info { flex: 1; margin-left: 20px; }
@@ -60,17 +60,17 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             .info-section { margin-bottom: 15px; }
             .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
             .info-column h4 { font-weight: bold; margin-bottom: 8px; text-decoration: underline; }
-            .info-row { margin-bottom: 5px; font-size: 11px; }
-            .info-label { font-weight: bold; display: inline-block; width: 70px; }
-            .table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
-            .table th, .table td { border: 1px solid #000; padding: 5px; text-align: left; vertical-align: top; }
-            .table th { background-color: #f0f0f0; font-weight: bold; text-align: center; font-size: 9px; }
+            .info-row { margin-bottom: 6px; font-size: 13px; }
+            .info-label { font-weight: bold; display: inline-block; width: 80px; }
+            .table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+            .table th, .table td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
+            .table th { background-color: #f0f0f0; font-weight: bold; text-align: center; font-size: 12px; }
             .table .number { text-align: right; }
             .table .center { text-align: center; }
-            .totals { margin-top: 15px; max-width: 300px; margin-left: auto; }
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 11px; }
-            .total-final { font-weight: bold; font-size: 12px; border-top: 2px solid #000; padding-top: 5px; }
-            .notes { margin: 15px 0; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 10px; }
+            .totals { margin-top: 15px; max-width: 350px; margin-left: auto; }
+            .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+            .total-final { font-weight: bold; font-size: 14px; border-top: 2px solid #000; padding-top: 8px; }
+            .notes { margin: 15px 0; padding: 12px; background-color: #f9f9f9; border: 1px solid #ddd; font-size: 12px; }
             .signatures { display: flex; justify-content: space-between; margin-top: 30px; }
             .signature { text-align: center; width: 30%; font-size: 10px; }
             .signature-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 3px; }
@@ -80,7 +80,8 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             .bank-info .bank-label { font-weight: bold; display: inline-block; width: 90px; }
             .thank-you { text-align: center; margin-top: 20px; color: #666; font-size: 10px; }
             @media print { 
-              body { margin: 0; padding: 10mm; } 
+              @page { margin: 10mm; size: A4; }
+              body { margin: 0; padding: 0; width: 100%; max-width: none; } 
               .no-print { display: none !important; }
             }
           </style>
