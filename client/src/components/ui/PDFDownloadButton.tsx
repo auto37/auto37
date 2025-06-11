@@ -51,7 +51,11 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; padding: 15mm 20mm; margin: 0; width: 210mm; min-height: 297mm; box-sizing: border-box; }
             .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 3px solid #000; padding-bottom: 15px; background-color: #f8f9fa; padding: 15px; }
-            .logo { width: 60px; height: 60px; object-fit: contain; }
+            .header-left { display: flex; align-items: flex-start; }
+            .header-right { text-align: right; }
+            .doc-info { font-size: 14px; line-height: 1.6; }
+            .doc-info strong { font-weight: bold; }
+            .logo { width: 80px; height: 80px; object-fit: contain; border: 1px solid #ddd; padding: 5px; background: white; }
             .company-info { flex: 1; margin-left: 20px; }
             .company-name { font-size: 20px; font-weight: bold; margin-bottom: 8px; color: #1a1a1a; text-transform: uppercase; }
             .company-details { font-size: 12px; line-height: 1.6; }
@@ -88,14 +92,22 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
         </head>
         <body>
           <div class="header">
-            ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="Logo" class="logo">` : ''}
-            <div class="company-info">
-              <div class="company-name">${settings.garageName}</div>
-              <div class="company-details">
-                ${settings.garageAddress ? `<div><strong>Địa chỉ:</strong> ${settings.garageAddress}</div>` : ''}
-                ${settings.garagePhone ? `<div><strong>Điện thoại:</strong> ${settings.garagePhone}</div>` : ''}
-                ${settings.garageEmail ? `<div><strong>Email:</strong> ${settings.garageEmail}</div>` : ''}
-                ${settings.garageTaxCode ? `<div><strong>Mã số thuế:</strong> ${settings.garageTaxCode}</div>` : ''}
+            <div class="header-left">
+              ${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="Logo" class="logo">` : ''}
+              <div class="company-info">
+                <div class="company-name">${settings.garageName}</div>
+                <div class="company-details">
+                  ${settings.garageAddress ? `<div><strong>Địa chỉ:</strong> ${settings.garageAddress}</div>` : ''}
+                  ${settings.garagePhone ? `<div><strong>Điện thoại:</strong> ${settings.garagePhone}</div>` : ''}
+                  ${settings.garageEmail ? `<div><strong>Email:</strong> ${settings.garageEmail}</div>` : ''}
+                  ${settings.garageTaxCode ? `<div><strong>Mã số thuế:</strong> ${settings.garageTaxCode}</div>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="header-right">
+              <div class="doc-info">
+                <div><strong>Số:</strong> ${code}</div>
+                <div><strong>Ngày:</strong> ${formatDate(date)}</div>
               </div>
             </div>
           </div>
@@ -117,17 +129,16 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
               ${vehicle.lastOdometer ? `<div class="info-row"><span class="info-label">Số KM:</span> ${vehicle.lastOdometer.toLocaleString()}</div>` : ''}
             </div>
           </div>
-          
-          <div class="info-section">
-            <div class="info-row"><span class="info-label">Số:</span> ${code}</div>
-            <div class="info-row"><span class="info-label">Ngày:</span> ${formatDate(date)}</div>
-          </div>
 
+
+          <!-- Parts Table -->
+          ${items.filter(item => item.unit && item.unit !== 'Dịch vụ').length > 0 ? `
+          <h3 style="margin: 20px 0 10px 0; font-weight: bold; color: #333;">CHI TIẾT VẬT TƯ:</h3>
           <table class="table">
             <thead>
               <tr>
                 <th style="width: 40px;">STT</th>
-                <th>Mô tả</th>
+                <th>Tên vật tư</th>
                 <th style="width: 60px;">ĐVT</th>
                 <th style="width: 60px;">SL</th>
                 <th style="width: 80px;">Đơn giá</th>
@@ -135,10 +146,10 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
               </tr>
             </thead>
             <tbody>
-              ${items.map((item, index) => `
+              ${items.filter(item => item.unit && item.unit !== 'Dịch vụ').map((item, index) => `
                 <tr>
                   <td class="center">${index + 1}</td>
-                  <td>${item.description}</td>
+                  <td>${item.name || item.description || 'Vật tư'}</td>
                   <td class="center">${item.unit}</td>
                   <td class="center">${item.quantity}</td>
                   <td class="number">${formatCurrency(item.unitPrice)}</td>
@@ -147,6 +158,36 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
               `).join('')}
             </tbody>
           </table>
+          ` : ''}
+
+          <!-- Services Table -->
+          ${items.filter(item => !item.unit || item.unit === 'Dịch vụ').length > 0 ? `
+          <h3 style="margin: 20px 0 10px 0; font-weight: bold; color: #333;">CHI TIẾT DỊCH VỤ:</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">STT</th>
+                <th>Tên dịch vụ</th>
+                <th style="width: 60px;">ĐVT</th>
+                <th style="width: 60px;">SL</th>
+                <th style="width: 80px;">Đơn giá</th>
+                <th style="width: 100px;">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.filter(item => !item.unit || item.unit === 'Dịch vụ').map((item, index) => `
+                <tr>
+                  <td class="center">${index + 1}</td>
+                  <td>${item.name || item.description || 'Dịch vụ'}</td>
+                  <td class="center">${item.unit || 'Dịch vụ'}</td>
+                  <td class="center">${item.quantity}</td>
+                  <td class="number">${formatCurrency(item.unitPrice)}</td>
+                  <td class="number">${formatCurrency(item.total)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ` : ''}
 
           <div class="totals">
             <div class="total-row">
@@ -193,7 +234,7 @@ const PDFDownloadButton: React.FC<PDFDownloadButtonProps> = ({
             </div>
           </div>
 
-          <div class="thank-you">Cảm ơn quý khách hàng!</div>
+          <div class="thank-you">Cảm ơn quý khách hàng đã sử dụng dịch vụ tại AUTO37 Garage!</div>
         </body>
       </html>
     `;
