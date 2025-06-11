@@ -129,15 +129,22 @@ export async function startAutoSync(): Promise<void> {
     clearInterval(syncInterval);
   }
 
+  // Only attempt sync if Supabase is available and enabled
+  const syncEnabled = await isSyncEnabled();
+  if (!syncEnabled) {
+    console.log('Auto-sync disabled - using IndexedDB only');
+    return;
+  }
+
   // Đồng bộ lần đầu khi mở ứng dụng
   await syncFromSupabase();
 
   // Thiết lập đồng bộ định kỳ
   syncInterval = setInterval(async () => {
     const isConnected = await checkSupabaseConnection();
-    const syncEnabled = await isSyncEnabled();
+    const syncStillEnabled = await isSyncEnabled();
     
-    if (isConnected && syncEnabled && !isSyncing) {
+    if (isConnected && syncStillEnabled && !isSyncing) {
       await syncToSupabase();
     }
   }, SYNC_INTERVAL);
