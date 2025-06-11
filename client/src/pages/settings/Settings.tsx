@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
+import { supabaseService } from '@/lib/supabase';
 
 
 export default function SettingsPage() {
@@ -293,6 +294,91 @@ export default function SettingsPage() {
     }
   };
 
+  // Supabase handlers
+  const handleTestConnection = async () => {
+    try {
+      await settingsDb.updateSettings({
+        supabaseUrl: settings.supabaseUrl,
+        supabaseKey: settings.supabaseKey
+      });
+      
+      await supabaseService.initialize();
+      const isConnected = await supabaseService.testConnection();
+      
+      if (isConnected) {
+        toast({
+          title: 'Thành công',
+          description: 'Kết nối Supabase thành công!'
+        });
+      } else {
+        toast({
+          title: 'Lỗi kết nối',
+          description: 'Không thể kết nối tới Supabase. Vui lòng kiểm tra URL và API key.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Có lỗi xảy ra khi kiểm tra kết nối.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleSyncNow = async () => {
+    try {
+      await supabaseService.initialize();
+      await supabaseService.syncAllData();
+      
+      const updatedSettings = {
+        ...settings,
+        lastSyncTime: new Date()
+      };
+      await settingsDb.updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã đồng bộ dữ liệu lên Supabase!'
+      });
+    } catch (error) {
+      console.error('Error syncing data:', error);
+      toast({
+        title: 'Lỗi đồng bộ',
+        description: 'Không thể đồng bộ dữ liệu. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleLoadFromSupabase = async () => {
+    try {
+      await supabaseService.initialize();
+      await supabaseService.loadFromSupabase();
+      
+      const updatedSettings = {
+        ...settings,
+        lastSyncTime: new Date()
+      };
+      await settingsDb.updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã tải dữ liệu từ Supabase!'
+      });
+    } catch (error) {
+      console.error('Error loading from Supabase:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải dữ liệu từ Supabase. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div>
       <Card>
@@ -512,6 +598,104 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="supabase" className="space-y-6">
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Cấu Hình Supabase</h3>
+                <p className="text-sm text-gray-500">
+                  Kết nối với Supabase để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau.
+                </p>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="supabaseUrl">Supabase Project URL</Label>
+                    <Input 
+                      id="supabaseUrl" 
+                      name="supabaseUrl"
+                      value={settings.supabaseUrl || ''}
+                      onChange={handleInputChange}
+                      placeholder="https://your-project-id.supabase.co"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="supabaseKey">Supabase Anon Public Key</Label>
+                    <Input 
+                      id="supabaseKey" 
+                      name="supabaseKey"
+                      type="password"
+                      value={settings.supabaseKey || ''}
+                      onChange={handleInputChange}
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="supabaseEnabled" 
+                      name="supabaseEnabled"
+                      className="h-4 w-4 rounded border-gray-300"
+                      checked={settings.supabaseEnabled || false}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        supabaseEnabled: e.target.checked
+                      }))}
+                    />
+                    <Label htmlFor="supabaseEnabled" className="cursor-pointer">
+                      Bật đồng bộ dữ liệu tự động
+                    </Label>
+                  </div>
+                  
+                  {settings.lastSyncTime && (
+                    <div className="text-sm text-gray-500">
+                      Đồng bộ lần cuối: {new Date(settings.lastSyncTime).toLocaleString('vi-VN')}
+                    </div>
+                  )}
+                </div>
+                
+                <Alert>
+                  <AlertTitle>Hướng dẫn thiết lập Supabase</AlertTitle>
+                  <AlertDescription>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Đăng nhập vào <a href="https://supabase.com" target="_blank" className="text-blue-600 underline">supabase.com</a></li>
+                      <li>Tạo project mới hoặc sử dụng project hiện có</li>
+                      <li>Vào Settings → API để lấy Project URL và anon public key</li>
+                      <li>Sao chép và dán thông tin vào các trường bên trên</li>
+                      <li>Bật đồng bộ để tự động cập nhật dữ liệu</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="flex gap-4">
+                  <Button 
+                    onClick={handleTestConnection}
+                    variant="outline"
+                    disabled={!settings.supabaseUrl || !settings.supabaseKey}
+                  >
+                    <i className="fas fa-plug mr-2"></i>
+                    Kiểm tra kết nối
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleSyncNow}
+                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
+                  >
+                    <i className="fas fa-sync mr-2"></i>
+                    Đồng bộ ngay
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleLoadFromSupabase}
+                    variant="destructive"
+                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
+                  >
+                    <i className="fas fa-download mr-2"></i>
+                    Tải từ Supabase
+                  </Button>
                 </div>
               </div>
             </TabsContent>

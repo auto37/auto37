@@ -1,9 +1,11 @@
 import { Switch, Route } from "wouter";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "./context/SidebarContext";
 import { ToastProvider } from "./context/ToastContext";
 import Layout from "./components/layout/Layout";
+import { autoSyncService, setupDatabaseChangeSync } from "./lib/autoSync";
 import { OfflineIndicator } from "./components/ui/offline-indicator";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/customers/Customers";
@@ -31,6 +33,14 @@ import RepairPrint from "./pages/print/RepairPrint";
 import NotFound from "@/pages/not-found";
 
 function App() {
+  useEffect(() => {
+    // Initialize automatic sync when app starts
+    autoSyncService.initialize();
+    
+    // Set up database change listeners for automatic sync
+    setupDatabaseChangeSync();
+  }, []);
+
   return (
     <SidebarProvider>
       <ToastProvider>
