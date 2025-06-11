@@ -1,9 +1,6 @@
 // Lưu trữ và quản lý cài đặt của ứng dụng
 import Dexie, { Table } from 'dexie';
-import { supabaseSettingsService } from './supabase-services/settings';
-import { supabase } from './supabase';
-
-// Định nghĩa kiểu dữ liệu cài đặt
+// Settings management for garage application
 export interface Settings {
   id?: number;
   garageName: string;
@@ -13,23 +10,12 @@ export interface Settings {
   garageTaxCode?: string;
   logoUrl?: string;
   iconColor?: string;
-  useSupabase?: boolean; // Tùy chọn sử dụng Supabase
   bankName?: string; // Tên ngân hàng
   bankAccount?: string; // Số tài khoản
   bankOwner?: string; // Tên chủ tài khoản
   bankBranch?: string; // Chi nhánh ngân hàng
   updatedAt: Date;
 }
-
-// Kiểm tra xem có thể kết nối Supabase hay không
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
-const SUPABASE_AVAILABLE = supabaseUrl && supabaseKey && supabaseUrl.length > 0 && supabaseKey.length > 0;
-
-// Kiểm tra cài đặt người dùng về việc sử dụng Supabase (localStorage)
-const userPreference = localStorage.getItem('useSupabase');
-// Chỉ sử dụng Supabase nếu có thể kết nối và người dùng không tắt
-const USE_SUPABASE = SUPABASE_AVAILABLE && (userPreference === null || userPreference === 'true');
 
 // Lớp Dexie để lưu trữ cài đặt cục bộ (fallback)
 class SettingsDatabase extends Dexie {
@@ -44,21 +30,6 @@ class SettingsDatabase extends Dexie {
 
   // Lấy cài đặt hiện tại
   async getSettings(): Promise<Settings> {
-    // Chỉ sử dụng Supabase nếu có kết nối
-    if (USE_SUPABASE) {
-      try {
-        // Thử lấy cài đặt từ Supabase
-        const settings = await supabaseSettingsService.getSettings();
-        return settings;
-      } catch (error) {
-        console.error('Lỗi khi lấy cài đặt từ Supabase:', error);
-        console.log('Fallback sang IndexedDB...');
-        // Sau khi có lỗi, tắt tùy chọn sử dụng Supabase cho session này
-        (window as any).DISABLE_SUPABASE = true;
-      }
-    }
-    
-    // Fallback sang IndexedDB nếu không kết nối được Supabase
     const allSettings = await this.settings.toArray();
     
     // Nếu không có cài đặt nào, tạo mới với giá trị mặc định
@@ -88,18 +59,6 @@ class SettingsDatabase extends Dexie {
 
   // Cập nhật cài đặt
   async updateSettings(settings: Partial<Settings>): Promise<void> {
-    // Nếu có kết nối Supabase, sử dụng Supabase
-    if (USE_SUPABASE) {
-      try {
-        await supabaseSettingsService.updateSettings(settings);
-        return;
-      } catch (error) {
-        console.error('Lỗi khi cập nhật cài đặt trên Supabase:', error);
-        console.log('Fallback sang IndexedDB...');
-      }
-    }
-    
-    // Fallback sang IndexedDB
     const currentSettings = await this.getSettings();
     
     // Cập nhật cài đặt với ID hiện tại
@@ -113,17 +72,6 @@ class SettingsDatabase extends Dexie {
 
   // Lưu ảnh dưới dạng base64
   async saveLogoAsBase64(file: File): Promise<string> {
-    // Nếu có kết nối Supabase, sử dụng Supabase
-    if (USE_SUPABASE) {
-      try {
-        return await supabaseSettingsService.saveLogoAsBase64(file);
-      } catch (error) {
-        console.error('Lỗi khi lưu logo trên Supabase:', error);
-        console.log('Fallback sang IndexedDB...');
-      }
-    }
-    
-    // Fallback sang IndexedDB
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
