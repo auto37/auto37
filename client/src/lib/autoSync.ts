@@ -32,13 +32,24 @@ class AutoSyncService {
 
   private async performInitialSync() {
     try {
-      // Load data from Supabase first (in case user is on a new device)
-      await supabaseService.loadFromSupabase();
-      console.log('Initial data loaded from Supabase');
+      // Check if local database is empty (new device/browser)
+      const customerCount = await db.customers.count();
+      const vehicleCount = await db.vehicles.count();
+      const inventoryCount = await db.inventoryItems.count();
       
-      // Then sync local changes back to Supabase
-      await supabaseService.syncAllData();
-      console.log('Local data synced to Supabase');
+      const isLocalDatabaseEmpty = customerCount === 0 && vehicleCount === 0 && inventoryCount === 0;
+      
+      if (isLocalDatabaseEmpty) {
+        // New device/browser - load data from Supabase first
+        console.log('Empty local database detected, loading from Supabase...');
+        await supabaseService.loadFromSupabase();
+        console.log('Initial data loaded from Supabase');
+      } else {
+        // Existing data - sync local changes to Supabase
+        console.log('Local data found, syncing to Supabase...');
+        await supabaseService.syncAllData();
+        console.log('Local data synced to Supabase');
+      }
       
       // Update last sync time
       await settingsDb.updateSettings({

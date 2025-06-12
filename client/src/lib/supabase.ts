@@ -179,74 +179,209 @@ class SupabaseService {
     if (!this.client || !this.isEnabled()) return;
 
     try {
+      console.log('Starting data load from Supabase...');
+      
       // Load customers
-      const { data: customers } = await this.client.from('customers').select('*');
-      if (customers) {
+      const { data: customersData, error: customersError } = await this.client.from('customers').select('*');
+      if (customersError) throw customersError;
+      if (customersData?.length) {
+        const customers = customersData.map(item => ({
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          phone: item.phone,
+          address: item.address,
+          email: item.email,
+          taxCode: item.tax_code,
+          notes: item.notes
+        }));
         await this.db.customers.clear();
         await this.db.customers.bulkAdd(customers);
+        console.log(`Loaded ${customers.length} customers from Supabase`);
       }
 
       // Load vehicles
-      const { data: vehicles } = await this.client.from('vehicles').select('*');
-      if (vehicles) {
+      const { data: vehiclesData, error: vehiclesError } = await this.client.from('vehicles').select('*');
+      if (vehiclesError) throw vehiclesError;
+      if (vehiclesData?.length) {
+        const vehicles = vehiclesData.map(item => ({
+          id: item.id,
+          code: item.code,
+          customerId: item.customer_id,
+          licensePlate: item.license_plate,
+          brand: item.brand,
+          model: item.model,
+          vin: item.vin,
+          year: item.year,
+          color: item.color,
+          lastOdometer: item.last_odometer || 0
+        }));
         await this.db.vehicles.clear();
         await this.db.vehicles.bulkAdd(vehicles);
+        console.log(`Loaded ${vehicles.length} vehicles from Supabase`);
       }
 
       // Load inventory categories
-      const { data: categories } = await this.client.from('inventory_categories').select('*');
-      if (categories) {
+      const { data: categoriesData, error: categoriesError } = await this.client.from('inventory_categories').select('*');
+      if (categoriesError) throw categoriesError;
+      if (categoriesData?.length) {
+        const categories = categoriesData.map(item => ({
+          id: item.id,
+          code: item.code,
+          name: item.name
+        }));
         await this.db.inventoryCategories.clear();
         await this.db.inventoryCategories.bulkAdd(categories);
+        console.log(`Loaded ${categories.length} inventory categories from Supabase`);
       }
 
       // Load inventory items
-      const { data: items } = await this.client.from('inventory_items').select('*');
-      if (items) {
+      const { data: itemsData, error: itemsError } = await this.client.from('inventory_items').select('*');
+      if (itemsError) throw itemsError;
+      if (itemsData?.length) {
+        const items = itemsData.map(item => ({
+          id: item.id,
+          sku: item.sku,
+          name: item.name,
+          categoryId: item.category_id,
+          unit: item.unit,
+          quantity: item.quantity || 0,
+          costPrice: item.cost_price || 0,
+          sellingPrice: item.selling_price || 0,
+          supplier: item.supplier,
+          location: item.location,
+          minQuantity: item.min_quantity || 0,
+          notes: item.notes
+        }));
         await this.db.inventoryItems.clear();
         await this.db.inventoryItems.bulkAdd(items);
+        console.log(`Loaded ${items.length} inventory items from Supabase`);
       }
 
       // Load services
-      const { data: services } = await this.client.from('services').select('*');
-      if (services) {
+      const { data: servicesData, error: servicesError } = await this.client.from('services').select('*');
+      if (servicesError) throw servicesError;
+      if (servicesData?.length) {
+        const services = servicesData.map(item => ({
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          description: item.description,
+          price: item.price || 0,
+          estimatedTime: item.estimated_time || 0
+        }));
         await this.db.services.clear();
         await this.db.services.bulkAdd(services);
+        console.log(`Loaded ${services.length} services from Supabase`);
       }
 
       // Load quotations
-      const { data: quotations } = await this.client.from('quotations').select('*');
-      if (quotations) {
+      const { data: quotationsData, error: quotationsError } = await this.client.from('quotations').select('*');
+      if (quotationsError) throw quotationsError;
+      if (quotationsData?.length) {
+        const quotations = quotationsData.map(item => ({
+          id: item.id,
+          code: item.code,
+          dateCreated: new Date(item.date_created),
+          customerId: item.customer_id,
+          vehicleId: item.vehicle_id,
+          subtotal: item.subtotal || 0,
+          tax: item.tax || 0,
+          total: item.total || 0,
+          notes: item.notes,
+          status: item.status || 'new'
+        }));
         await this.db.quotations.clear();
         await this.db.quotations.bulkAdd(quotations);
+        console.log(`Loaded ${quotations.length} quotations from Supabase`);
       }
 
       // Load quotation items
-      const { data: quotationItems } = await this.client.from('quotation_items').select('*');
-      if (quotationItems) {
+      const { data: quotationItemsData, error: quotationItemsError } = await this.client.from('quotation_items').select('*');
+      if (quotationItemsError) throw quotationItemsError;
+      if (quotationItemsData?.length) {
+        const quotationItems = quotationItemsData.map(item => ({
+          id: item.id,
+          quotationId: item.quotation_id,
+          type: item.type,
+          itemId: item.item_id,
+          name: item.name,
+          quantity: item.quantity || 1,
+          unitPrice: item.unit_price || 0,
+          total: item.total || 0
+        }));
         await this.db.quotationItems.clear();
         await this.db.quotationItems.bulkAdd(quotationItems);
+        console.log(`Loaded ${quotationItems.length} quotation items from Supabase`);
       }
 
       // Load repair orders
-      const { data: repairOrders } = await this.client.from('repair_orders').select('*');
-      if (repairOrders) {
+      const { data: repairOrdersData, error: repairOrdersError } = await this.client.from('repair_orders').select('*');
+      if (repairOrdersError) throw repairOrdersError;
+      if (repairOrdersData?.length) {
+        const repairOrders = repairOrdersData.map(item => ({
+          id: item.id,
+          code: item.code,
+          dateCreated: new Date(item.date_created),
+          dateExpected: item.date_expected ? new Date(item.date_expected) : undefined,
+          quotationId: item.quotation_id,
+          customerId: item.customer_id,
+          vehicleId: item.vehicle_id,
+          odometer: item.odometer || 0,
+          customerRequest: item.customer_request,
+          technicianNotes: item.technician_notes,
+          technicianId: item.technician_id,
+          subtotal: item.subtotal || 0,
+          tax: item.tax || 0,
+          total: item.total || 0,
+          status: item.status || 'new'
+        }));
         await this.db.repairOrders.clear();
         await this.db.repairOrders.bulkAdd(repairOrders);
+        console.log(`Loaded ${repairOrders.length} repair orders from Supabase`);
       }
 
       // Load repair order items
-      const { data: repairOrderItems } = await this.client.from('repair_order_items').select('*');
-      if (repairOrderItems) {
+      const { data: repairOrderItemsData, error: repairOrderItemsError } = await this.client.from('repair_order_items').select('*');
+      if (repairOrderItemsError) throw repairOrderItemsError;
+      if (repairOrderItemsData?.length) {
+        const repairOrderItems = repairOrderItemsData.map(item => ({
+          id: item.id,
+          repairOrderId: item.repair_order_id,
+          type: item.type,
+          itemId: item.item_id,
+          name: item.name,
+          quantity: item.quantity || 1,
+          unitPrice: item.unit_price || 0,
+          total: item.total || 0
+        }));
         await this.db.repairOrderItems.clear();
         await this.db.repairOrderItems.bulkAdd(repairOrderItems);
+        console.log(`Loaded ${repairOrderItems.length} repair order items from Supabase`);
       }
 
       // Load invoices
-      const { data: invoices } = await this.client.from('invoices').select('*');
-      if (invoices) {
+      const { data: invoicesData, error: invoicesError } = await this.client.from('invoices').select('*');
+      if (invoicesError) throw invoicesError;
+      if (invoicesData?.length) {
+        const invoices = invoicesData.map(item => ({
+          id: item.id,
+          code: item.code,
+          dateCreated: new Date(item.date_created),
+          repairOrderId: item.repair_order_id,
+          customerId: item.customer_id,
+          vehicleId: item.vehicle_id,
+          subtotal: item.subtotal || 0,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+          total: item.total || 0,
+          amountPaid: item.amount_paid || 0,
+          paymentMethod: item.payment_method,
+          status: item.status || 'unpaid'
+        }));
         await this.db.invoices.clear();
         await this.db.invoices.bulkAdd(invoices);
+        console.log(`Loaded ${invoices.length} invoices from Supabase`);
       }
 
       console.log('Data loaded from Supabase successfully');
