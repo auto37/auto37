@@ -15,15 +15,21 @@
 4. Copy toàn bộ nội dung trong file `supabase-setup.sql` và paste vào
 5. Nhấn **Run** để thực thi script
 
-## Bước 3: Reset dữ liệu (nếu có lỗi đồng bộ)
+## Bước 3: Khắc phục lỗi đồng bộ
 
-**⚠️ QUAN TRỌNG**: Nếu gặp lỗi duplicate key hoặc foreign key constraint khi đồng bộ:
+**⚠️ QUAN TRỌNG**: Nếu gặp lỗi khi đồng bộ, thực hiện theo thứ tự:
 
+### Bước 3a: Sửa lỗi trigger function
 1. Vào **SQL Editor** trong Supabase
 2. Tạo query mới
-3. Copy toàn bộ nội dung trong file `supabase-reset.sql` và paste vào
-4. Nhấn **Run** để xóa sạch dữ liệu cũ
-5. Kiểm tra kết quả - tất cả bảng phải có 0 records
+3. Copy toàn bộ nội dung trong file `supabase-fix.sql` và paste vào
+4. Nhấn **Run** để sửa lỗi trigger
+
+### Bước 3b: Reset dữ liệu (nếu cần)
+1. Tạo query mới trong **SQL Editor**
+2. Copy toàn bộ nội dung trong file `supabase-reset.sql` và paste vào
+3. Nhấn **Run** để xóa sạch dữ liệu cũ
+4. Kiểm tra kết quả - tất cả bảng phải có 0 records
 
 ## Bước 4: Lấy thông tin kết nối
 
