@@ -48,13 +48,27 @@ class SupabaseService {
     if (!this.client || !this.isEnabled()) return;
 
     try {
-      // Xóa dữ liệu cũ và thêm mới
-      await this.client.from('customers').delete().neq('id', -1);
+      // Xóa toàn bộ dữ liệu cũ
+      const { error: deleteError } = await this.client.from('customers').delete().gte('id', 0);
+      if (deleteError) throw deleteError;
+
       if (customers.length > 0) {
-        await this.client.from('customers').insert(customers);
+        const formattedCustomers = customers.map(customer => ({
+          id: customer.id,
+          code: customer.code,
+          name: customer.name,
+          phone: customer.phone,
+          address: customer.address || null,
+          email: customer.email || null,
+          tax_code: customer.taxCode || null,
+          notes: customer.notes || null
+        }));
+        const { error } = await this.client.from('customers').insert(formattedCustomers);
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error syncing customers:', error);
+      throw error;
     }
   }
 
@@ -64,10 +78,24 @@ class SupabaseService {
     try {
       await this.client.from('vehicles').delete().neq('id', -1);
       if (vehicles.length > 0) {
-        await this.client.from('vehicles').insert(vehicles);
+        const formattedVehicles = vehicles.map(vehicle => ({
+          id: vehicle.id,
+          code: vehicle.code,
+          customer_id: vehicle.customerId,
+          license_plate: vehicle.licensePlate,
+          brand: vehicle.brand,
+          model: vehicle.model,
+          vin: vehicle.vin,
+          year: vehicle.year,
+          color: vehicle.color,
+          last_odometer: vehicle.lastOdometer
+        }));
+        const { error } = await this.client.from('vehicles').insert(formattedVehicles);
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error syncing vehicles:', error);
+      throw error;
     }
   }
 
@@ -77,10 +105,17 @@ class SupabaseService {
     try {
       await this.client.from('inventory_categories').delete().neq('id', -1);
       if (categories.length > 0) {
-        await this.client.from('inventory_categories').insert(categories);
+        const formattedCategories = categories.map(category => ({
+          id: category.id,
+          code: category.code,
+          name: category.name
+        }));
+        const { error } = await this.client.from('inventory_categories').insert(formattedCategories);
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error syncing inventory categories:', error);
+      throw error;
     }
   }
 
@@ -423,19 +458,17 @@ class SupabaseService {
         db.invoices.toArray()
       ]);
 
-      // Sync to Supabase
-      await Promise.all([
-        this.syncCustomers(customers),
-        this.syncVehicles(vehicles),
-        this.syncInventoryCategories(categories),
-        this.syncInventoryItems(items),
-        this.syncServices(services),
-        this.syncQuotations(quotations),
-        this.syncQuotationItems(quotationItems),
-        this.syncRepairOrders(repairOrders),
-        this.syncRepairOrderItems(repairOrderItems),
-        this.syncInvoices(invoices)
-      ]);
+      // Sync to Supabase in correct order to avoid foreign key constraints
+      await this.syncCustomers(customers);
+      await this.syncVehicles(vehicles);
+      await this.syncInventoryCategories(categories);
+      await this.syncInventoryItems(items);
+      await this.syncServices(services);
+      await this.syncQuotations(quotations);
+      await this.syncQuotationItems(quotationItems);
+      await this.syncRepairOrders(repairOrders);
+      await this.syncRepairOrderItems(repairOrderItems);
+      await this.syncInvoices(invoices);
 
       console.log('All data synced to Supabase successfully');
     } catch (error) {
