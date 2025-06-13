@@ -48,12 +48,13 @@ class SupabaseService {
     if (!this.client || !this.isEnabled()) return;
 
     try {
-      // Xóa toàn bộ dữ liệu cũ
-      const { error: deleteError } = await this.client.from('customers').delete().gte('id', 0);
-      if (deleteError) throw deleteError;
-
       if (customers.length > 0) {
-        const formattedCustomers = customers.map(customer => ({
+        // Remove duplicates based on code
+        const uniqueCustomers = customers.filter((customer, index, arr) => 
+          arr.findIndex(c => c.code === customer.code) === index
+        );
+
+        const formattedCustomers = uniqueCustomers.map(customer => ({
           id: customer.id,
           code: customer.code,
           name: customer.name,
@@ -63,7 +64,15 @@ class SupabaseService {
           tax_code: customer.taxCode || null,
           notes: customer.notes || null
         }));
-        const { error } = await this.client.from('customers').insert(formattedCustomers);
+
+        // Use upsert to handle existing records
+        const { error } = await this.client
+          .from('customers')
+          .upsert(formattedCustomers, { 
+            onConflict: 'code',
+            ignoreDuplicates: false 
+          });
+        
         if (error) throw error;
       }
     } catch (error) {
@@ -76,21 +85,31 @@ class SupabaseService {
     if (!this.client || !this.isEnabled()) return;
 
     try {
-      await this.client.from('vehicles').delete().neq('id', -1);
       if (vehicles.length > 0) {
-        const formattedVehicles = vehicles.map(vehicle => ({
+        // Remove duplicates based on code
+        const uniqueVehicles = vehicles.filter((vehicle, index, arr) => 
+          arr.findIndex(v => v.code === vehicle.code) === index
+        );
+
+        const formattedVehicles = uniqueVehicles.map(vehicle => ({
           id: vehicle.id,
           code: vehicle.code,
           customer_id: vehicle.customerId,
           license_plate: vehicle.licensePlate,
           brand: vehicle.brand,
           model: vehicle.model,
-          vin: vehicle.vin,
-          year: vehicle.year,
-          color: vehicle.color,
-          last_odometer: vehicle.lastOdometer
+          vin: vehicle.vin || null,
+          year: vehicle.year || null,
+          color: vehicle.color || null,
+          last_odometer: vehicle.lastOdometer || 0
         }));
-        const { error } = await this.client.from('vehicles').insert(formattedVehicles);
+
+        const { error } = await this.client
+          .from('vehicles')
+          .upsert(formattedVehicles, { 
+            onConflict: 'code',
+            ignoreDuplicates: false 
+          });
         if (error) throw error;
       }
     } catch (error) {

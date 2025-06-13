@@ -15,26 +15,36 @@
 4. Copy toàn bộ nội dung trong file `supabase-setup.sql` và paste vào
 5. Nhấn **Run** để thực thi script
 
-## Bước 3: Lấy thông tin kết nối
+## Bước 3: Reset dữ liệu (nếu có lỗi đồng bộ)
+
+**⚠️ QUAN TRỌNG**: Nếu gặp lỗi duplicate key hoặc foreign key constraint khi đồng bộ:
+
+1. Vào **SQL Editor** trong Supabase
+2. Tạo query mới
+3. Copy toàn bộ nội dung trong file `supabase-reset.sql` và paste vào
+4. Nhấn **Run** để xóa sạch dữ liệu cũ
+5. Kiểm tra kết quả - tất cả bảng phải có 0 records
+
+## Bước 4: Lấy thông tin kết nối
 
 1. Vào **Settings** → **API** trong dự án Supabase
 2. Copy 2 thông tin sau:
    - **Project URL** (ví dụ: https://xxxxx.supabase.co)
    - **anon public key** (key rất dài bắt đầu bằng "eyJ...")
 
-## Bước 4: Cấu hình trong ứng dụng
+## Bước 5: Cấu hình trong ứng dụng
 
 1. Mở ứng dụng garage management
 2. Vào **Cài Đặt** → tab **Supabase**
 3. Điền thông tin:
-   - **Supabase URL**: Project URL từ bước 3
-   - **Supabase Key**: anon public key từ bước 3
+   - **Supabase URL**: Project URL từ bước 4
+   - **Supabase Key**: anon public key từ bước 4
 4. Bật "Bật đồng bộ dữ liệu tự động"
 5. Nhấn "Kiểm tra kết nối" để test
 
-## Bước 5: Đồng bộ dữ liệu
+## Bước 6: Đồng bộ dữ liệu
 
-1. Nhấn "Đồng bộ ngay" để upload dữ liệu hiện tại lên Supabase
+1. **LẦN ĐẦU**: Nhấn "Đồng bộ ngay" để upload dữ liệu hiện tại lên Supabase
 2. Hệ thống sẽ tự động đồng bộ mỗi 5 phút
 3. Mở trình duyệt/thiết bị khác và cấu hình Supabase tương tự
 4. Dữ liệu sẽ tự động tải về khi khởi động ứng dụng

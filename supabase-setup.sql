@@ -213,3 +213,17 @@ CREATE TRIGGER update_quotation_items_updated_at BEFORE UPDATE ON public.quotati
 CREATE TRIGGER update_repair_orders_updated_at BEFORE UPDATE ON public.repair_orders FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
 CREATE TRIGGER update_repair_order_items_updated_at BEFORE UPDATE ON public.repair_order_items FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
 CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON public.invoices FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
+
+-- Script để xóa sạch dữ liệu và reset ID sequences (chạy riêng khi cần reset)
+/*
+TRUNCATE TABLE public.invoices RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.repair_order_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.repair_orders RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.quotation_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.quotations RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.services RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.inventory_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.inventory_categories RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.vehicles RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.customers RESTART IDENTITY CASCADE;
+*/
