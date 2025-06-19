@@ -101,6 +101,7 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 ## Changelog
 
 - June 19, 2025. Initial setup
+- June 19, 2025. Replaced Supabase with MongoDB Atlas Data API integration for real cloud synchronization
 
 ## User Preferences
 

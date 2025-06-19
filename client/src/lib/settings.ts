@@ -17,6 +17,8 @@ export interface Settings {
   mongoConnectionString?: string; // MongoDB Connection String
   mongoDatabaseName?: string; // MongoDB Database Name
   mongoEnabled?: boolean; // Bật/tắt đồng bộ MongoDB
+  mongoDataApiUrl?: string; // MongoDB Data API URL
+  mongoApiKey?: string; // MongoDB Data API Key
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
 }

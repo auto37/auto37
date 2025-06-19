@@ -28,6 +28,8 @@ export default function SettingsPage() {
     mongoConnectionString: '',
     mongoDatabaseName: '',
     mongoEnabled: false,
+    mongoDataApiUrl: '',
+    mongoApiKey: '',
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
@@ -631,6 +633,35 @@ export default function SettingsPage() {
                       onChange={handleInputChange}
                       placeholder="garage_management"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mongoDataApiUrl">MongoDB Data API URL</Label>
+                    <Input 
+                      id="mongoDataApiUrl" 
+                      name="mongoDataApiUrl"
+                      value={settings.mongoDataApiUrl || ''}
+                      onChange={handleInputChange}
+                      placeholder="https://data.mongodb-api.com/app/your-app-id/endpoint/data/v1"
+                    />
+                    <p className="text-xs text-gray-500">
+                      URL của MongoDB Atlas Data API từ App Services
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="mongoApiKey">MongoDB API Key</Label>
+                    <Input 
+                      id="mongoApiKey" 
+                      name="mongoApiKey"
+                      type="password"
+                      value={settings.mongoApiKey || ''}
+                      onChange={handleInputChange}
+                      placeholder="API Key từ MongoDB Atlas"
+                    />
+                    <p className="text-xs text-gray-500">
+                      API Key được tạo trong MongoDB Atlas App Services
+                    </p>
                   </div>
                   
                   <div className="flex items-center space-x-2">
