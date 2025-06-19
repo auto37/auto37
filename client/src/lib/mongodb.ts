@@ -284,7 +284,7 @@ class MongoDBService {
                 break;
               case 'quotations':
                 await db.quotations.clear();
-                await db.quotations.bulkAdd(documents.map(q => ({
+                await db.quotations.bulkAdd(documents.map((q: any) => ({
                   ...q,
                   dateCreated: new Date(q.dateCreated)
                 })));
@@ -297,7 +297,7 @@ class MongoDBService {
                 break;
               case 'repair_orders':
                 await db.repairOrders.clear();
-                await db.repairOrders.bulkAdd(documents.map(r => ({
+                await db.repairOrders.bulkAdd(documents.map((r: any) => ({
                   ...r,
                   dateCreated: new Date(r.dateCreated),
                   dateExpected: r.dateExpected ? new Date(r.dateExpected) : undefined
@@ -311,7 +311,7 @@ class MongoDBService {
                 break;
               case 'invoices':
                 await db.invoices.clear();
-                await db.invoices.bulkAdd(documents.map(i => ({
+                await db.invoices.bulkAdd(documents.map((i: any) => ({
                   ...i,
                   dateCreated: new Date(i.dateCreated)
                 })));

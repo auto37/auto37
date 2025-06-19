@@ -25,9 +25,9 @@ export default function SettingsPage() {
     bankAccount: '',
     bankOwner: '',
     bankBranch: '',
-    supabaseUrl: '',
-    supabaseKey: '',
-    supabaseEnabled: false,
+    mongoConnectionString: '',
+    mongoDatabaseName: '',
+    mongoEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
