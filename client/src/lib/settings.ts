@@ -14,9 +14,9 @@ export interface Settings {
   bankAccount?: string; // Số tài khoản
   bankOwner?: string; // Tên chủ tài khoản
   bankBranch?: string; // Chi nhánh ngân hàng
-  supabaseUrl?: string; // Supabase URL
-  supabaseKey?: string; // Supabase Anon Key
-  supabaseEnabled?: boolean; // Bật/tắt đồng bộ Supabase
+  mongoConnectionString?: string; // MongoDB Connection String
+  mongoDatabaseName?: string; // MongoDB Database Name
+  mongoEnabled?: boolean; // Bật/tắt đồng bộ MongoDB
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
 }
@@ -50,9 +50,9 @@ class SettingsDatabase extends Dexie {
         bankAccount: '',
         bankOwner: '',
         bankBranch: '',
-        supabaseUrl: '',
-        supabaseKey: '',
-        supabaseEnabled: false,
+        mongoConnectionString: '',
+        mongoDatabaseName: '',
+        mongoEnabled: false,
         lastSyncTime: undefined,
         updatedAt: new Date()
       };

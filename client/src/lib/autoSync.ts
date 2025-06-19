@@ -1,4 +1,4 @@
-import { supabaseService } from './supabase';
+import { mongoDBService } from './mongodb';
 import { settingsDb } from './settings';
 import { db } from './db';
 
@@ -12,8 +12,8 @@ class AutoSyncService {
     try {
       const settings = await settingsDb.getSettings();
       
-      if (settings.supabaseEnabled && settings.supabaseUrl && settings.supabaseKey) {
-        await supabaseService.initialize();
+      if (settings.mongoEnabled && settings.mongoConnectionString && settings.mongoDatabaseName) {
+        await mongoDBService.initialize();
         
         // Initial sync when app starts
         await this.performInitialSync();
@@ -40,15 +40,15 @@ class AutoSyncService {
       const isLocalDatabaseEmpty = customerCount === 0 && vehicleCount === 0 && inventoryCount === 0;
       
       if (isLocalDatabaseEmpty) {
-        // New device/browser - load data from Supabase first
-        console.log('Empty local database detected, loading from Supabase...');
-        await supabaseService.loadFromSupabase();
-        console.log('Initial data loaded from Supabase');
+        // New device/browser - load data from MongoDB first
+        console.log('Empty local database detected, loading from MongoDB...');
+        await mongoDBService.loadFromMongoDB();
+        console.log('Initial data loaded from MongoDB');
       } else {
-        // Existing data - sync local changes to Supabase
-        console.log('Local data found, syncing to Supabase...');
-        await supabaseService.syncAllData();
-        console.log('Local data synced to Supabase');
+        // Existing data - sync local changes to MongoDB
+        console.log('Local data found, syncing to MongoDB...');
+        await mongoDBService.syncAllData();
+        console.log('Local data synced to MongoDB');
       }
       
       // Update last sync time
@@ -76,12 +76,12 @@ class AutoSyncService {
     try {
       const settings = await settingsDb.getSettings();
       
-      if (!settings.supabaseEnabled) {
+      if (!settings.mongoEnabled) {
         this.stopPeriodicSync();
         return;
       }
 
-      await supabaseService.syncAllData();
+      await mongoDBService.syncAllData();
       await settingsDb.updateSettings({
         lastSyncTime: new Date()
       });
@@ -96,8 +96,8 @@ class AutoSyncService {
     try {
       const settings = await settingsDb.getSettings();
       
-      if (settings.supabaseEnabled && supabaseService.isEnabled()) {
-        await supabaseService.syncAllData();
+      if (settings.mongoEnabled && mongoDBService.isEnabled()) {
+        await mongoDBService.syncAllData();
         await settingsDb.updateSettings({
           lastSyncTime: new Date()
         });

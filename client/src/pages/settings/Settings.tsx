@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import { supabaseService } from '@/lib/supabase';
+import { mongoDBService } from '@/lib/mongodb';
 
 
 export default function SettingsPage() {
