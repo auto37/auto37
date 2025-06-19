@@ -294,26 +294,26 @@ export default function SettingsPage() {
     }
   };
 
-  // Supabase handlers
+  // MongoDB handlers
   const handleTestConnection = async () => {
     try {
       await settingsDb.updateSettings({
-        supabaseUrl: settings.supabaseUrl,
-        supabaseKey: settings.supabaseKey
+        mongoConnectionString: settings.mongoConnectionString,
+        mongoDatabaseName: settings.mongoDatabaseName
       });
       
-      await supabaseService.initialize();
-      const isConnected = await supabaseService.testConnection();
+      await mongoDBService.initialize();
+      const isConnected = await mongoDBService.testConnection();
       
       if (isConnected) {
         toast({
           title: 'Thành công',
-          description: 'Kết nối Supabase thành công!'
+          description: 'Kết nối MongoDB thành công!'
         });
       } else {
         toast({
           title: 'Lỗi kết nối',
-          description: 'Không thể kết nối tới Supabase. Vui lòng kiểm tra URL và API key.',
+          description: 'Không thể kết nối tới MongoDB. Vui lòng kiểm tra Connection String và Database Name.',
           variant: 'destructive'
         });
       }
@@ -329,8 +329,8 @@ export default function SettingsPage() {
 
   const handleSyncNow = async () => {
     try {
-      await supabaseService.initialize();
-      await supabaseService.syncAllData();
+      await mongoDBService.initialize();
+      await mongoDBService.syncAllData();
       
       const updatedSettings = {
         ...settings,
@@ -341,7 +341,7 @@ export default function SettingsPage() {
       
       toast({
         title: 'Thành công',
-        description: 'Đã đồng bộ dữ liệu lên Supabase!'
+        description: 'Đã đồng bộ dữ liệu lên MongoDB!'
       });
     } catch (error) {
       console.error('Error syncing data:', error);
@@ -353,10 +353,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLoadFromSupabase = async () => {
+  const handleLoadFromMongoDB = async () => {
     try {
-      await supabaseService.initialize();
-      await supabaseService.loadFromSupabase();
+      await mongoDBService.initialize();
+      await mongoDBService.loadFromMongoDB();
       
       const updatedSettings = {
         ...settings,
@@ -367,13 +367,13 @@ export default function SettingsPage() {
       
       toast({
         title: 'Thành công',
-        description: 'Đã tải dữ liệu từ Supabase!'
+        description: 'Đã tải dữ liệu từ MongoDB!'
       });
     } catch (error) {
-      console.error('Error loading from Supabase:', error);
+      console.error('Error loading from MongoDB:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể tải dữ liệu từ Supabase. Vui lòng thử lại.',
+        description: 'Không thể tải dữ liệu từ MongoDB. Vui lòng thử lại.',
         variant: 'destructive'
       });
     }
@@ -391,9 +391,8 @@ export default function SettingsPage() {
               <TabsTrigger value="garage">Thông Tin Gara</TabsTrigger>
               <TabsTrigger value="bank">Thông Tin Ngân Hàng</TabsTrigger>
               <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
-              <TabsTrigger value="supabase">Supabase</TabsTrigger>
-              <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
               <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
+              <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
             </TabsList>
             
             <TabsContent value="garage" className="space-y-6">
@@ -602,50 +601,51 @@ export default function SettingsPage() {
               </div>
             </TabsContent>
             
-            <TabsContent value="supabase" className="space-y-6">
+
+            
+            <TabsContent value="database" className="space-y-6">
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Cấu Hình Supabase</h3>
+                <h3 className="text-lg font-semibold">Cấu Hình MongoDB</h3>
                 <p className="text-sm text-gray-500">
-                  Kết nối với Supabase để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau.
+                  Kết nối với MongoDB để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau.
                 </p>
                 
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="supabaseUrl">Supabase Project URL</Label>
+                    <Label htmlFor="mongoConnectionString">MongoDB Connection String</Label>
                     <Input 
-                      id="supabaseUrl" 
-                      name="supabaseUrl"
-                      value={settings.supabaseUrl || ''}
+                      id="mongoConnectionString" 
+                      name="mongoConnectionString"
+                      value={settings.mongoConnectionString || ''}
                       onChange={handleInputChange}
-                      placeholder="https://your-project-id.supabase.co"
+                      placeholder="mongodb+srv://username:password@cluster.mongodb.net/"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="supabaseKey">Supabase Anon Public Key</Label>
+                    <Label htmlFor="mongoDatabaseName">Tên Database</Label>
                     <Input 
-                      id="supabaseKey" 
-                      name="supabaseKey"
-                      type="password"
-                      value={settings.supabaseKey || ''}
+                      id="mongoDatabaseName" 
+                      name="mongoDatabaseName"
+                      value={settings.mongoDatabaseName || ''}
                       onChange={handleInputChange}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      placeholder="garage_management"
                     />
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <input 
                       type="checkbox" 
-                      id="supabaseEnabled" 
-                      name="supabaseEnabled"
+                      id="mongoEnabled" 
+                      name="mongoEnabled"
                       className="h-4 w-4 rounded border-gray-300"
-                      checked={settings.supabaseEnabled || false}
+                      checked={settings.mongoEnabled || false}
                       onChange={(e) => setSettings(prev => ({
                         ...prev,
-                        supabaseEnabled: e.target.checked
+                        mongoEnabled: e.target.checked
                       }))}
                     />
-                    <Label htmlFor="supabaseEnabled" className="cursor-pointer">
+                    <Label htmlFor="mongoEnabled" className="cursor-pointer">
                       Bật đồng bộ dữ liệu tự động
                     </Label>
                   </div>
@@ -658,13 +658,15 @@ export default function SettingsPage() {
                 </div>
                 
                 <Alert>
-                  <AlertTitle>Hướng dẫn thiết lập Supabase</AlertTitle>
+                  <AlertTitle>Hướng dẫn thiết lập MongoDB</AlertTitle>
                   <AlertDescription>
                     <ol className="list-decimal list-inside space-y-1">
-                      <li>Đăng nhập vào <a href="https://supabase.com" target="_blank" className="text-blue-600 underline">supabase.com</a></li>
-                      <li>Tạo project mới hoặc sử dụng project hiện có</li>
-                      <li>Vào Settings → API để lấy Project URL và anon public key</li>
-                      <li>Sao chép và dán thông tin vào các trường bên trên</li>
+                      <li>Đăng nhập vào <a href="https://mongodb.com/atlas" target="_blank" className="text-blue-600 underline">MongoDB Atlas</a></li>
+                      <li>Tạo cluster mới hoặc sử dụng cluster hiện có</li>
+                      <li>Vào Database → Connect để lấy Connection String</li>
+                      <li>Chọn "Connect your application" và copy connection string</li>
+                      <li>Thay thế &lt;password&gt; bằng mật khẩu thực của bạn</li>
+                      <li>Nhập tên database (ví dụ: garage_management)</li>
                       <li>Bật đồng bộ để tự động cập nhật dữ liệu</li>
                     </ol>
                   </AlertDescription>
@@ -674,7 +676,7 @@ export default function SettingsPage() {
                   <Button 
                     onClick={handleTestConnection}
                     variant="outline"
-                    disabled={!settings.supabaseUrl || !settings.supabaseKey}
+                    disabled={!settings.mongoConnectionString || !settings.mongoDatabaseName}
                   >
                     <i className="fas fa-plug mr-2"></i>
                     Kiểm tra kết nối
@@ -682,33 +684,21 @@ export default function SettingsPage() {
                   
                   <Button 
                     onClick={handleSyncNow}
-                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
+                    disabled={!settings.mongoEnabled || !settings.mongoConnectionString || !settings.mongoDatabaseName}
                   >
                     <i className="fas fa-sync mr-2"></i>
                     Đồng bộ ngay
                   </Button>
                   
                   <Button 
-                    onClick={handleLoadFromSupabase}
+                    onClick={handleLoadFromMongoDB}
                     variant="destructive"
-                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
+                    disabled={!settings.mongoEnabled || !settings.mongoConnectionString || !settings.mongoDatabaseName}
                   >
                     <i className="fas fa-download mr-2"></i>
-                    Tải từ Supabase
+                    Tải từ MongoDB
                   </Button>
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="database" className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Cơ Sở Dữ Liệu</h3>
-                <Alert>
-                  <AlertTitle>Thông tin</AlertTitle>
-                  <AlertDescription>
-                    Hệ thống đang sử dụng PostgreSQL database được cung cấp bởi Replit.
-                  </AlertDescription>
-                </Alert>
               </div>
             </TabsContent>
             
