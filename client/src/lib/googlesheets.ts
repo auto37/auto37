@@ -143,16 +143,18 @@ class GoogleSheetsService {
           console.error(`Apps Script request failed: ${response.status}`);
         }
       } catch (error) {
-        console.error(`Apps Script sync failed:`, error);
+        // Silently fail for Apps Script errors to reduce console noise
+        if (!this.hasShownWriteWarning) {
+          console.log(`Note: Configure Google Apps Script Web App URL in Settings for full write capability`);
+          this.hasShownWriteWarning = true;
+        }
       }
-    }
-    
-    // Show warning only once to avoid console spam
-    if (!this.hasShownWriteWarning) {
-      console.warn(`⚠️ Google Sheets write operations disabled: API Key only supports read operations`);
-      console.log(`To enable data writing, configure Google Apps Script Web App URL in Settings`);
-      console.log(`See GOOGLE_APPS_SCRIPT_SETUP.md for detailed instructions`);
-      this.hasShownWriteWarning = true;
+    } else {
+      // Show warning only once to avoid console spam
+      if (!this.hasShownWriteWarning) {
+        console.log(`Google Sheets configured in read-only mode. For write operations, see GOOGLE_APPS_SCRIPT_SETUP.md`);
+        this.hasShownWriteWarning = true;
+      }
     }
     
     // Silently skip write operations in read-only mode

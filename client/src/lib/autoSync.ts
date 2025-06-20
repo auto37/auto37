@@ -10,19 +10,10 @@ class AutoSyncService {
     if (this.isInitialized) return;
 
     try {
-      const settings = await settingsDb.getSettings();
+      await googleSheetsService.initialize();
       
-      if (settings.googleSheetsEnabled && settings.googleSheetsId && settings.googleSheetsApiKey) {
-        await googleSheetsService.initialize();
-        
-        // Initial sync when app starts
-        await this.performInitialSync();
-        
-        // Set up periodic sync every 5 minutes
-        this.setupPeriodicSync();
-        
-        console.log('AutoSync initialized successfully');
-      }
+      // Auto-sync disabled to reduce console noise
+      // Use manual sync in Settings when needed
       
       this.isInitialized = true;
     } catch (error) {
