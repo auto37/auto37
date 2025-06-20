@@ -16,6 +16,7 @@ interface SheetData {
 class GoogleSheetsService {
   private config: GoogleSheetsConfig | null = null;
   private baseUrl = 'https://sheets.googleapis.com/v4/spreadsheets';
+  private hasShownWriteWarning = false; // Flag to show warning only once
 
   private extractSheetId(input: string): string {
     // Extract ID from full Google Sheets URL if provided
@@ -111,10 +112,7 @@ class GoogleSheetsService {
   private async updateSheetData(sheetName: string, data: any[]): Promise<void> {
     if (!this.config) throw new Error('Google Sheets not configured');
     
-    console.log(`Syncing ${data.length} records to ${sheetName}`);
-    
     if (data.length === 0) {
-      console.log(`No data to sync for ${sheetName}`);
       return;
     }
 
@@ -149,12 +147,15 @@ class GoogleSheetsService {
       }
     }
     
-    // Fallback: API Key only supports read operations
-    console.warn(`⚠️ Cannot write to ${sheetName}: API Key only supports read operations`);
-    console.log(`To enable data writing, configure Google Apps Script Web App URL in Settings`);
+    // Show warning only once to avoid console spam
+    if (!this.hasShownWriteWarning) {
+      console.warn(`⚠️ Google Sheets write operations disabled: API Key only supports read operations`);
+      console.log(`To enable data writing, configure Google Apps Script Web App URL in Settings`);
+      console.log(`See GOOGLE_APPS_SCRIPT_SETUP.md for detailed instructions`);
+      this.hasShownWriteWarning = true;
+    }
     
-    const headers = Object.keys(data[0]);
-    console.log(`Would sync ${data.length} records with fields:`, headers);
+    // Silently skip write operations in read-only mode
   }
 
   async syncCustomers(customers: any[]) {
