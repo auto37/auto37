@@ -32,16 +32,40 @@ class GoogleSheetsService {
   }
 
   async testConnection(): Promise<boolean> {
-    if (!this.config) return false;
+    if (!this.config) {
+      console.log('No Google Sheets config found');
+      return false;
+    }
+    
+    if (!this.config.sheetsId || !this.config.apiKey) {
+      console.log('Missing Sheets ID or API Key');
+      return false;
+    }
     
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.config.sheetsId}?key=${this.config.apiKey}`,
-        { method: 'GET' }
-      );
-      return response.ok;
+      const url = `${this.baseUrl}/${this.config.sheetsId}?key=${this.config.apiKey}&fields=spreadsheetId,properties.title`;
+      console.log('Testing Google Sheets connection to:', url.replace(this.config.apiKey, '[API_KEY]'));
+      
+      const response = await fetch(url, { 
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Connection successful, spreadsheet found:', data.properties?.title);
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        return false;
+      }
     } catch (err) {
-      console.error('Google Sheets connection test failed:', err);
+      console.error('Network error testing Google Sheets connection:', err);
       return false;
     }
   }
