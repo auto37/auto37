@@ -11,6 +11,12 @@ export function GoogleSheetsDemo() {
   const [result, setResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const extractSheetId = (input: string): string => {
+    // Extract ID from full Google Sheets URL if provided
+    const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : input;
+  };
+
   const testConnection = async () => {
     if (!sheetsId || !apiKey) {
       setResult('Vui lòng điền đầy đủ Sheets ID và API Key');
@@ -21,8 +27,9 @@ export function GoogleSheetsDemo() {
     setResult('Đang kiểm tra kết nối...');
 
     try {
-      // Test basic connection
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}?key=${apiKey}&fields=spreadsheetId,properties.title`;
+      // Extract clean ID from URL or use as-is
+      const cleanId = extractSheetId(sheetsId);
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${cleanId}?key=${apiKey}&fields=spreadsheetId,properties.title`;
       
       const response = await fetch(url);
       
@@ -98,10 +105,11 @@ export function GoogleSheetsDemo() {
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            <strong>Hướng dẫn nhanh:</strong><br/>
-            1. Tạo API Key trong Google Cloud Console (bật Google Sheets API)<br/>
+            <strong>Hướng dẫn chi tiết:</strong><br/>
+            1. Tạo API Key trong Google Cloud Console và bật Google Sheets API<br/>
             2. Tạo Google Sheets mới hoặc dùng sheets có sẵn<br/>
-            3. Copy ID từ URL sheets và test kết nối
+            3. Từ URL như: https://docs.google.com/spreadsheets/d/<strong>1F2Ik4lkVHbN4-roOULqkRrwdEaqzlZ3wzqcdI-qkg7w</strong>/edit<br/>
+            4. Copy phần <strong>ID giữa /d/ và /edit</strong> hoặc paste toàn bộ URL (tự động trích xuất ID)
           </AlertDescription>
         </Alert>
 
@@ -118,13 +126,18 @@ export function GoogleSheetsDemo() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sheetsId">Google Sheets ID</Label>
+            <Label htmlFor="sheetsId">Google Sheets ID hoặc URL đầy đủ</Label>
             <Input
               id="sheetsId"
               value={sheetsId}
               onChange={(e) => setSheetsId(e.target.value)}
-              placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+              placeholder="Paste URL: https://docs.google.com/spreadsheets/d/1F2Ik.../edit hoặc chỉ ID"
             />
+            {sheetsId && (
+              <p className="text-sm text-gray-600">
+                ID được trích xuất: <code className="bg-gray-100 px-1 rounded">{extractSheetId(sheetsId)}</code>
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2">

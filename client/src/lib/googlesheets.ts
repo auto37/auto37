@@ -16,6 +16,12 @@ class GoogleSheetsService {
   private config: GoogleSheetsConfig | null = null;
   private baseUrl = 'https://sheets.googleapis.com/v4/spreadsheets';
 
+  private extractSheetId(input: string): string {
+    // Extract ID from full Google Sheets URL if provided
+    const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : input;
+  }
+
   async initialize() {
     const settings = await settingsDb.getSettings();
     if (settings.googleSheetsId && settings.googleSheetsApiKey) {
@@ -43,7 +49,8 @@ class GoogleSheetsService {
     }
     
     try {
-      const url = `${this.baseUrl}/${this.config.sheetsId}?key=${this.config.apiKey}&fields=spreadsheetId,properties.title`;
+      const cleanId = this.extractSheetId(this.config.sheetsId);
+      const url = `${this.baseUrl}/${cleanId}?key=${this.config.apiKey}&fields=spreadsheetId,properties.title`;
       console.log('Testing Google Sheets connection to:', url.replace(this.config.apiKey, '[API_KEY]'));
       
       const response = await fetch(url, { 
@@ -73,8 +80,9 @@ class GoogleSheetsService {
   private async getSheetData(sheetName: string): Promise<any[]> {
     if (!this.config) throw new Error('Google Sheets not configured');
 
+    const cleanId = this.extractSheetId(this.config.sheetsId);
     const response = await fetch(
-      `${this.baseUrl}/${this.config.sheetsId}/values/${sheetName}?key=${this.config.apiKey}`,
+      `${this.baseUrl}/${cleanId}/values/${sheetName}?key=${this.config.apiKey}`,
       { method: 'GET' }
     );
 
@@ -102,6 +110,8 @@ class GoogleSheetsService {
     if (!this.config) throw new Error('Google Sheets not configured');
     if (data.length === 0) return;
 
+    const cleanId = this.extractSheetId(this.config.sheetsId);
+    
     // Get headers from first object
     const headers = Object.keys(data[0]);
     const values = [
@@ -111,7 +121,7 @@ class GoogleSheetsService {
 
     // Clear existing data first
     await fetch(
-      `${this.baseUrl}/${this.config.sheetsId}/values/${sheetName}:clear?key=${this.config.apiKey}`,
+      `${this.baseUrl}/${cleanId}/values/${sheetName}:clear?key=${this.config.apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +131,7 @@ class GoogleSheetsService {
 
     // Update with new data
     await fetch(
-      `${this.baseUrl}/${this.config.sheetsId}/values/${sheetName}?valueInputOption=RAW&key=${this.config.apiKey}`,
+      `${this.baseUrl}/${cleanId}/values/${sheetName}?valueInputOption=RAW&key=${this.config.apiKey}`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
