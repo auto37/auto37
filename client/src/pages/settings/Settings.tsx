@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import { supabaseService } from '@/lib/supabase';
+import { googleSheetsService } from '@/lib/googlesheets';
 
 
 export default function SettingsPage() {
@@ -25,9 +25,10 @@ export default function SettingsPage() {
     bankAccount: '',
     bankOwner: '',
     bankBranch: '',
-    supabaseUrl: '',
-    supabaseKey: '',
-    supabaseEnabled: false,
+    googleSheetsId: '',
+    googleSheetsApiKey: '',
+    googleSheetsWebAppUrl: '',
+    googleSheetsEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
@@ -43,28 +44,23 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      setIsLoading(true);
-      try {
-        const currentSettings = await settingsDb.getSettings();
-        setSettings(currentSettings);
-        if (currentSettings.logoUrl) {
-          setLogoPreview(currentSettings.logoUrl);
-        }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải cài đặt. Vui lòng thử lại.',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    loadSettings();
+  }, []);
 
-    fetchSettings();
-  }, [toast]);
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const currentSettings = await settingsDb.getSettings();
+      setSettings(currentSettings);
+      if (currentSettings.logoUrl) {
+        setLogoPreview(currentSettings.logoUrl);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,38 +70,16 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      
-      // Kiểm tra xem có phải là file ảnh hay không
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Lỗi',
-          description: 'Vui lòng chọn tệp tin ảnh hợp lệ (JPEG, PNG, SVG).',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      // Kiểm tra kích thước file (<=2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: 'Lỗi',
-          description: 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 2MB.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
       setLogoFile(file);
       
-      // Hiển thị ảnh preview
+      // Preview
       const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          setLogoPreview(event.target.result);
-        }
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setLogoPreview(result);
       };
       reader.readAsDataURL(file);
     }
@@ -114,206 +88,59 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      // Lưu cài đặt cơ bản
-      await settingsDb.updateSettings({
-        garageName: settings.garageName,
-        garageAddress: settings.garageAddress,
-        garagePhone: settings.garagePhone,
-        garageEmail: settings.garageEmail,
-        garageTaxCode: settings.garageTaxCode,
-        iconColor: settings.iconColor
-      });
+      let logoUrl = settings.logoUrl;
       
-      // Nếu có logo mới, lưu logo
+      // Upload logo if new file selected
       if (logoFile) {
-        await settingsDb.saveLogoAsBase64(logoFile);
+        logoUrl = await settingsDb.saveLogoAsBase64(logoFile);
       }
+      
+      const updatedSettings: Partial<Settings> = {
+        ...settings,
+        logoUrl,
+        updatedAt: new Date()
+      };
+      
+      await settingsDb.updateSettings(updatedSettings);
+      setSettings(prev => ({ ...prev, ...updatedSettings }));
+      setLogoFile(null);
       
       toast({
         title: 'Thành công',
-        description: 'Đã lưu cài đặt.',
+        description: 'Đã lưu cài đặt thành công!'
       });
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
         title: 'Lỗi',
-        description: 'Không thể lưu cài đặt. Vui lòng thử lại.',
+        description: 'Có lỗi xảy ra khi lưu cài đặt.',
         variant: 'destructive'
       });
     } finally {
       setIsSaving(false);
     }
   };
-  
-  // Xử lý sao lưu dữ liệu
-  const handleBackup = async () => {
-    setIsBackingUp(true);
-    try {
-      await downloadBackup();
-      
-      toast({
-        title: 'Thành công',
-        description: 'Đã tạo bản sao lưu dữ liệu.',
-      });
-    } catch (error) {
-      console.error('Error backing up data:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tạo bản sao lưu. Vui lòng thử lại.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsBackingUp(false);
-    }
-  };
-  
-  // Xử lý khi chọn file khôi phục
-  const handleRestoreFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      
-      // Kiểm tra định dạng file
-      if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-        toast({
-          title: 'Lỗi',
-          description: 'Vui lòng chọn file JSON hợp lệ.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      setRestoreFile(file);
-    }
-  };
-  
-  // Xử lý khôi phục dữ liệu
-  const handleRestore = async () => {
-    if (!restoreFile) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng chọn file sao lưu để khôi phục.',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    const confirmRestore = window.confirm(
-      'Khôi phục dữ liệu sẽ xóa toàn bộ dữ liệu hiện tại và thay thế bằng dữ liệu từ file sao lưu. Bạn có chắc chắn muốn tiếp tục?'
-    );
-    
-    if (!confirmRestore) return;
-    
-    setIsRestoring(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          try {
-            await importDatabaseFromJson(event.target.result);
-            
-            // Tải lại cài đặt sau khi khôi phục
-            const currentSettings = await settingsDb.getSettings();
-            setSettings(currentSettings);
-            if (currentSettings.logoUrl) {
-              setLogoPreview(currentSettings.logoUrl);
-            }
-            
-            toast({
-              title: 'Thành công',
-              description: 'Đã khôi phục dữ liệu thành công.',
-            });
-            
-            // Reset file input
-            if (fileInputRef.current) {
-              fileInputRef.current.value = '';
-            }
-            setRestoreFile(null);
-            
-          } catch (importError) {
-            console.error('Error importing data:', importError);
-            toast({
-              title: 'Lỗi',
-              description: 'Không thể khôi phục dữ liệu. File sao lưu có thể không hợp lệ.',
-              variant: 'destructive'
-            });
-          }
-        }
-      };
-      reader.readAsText(restoreFile);
-    } catch (error) {
-      console.error('Error reading file:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể đọc file sao lưu. Vui lòng thử lại.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsRestoring(false);
-    }
-  };
-  
-  // Xử lý xóa toàn bộ dữ liệu
-  const handleClearData = async () => {
-    const confirmClear = window.confirm(
-      'CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu trong hệ thống. Bạn có chắc chắn muốn tiếp tục?'
-    );
-    
-    if (!confirmClear) return;
-    
-    // Yêu cầu xác nhận lần thứ hai
-    const confirmFinal = window.confirm(
-      'ĐÂY LÀ THAO TÁC XÓA VĨNH VIỄN. Nhập "XÓA" để xác nhận.'
-    );
-    
-    if (!confirmFinal) return;
-    
-    setIsClearing(true);
-    try {
-      await clearAllData();
-      
-      // Khởi tạo lại cài đặt
-      const currentSettings = await settingsDb.getSettings();
-      setSettings(currentSettings);
-      setLogoPreview('');
-      
-      toast({
-        title: 'Thành công',
-        description: 'Đã xóa toàn bộ dữ liệu.',
-      });
-      
-      setShowClearConfirm(false);
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể xóa dữ liệu. Vui lòng thử lại.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsClearing(false);
-    }
-  };
 
-  // Supabase handlers
+  // Google Sheets handlers
   const handleTestConnection = async () => {
     try {
       await settingsDb.updateSettings({
-        supabaseUrl: settings.supabaseUrl,
-        supabaseKey: settings.supabaseKey
+        googleSheetsId: settings.googleSheetsId,
+        googleSheetsApiKey: settings.googleSheetsApiKey
       });
       
-      await supabaseService.initialize();
-      const isConnected = await supabaseService.testConnection();
+      await googleSheetsService.initialize();
+      const isConnected = await googleSheetsService.testConnection();
       
       if (isConnected) {
         toast({
           title: 'Thành công',
-          description: 'Kết nối Supabase thành công!'
+          description: 'Kết nối Google Sheets thành công!'
         });
       } else {
         toast({
           title: 'Lỗi kết nối',
-          description: 'Không thể kết nối tới Supabase. Vui lòng kiểm tra URL và API key.',
+          description: 'Không thể kết nối tới Google Sheets. Vui lòng kiểm tra Sheets ID và API Key.',
           variant: 'destructive'
         });
       }
@@ -329,8 +156,8 @@ export default function SettingsPage() {
 
   const handleSyncNow = async () => {
     try {
-      await supabaseService.initialize();
-      await supabaseService.syncAllData();
+      await googleSheetsService.initialize();
+      await googleSheetsService.syncAllData();
       
       const updatedSettings = {
         ...settings,
@@ -341,7 +168,7 @@ export default function SettingsPage() {
       
       toast({
         title: 'Thành công',
-        description: 'Đã đồng bộ dữ liệu lên Supabase!'
+        description: 'Đã đồng bộ dữ liệu lên Google Sheets!'
       });
     } catch (error) {
       console.error('Error syncing data:', error);
@@ -353,10 +180,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLoadFromSupabase = async () => {
+  const handleLoadFromGoogleSheets = async () => {
     try {
-      await supabaseService.initialize();
-      await supabaseService.loadFromSupabase();
+      await googleSheetsService.initialize();
+      await googleSheetsService.loadFromGoogleSheets();
       
       const updatedSettings = {
         ...settings,
@@ -367,54 +194,175 @@ export default function SettingsPage() {
       
       toast({
         title: 'Thành công',
-        description: 'Đã tải dữ liệu từ Supabase!'
+        description: 'Đã tải dữ liệu từ Google Sheets!'
       });
     } catch (error) {
-      console.error('Error loading from Supabase:', error);
+      console.error('Error loading data:', error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể tải dữ liệu từ Supabase. Vui lòng thử lại.',
+        title: 'Lỗi tải dữ liệu',
+        description: 'Không thể tải dữ liệu từ Google Sheets. Vui lòng thử lại.',
         variant: 'destructive'
       });
     }
   };
 
+  // Backup and restore handlers
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      await downloadBackup();
+      toast({
+        title: 'Thành công',
+        description: 'Đã tải xuống file sao lưu!'
+      });
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Có lỗi xảy ra khi tạo file sao lưu.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoreFile) return;
+    
+    setIsRestoring(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const jsonData = e.target?.result as string;
+          await importDatabaseFromJson(jsonData);
+          
+          toast({
+            title: 'Thành công',
+            description: 'Đã khôi phục dữ liệu thành công!'
+          });
+          
+          setRestoreFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        } catch (error) {
+          console.error('Error restoring data:', error);
+          toast({
+            title: 'Lỗi',
+            description: 'Có lỗi xảy ra khi khôi phục dữ liệu.',
+            variant: 'destructive'
+          });
+        } finally {
+          setIsRestoring(false);
+        }
+      };
+      reader.readAsText(restoreFile);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      setIsRestoring(false);
+    }
+  };
+
+  const handleClearData = async () => {
+    setIsClearing(true);
+    try {
+      await clearAllData();
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa toàn bộ dữ liệu!'
+      });
+      setShowClearConfirm(false);
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Có lỗi xảy ra khi xóa dữ liệu.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p>Đang tải cài đặt...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Cài Đặt Hệ Thống</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="garage">
-            <TabsList className="mb-4">
-              <TabsTrigger value="garage">Thông Tin Gara</TabsTrigger>
-              <TabsTrigger value="bank">Thông Tin Ngân Hàng</TabsTrigger>
-              <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
-              <TabsTrigger value="supabase">Supabase</TabsTrigger>
-              <TabsTrigger value="backup">Sao Lưu & Phục Hồi</TabsTrigger>
-              <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="garage" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Cài Đặt Hệ Thống</h1>
+        <Button 
+          onClick={handleSaveSettings} 
+          disabled={isSaving}
+          className="bg-orange-500 hover:bg-orange-600 text-white"
+        >
+          {isSaving ? (
+            <>
+              <i className="fas fa-spinner fa-spin mr-2"></i>
+              Đang lưu...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-save mr-2"></i>
+              Lưu cài đặt
+            </>
+          )}
+        </Button>
+      </div>
+
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">Chung</TabsTrigger>
+          <TabsTrigger value="display">Hiển thị</TabsTrigger>
+          <TabsTrigger value="database">Cơ sở dữ liệu</TabsTrigger>
+          <TabsTrigger value="backup">Sao lưu</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông Tin Garage</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="garageName">Tên Gara</Label>
+                  <Label htmlFor="garageName">Tên Garage</Label>
                   <Input 
                     id="garageName" 
                     name="garageName"
-                    value={settings.garageName}
+                    value={settings.garageName} 
                     onChange={handleInputChange}
-                    placeholder="Nhập tên gara"
+                    placeholder="Nhập tên garage"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="garagePhone">Số Điện Thoại</Label>
+                  <Label htmlFor="garageAddress">Địa chỉ</Label>
+                  <Input 
+                    id="garageAddress" 
+                    name="garageAddress"
+                    value={settings.garageAddress || ''} 
+                    onChange={handleInputChange}
+                    placeholder="Nhập địa chỉ garage"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="garagePhone">Số điện thoại</Label>
                   <Input 
                     id="garagePhone" 
                     name="garagePhone"
-                    value={settings.garagePhone || ''}
+                    value={settings.garagePhone || ''} 
                     onChange={handleInputChange}
                     placeholder="Nhập số điện thoại"
                   />
@@ -426,126 +374,119 @@ export default function SettingsPage() {
                     id="garageEmail" 
                     name="garageEmail"
                     type="email"
-                    value={settings.garageEmail || ''}
+                    value={settings.garageEmail || ''} 
                     onChange={handleInputChange}
-                    placeholder="Nhập địa chỉ email"
+                    placeholder="Nhập email garage"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="garageTaxCode">Mã Số Thuế</Label>
+                  <Label htmlFor="garageTaxCode">Mã số thuế</Label>
                   <Input 
                     id="garageTaxCode" 
                     name="garageTaxCode"
-                    value={settings.garageTaxCode || ''}
+                    value={settings.garageTaxCode || ''} 
                     onChange={handleInputChange}
-                    placeholder="Nhập mã số thuế (nếu có)"
+                    placeholder="Nhập mã số thuế"
                   />
                 </div>
-                
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="garageAddress">Địa Chỉ</Label>
-                  <Input 
-                    id="garageAddress" 
-                    name="garageAddress"
-                    value={settings.garageAddress || ''}
-                    onChange={handleInputChange}
-                    placeholder="Nhập địa chỉ gara"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="bank" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông Tin Ngân Hàng</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bankName">Tên Ngân Hàng</Label>
+                  <Label htmlFor="bankName">Tên ngân hàng</Label>
                   <Input 
                     id="bankName" 
                     name="bankName"
-                    value={settings.bankName || ''}
+                    value={settings.bankName || ''} 
                     onChange={handleInputChange}
-                    placeholder="VD: Ngân hàng TMCP Đầu tư và Phát triển Việt Nam"
+                    placeholder="Vietcombank, Techcombank, ..."
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="bankAccount">Số Tài Khoản</Label>
+                  <Label htmlFor="bankAccount">Số tài khoản</Label>
                   <Input 
                     id="bankAccount" 
                     name="bankAccount"
-                    value={settings.bankAccount || ''}
+                    value={settings.bankAccount || ''} 
                     onChange={handleInputChange}
-                    placeholder="VD: 1234567890123"
+                    placeholder="Nhập số tài khoản"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="bankOwner">Tên Chủ Tài Khoản</Label>
+                  <Label htmlFor="bankOwner">Tên chủ tài khoản</Label>
                   <Input 
                     id="bankOwner" 
                     name="bankOwner"
-                    value={settings.bankOwner || ''}
+                    value={settings.bankOwner || ''} 
                     onChange={handleInputChange}
-                    placeholder="VD: NGUYEN VAN A"
+                    placeholder="Nhập tên chủ tài khoản"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="bankBranch">Chi Nhánh</Label>
+                  <Label htmlFor="bankBranch">Chi nhánh</Label>
                   <Input 
                     id="bankBranch" 
                     name="bankBranch"
-                    value={settings.bankBranch || ''}
+                    value={settings.bankBranch || ''} 
                     onChange={handleInputChange}
-                    placeholder="VD: Chi nhánh Hà Nội"
+                    placeholder="Chi nhánh ngân hàng"
                   />
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Logo Garage</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="logo">Chọn logo (PNG, JPG)</Label>
+                <Input 
+                  id="logo" 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
               </div>
               
-              <Alert>
-                <AlertTitle>Lưu ý</AlertTitle>
-                <AlertDescription>
-                  Thông tin ngân hàng sẽ được hiển thị trên các phiếu báo giá, lệnh sửa chữa và hóa đơn quyết toán để khách hàng có thể thực hiện thanh toán.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-            
-            <TabsContent value="appearance" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Logo Gara</h3>
-                  <div className="p-4 border rounded-md">
-                    {logoPreview ? (
-                      <div className="mb-4 flex justify-center">
-                        <img 
-                          src={logoPreview} 
-                          alt="Logo gara" 
-                          className="max-h-40 max-w-full rounded"
-                        />
-                      </div>
-                    ) : (
-                      <div className="mb-4 p-8 text-center bg-gray-100 rounded">
-                        <p className="text-gray-500">Chưa có logo</p>
-                      </div>
-                    )}
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="logoFile">Tải lên logo mới</Label>
-                      <Input 
-                        id="logoFile" 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleLogoChange}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Kích thước khuyến nghị: 200x100 pixels. Định dạng JPEG, PNG hoặc SVG. Tối đa 2MB.
-                      </p>
+              {logoPreview && (
+                <div className="space-y-2">
+                  <Label>Xem trước logo</Label>
+                  <div className="flex items-center space-x-4">
+                    <img 
+                      src={logoPreview} 
+                      alt="Logo preview" 
+                      className="w-24 h-24 object-contain border rounded-md"
+                    />
+                    <div className="text-sm text-gray-500">
+                      Logo sẽ hiển thị trên các hóa đơn, báo giá và tài liệu in ấn.
                     </div>
                   </div>
                 </div>
-                
-                <div className="space-y-4">
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="display" className="space-y-6">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Giao Diện & Hiển Thị</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
                   <h3 className="text-lg font-semibold">Cài Đặt Hiển Thị</h3>
                   <div className="p-4 border rounded-md space-y-4">
                     <div className="space-y-4">
@@ -599,255 +540,249 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="database" className="space-y-6">
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Cấu Hình Google Sheets</h3>
+            <p className="text-sm text-gray-500">
+              Kết nối với Google Sheets để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau. Đơn giản và dễ sử dụng hơn MongoDB.
+            </p>
             
-            <TabsContent value="supabase" className="space-y-6">
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Cấu Hình Supabase</h3>
-                <p className="text-sm text-gray-500">
-                  Kết nối với Supabase để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau.
+            <Alert>
+              <i className="fas fa-lightbulb"></i>
+              <AlertTitle>Thông tin quan trọng</AlertTitle>
+              <AlertDescription>
+                <strong>API Key chỉ cho phép đọc dữ liệu.</strong> Để ghi dữ liệu lên Google Sheets, cần thiết lập Google Apps Script Web App URL. 
+                Xem hướng dẫn chi tiết trong file <strong>GOOGLE_APPS_SCRIPT_SETUP.md</strong>
+              </AlertDescription>
+            </Alert>
+            
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="googleSheetsId">Google Sheets ID hoặc URL đầy đủ</Label>
+                <Input 
+                  id="googleSheetsId" 
+                  name="googleSheetsId"
+                  value={settings.googleSheetsId || ''}
+                  onChange={handleInputChange}
+                  placeholder="Paste URL hoặc chỉ ID: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                />
+                <p className="text-xs text-gray-500">
+                  Có thể paste toàn bộ URL Google Sheets hoặc chỉ ID. Hệ thống sẽ tự động trích xuất ID.
                 </p>
-                
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="supabaseUrl">Supabase Project URL</Label>
-                    <Input 
-                      id="supabaseUrl" 
-                      name="supabaseUrl"
-                      value={settings.supabaseUrl || ''}
-                      onChange={handleInputChange}
-                      placeholder="https://your-project-id.supabase.co"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="supabaseKey">Supabase Anon Public Key</Label>
-                    <Input 
-                      id="supabaseKey" 
-                      name="supabaseKey"
-                      type="password"
-                      value={settings.supabaseKey || ''}
-                      onChange={handleInputChange}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="supabaseEnabled" 
-                      name="supabaseEnabled"
-                      className="h-4 w-4 rounded border-gray-300"
-                      checked={settings.supabaseEnabled || false}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        supabaseEnabled: e.target.checked
-                      }))}
-                    />
-                    <Label htmlFor="supabaseEnabled" className="cursor-pointer">
-                      Bật đồng bộ dữ liệu tự động
-                    </Label>
-                  </div>
-                  
-                  {settings.lastSyncTime && (
-                    <div className="text-sm text-gray-500">
-                      Đồng bộ lần cuối: {new Date(settings.lastSyncTime).toLocaleString('vi-VN')}
-                    </div>
-                  )}
-                </div>
-                
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="googleSheetsApiKey">Google Sheets API Key</Label>
+                <Input 
+                  id="googleSheetsApiKey" 
+                  name="googleSheetsApiKey"
+                  type="password"
+                  value={settings.googleSheetsApiKey || ''}
+                  onChange={handleInputChange}
+                  placeholder="API Key từ Google Cloud Console"
+                />
+                <p className="text-xs text-gray-500">
+                  API Key cho đọc dữ liệu từ Google Sheets (chỉ đọc)
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="googleSheetsWebAppUrl">Google Apps Script Web App URL (Tùy chọn)</Label>
+                <Input 
+                  id="googleSheetsWebAppUrl" 
+                  name="googleSheetsWebAppUrl"
+                  value={settings.googleSheetsWebAppUrl || ''}
+                  onChange={handleInputChange}
+                  placeholder="https://script.google.com/macros/s/ABC.../exec"
+                />
+                <p className="text-xs text-gray-500">
+                  Web App URL để ghi dữ liệu lên Google Sheets. Xem hướng dẫn trong GOOGLE_APPS_SCRIPT_SETUP.md
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="googleSheetsEnabled" 
+                  name="googleSheetsEnabled"
+                  className="h-4 w-4 rounded border-gray-300"
+                  checked={settings.googleSheetsEnabled || false}
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    googleSheetsEnabled: e.target.checked
+                  }))}
+                />
+                <Label htmlFor="googleSheetsEnabled" className="cursor-pointer">
+                  Bật đồng bộ dữ liệu tự động
+                </Label>
+              </div>
+              
+              {settings.lastSyncTime && (
                 <Alert>
-                  <AlertTitle>Hướng dẫn thiết lập Supabase</AlertTitle>
+                  <i className="fas fa-info-circle"></i>
+                  <AlertTitle>Đồng bộ gần nhất</AlertTitle>
                   <AlertDescription>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Đăng nhập vào <a href="https://supabase.com" target="_blank" className="text-blue-600 underline">supabase.com</a></li>
-                      <li>Tạo project mới hoặc sử dụng project hiện có</li>
-                      <li>Vào Settings → API để lấy Project URL và anon public key</li>
-                      <li>Sao chép và dán thông tin vào các trường bên trên</li>
-                      <li>Bật đồng bộ để tự động cập nhật dữ liệu</li>
-                    </ol>
+                    {new Date(settings.lastSyncTime).toLocaleString('vi-VN')}
                   </AlertDescription>
                 </Alert>
-                
-                <div className="flex gap-4">
-                  <Button 
-                    onClick={handleTestConnection}
-                    variant="outline"
-                    disabled={!settings.supabaseUrl || !settings.supabaseKey}
-                  >
-                    <i className="fas fa-plug mr-2"></i>
-                    Kiểm tra kết nối
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleSyncNow}
-                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
-                  >
-                    <i className="fas fa-sync mr-2"></i>
-                    Đồng bộ ngay
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleLoadFromSupabase}
-                    variant="destructive"
-                    disabled={!settings.supabaseEnabled || !settings.supabaseUrl || !settings.supabaseKey}
-                  >
-                    <i className="fas fa-download mr-2"></i>
-                    Tải từ Supabase
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="database" className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Cơ Sở Dữ Liệu</h3>
-                <Alert>
-                  <AlertTitle>Thông tin</AlertTitle>
-                  <AlertDescription>
-                    Hệ thống đang sử dụng PostgreSQL database được cung cấp bởi Replit.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="backup" className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Sao Lưu Dữ Liệu</h3>
-                <p className="text-sm text-gray-500">
-                  Sao lưu toàn bộ dữ liệu hệ thống, bao gồm khách hàng, phương tiện, kho, hóa đơn và các giao dịch khác.
-                </p>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="secondary"
-                    onClick={handleBackup}
-                    disabled={isBackingUp}
-                  >
-                    {isBackingUp ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Đang tạo sao lưu...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-download mr-2"></i>
-                        Tạo bản sao lưu
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <Alert className="my-4">
-                  <i className="fas fa-info-circle mr-2 text-blue-500"></i>
-                  <AlertTitle>Lưu ý về sao lưu</AlertTitle>
-                  <AlertDescription>
-                    Dữ liệu được lưu trong trình duyệt của bạn (IndexedDB). Để đảm bảo an toàn dữ liệu, 
-                    bạn nên thường xuyên thực hiện sao lưu và lưu trữ các file sao lưu ở nơi an toàn.
-                  </AlertDescription>
-                </Alert>
-                
-                <Separator className="my-4" />
-                
-                <h3 className="text-lg font-semibold">Phục Hồi Dữ Liệu</h3>
-                <p className="text-sm text-gray-500">
-                  Cảnh báo: Phục hồi dữ liệu sẽ ghi đè dữ liệu hiện tại. Hãy đảm bảo bạn đã sao lưu trước khi tiến hành.
-                </p>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="restoreFile">Chọn tệp sao lưu</Label>
-                    <Input 
-                      id="restoreFile" 
-                      type="file" 
-                      accept=".json" 
-                      ref={fileInputRef}
-                      onChange={handleRestoreFileChange} 
-                      disabled={isRestoring}
-                    />
-                    {restoreFile && (
-                      <p className="text-sm text-green-600">
-                        Đã chọn: {restoreFile.name}
-                      </p>
-                    )}
-                  </div>
-                  <Button 
-                    variant="destructive"
-                    onClick={handleRestore}
-                    disabled={!restoreFile || isRestoring}
-                  >
-                    {isRestoring ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Đang phục hồi...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-sync-alt mr-2"></i>
-                        Phục hồi dữ liệu
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <h3 className="text-lg font-semibold">Xóa Tất Cả Dữ Liệu</h3>
-                <p className="text-sm text-gray-500">
-                  Cảnh báo: Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu. Hãy đảm bảo bạn đã sao lưu trước.
-                </p>
-                
-                <Alert variant="destructive">
-                  <i className="fas fa-exclamation-triangle mr-2"></i>
-                  <AlertTitle>Thao tác nguy hiểm</AlertTitle>
-                  <AlertDescription>
-                    Dữ liệu đã xóa không thể khôi phục trừ khi bạn có bản sao lưu. 
-                    Thao tác này sẽ xóa tất cả khách hàng, phương tiện, hóa đơn, báo giá và tất cả dữ liệu khác.
-                  </AlertDescription>
-                </Alert>
+              )}
+              
+              <div className="flex gap-4">
+                <Button 
+                  onClick={handleTestConnection}
+                  variant="outline"
+                  disabled={!settings.googleSheetsId || !settings.googleSheetsApiKey}
+                >
+                  <i className="fas fa-plug mr-2"></i>
+                  Kiểm tra kết nối
+                </Button>
                 
                 <Button 
-                  variant="destructive"
-                  onClick={handleClearData}
-                  disabled={isClearing}
-                  className="bg-red-700 hover:bg-red-800"
+                  onClick={handleSyncNow}
+                  disabled={!settings.googleSheetsEnabled || !settings.googleSheetsId || !settings.googleSheetsApiKey}
                 >
-                  {isClearing ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin mr-2"></i>
-                      Đang xóa dữ liệu...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-trash-alt mr-2"></i>
-                      Xóa Tất Cả Dữ Liệu
-                    </>
-                  )}
+                  <i className="fas fa-sync mr-2"></i>
+                  Đồng bộ ngay
+                </Button>
+                
+                <Button 
+                  onClick={handleLoadFromGoogleSheets}
+                  variant="destructive"
+                  disabled={!settings.googleSheetsEnabled || !settings.googleSheetsId || !settings.googleSheetsApiKey}
+                >
+                  <i className="fas fa-download mr-2"></i>
+                  Tải từ Google Sheets
                 </Button>
               </div>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex justify-end gap-2 mt-6">
-            <Button 
-              type="button" 
-              onClick={handleSaveSettings}
-              disabled={isSaving || isLoading}
-            >
-              {isSaving ? (
-                <>
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Đang Lưu...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-save mr-2"></i>
-                  Lưu Cài Đặt
-                </>
-              )}
-            </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+        
+        <TabsContent value="backup" className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Sao Lưu Dữ Liệu</h3>
+            <p className="text-sm text-gray-500">
+              Sao lưu toàn bộ dữ liệu hệ thống, bao gồm khách hàng, phương tiện, kho, hóa đơn và các giao dịch khác.
+            </p>
+            <div className="flex space-x-2">
+              <Button 
+                variant="secondary"
+                onClick={handleBackup}
+                disabled={isBackingUp}
+              >
+                {isBackingUp ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Đang tạo...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-download mr-2"></i>
+                    Tải xuống bản sao lưu
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Khôi Phục Dữ Liệu</h3>
+            <p className="text-sm text-gray-500">
+              Khôi phục dữ liệu từ file sao lưu đã tải xuống trước đó.
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="restore">Chọn file sao lưu (.json)</Label>
+                <Input 
+                  ref={fileInputRef}
+                  id="restore" 
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+                />
+              </div>
+              <Button 
+                variant="destructive"
+                onClick={handleRestore}
+                disabled={!restoreFile || isRestoring}
+              >
+                {isRestoring ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Đang khôi phục...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-upload mr-2"></i>
+                    Khôi phục dữ liệu
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-red-600">Xóa Toàn Bộ Dữ Liệu</h3>
+            <p className="text-sm text-gray-500">
+              <strong>Cảnh báo:</strong> Thao tác này sẽ xóa hoàn toàn tất cả dữ liệu trong hệ thống và không thể khôi phục.
+            </p>
+            
+            {!showClearConfirm ? (
+              <Button 
+                variant="destructive"
+                onClick={() => setShowClearConfirm(true)}
+              >
+                <i className="fas fa-trash mr-2"></i>
+                Xóa toàn bộ dữ liệu
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <Alert variant="destructive">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <AlertTitle>Xác nhận xóa dữ liệu</AlertTitle>
+                  <AlertDescription>
+                    Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Thao tác này không thể hoàn tác.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="destructive"
+                    onClick={handleClearData}
+                    disabled={isClearing}
+                  >
+                    {isClearing ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Đang xóa...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-check mr-2"></i>
+                        Xác nhận xóa
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowClearConfirm(false)}
+                  >
+                    Hủy bỏ
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
