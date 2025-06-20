@@ -25,11 +25,9 @@ export default function SettingsPage() {
     bankAccount: '',
     bankOwner: '',
     bankBranch: '',
-    mongoConnectionString: '',
-    mongoDatabaseName: '',
-    mongoEnabled: false,
-    mongoDataApiUrl: '',
-    mongoApiKey: '',
+    googleSheetsId: '',
+    googleSheetsApiKey: '',
+    googleSheetsEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
@@ -607,76 +605,54 @@ export default function SettingsPage() {
             
             <TabsContent value="database" className="space-y-6">
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Cấu Hình MongoDB</h3>
+                <h3 className="text-lg font-semibold">Cấu Hình Google Sheets</h3>
                 <p className="text-sm text-gray-500">
-                  Kết nối với MongoDB để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau.
+                  Kết nối với Google Sheets để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau. Đơn giản và dễ sử dụng hơn MongoDB.
                 </p>
                 
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="mongoConnectionString">MongoDB Connection String</Label>
+                    <Label htmlFor="googleSheetsId">Google Sheets ID</Label>
                     <Input 
-                      id="mongoConnectionString" 
-                      name="mongoConnectionString"
-                      value={settings.mongoConnectionString || ''}
+                      id="googleSheetsId" 
+                      name="googleSheetsId"
+                      value={settings.googleSheetsId || ''}
                       onChange={handleInputChange}
-                      placeholder="mongodb+srv://username:password@cluster.mongodb.net/"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="mongoDatabaseName">Tên Database</Label>
-                    <Input 
-                      id="mongoDatabaseName" 
-                      name="mongoDatabaseName"
-                      value={settings.mongoDatabaseName || ''}
-                      onChange={handleInputChange}
-                      placeholder="garage_management"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mongoDataApiUrl">MongoDB Data API URL</Label>
-                    <Input 
-                      id="mongoDataApiUrl" 
-                      name="mongoDataApiUrl"
-                      value={settings.mongoDataApiUrl || ''}
-                      onChange={handleInputChange}
-                      placeholder="https://data.mongodb-api.com/app/your-app-id/endpoint/data/v1"
+                      placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
                     />
                     <p className="text-xs text-gray-500">
-                      URL của MongoDB Atlas Data API từ App Services
+                      ID của Google Sheets (từ URL: docs.google.com/spreadsheets/d/[ID]/edit)
                     </p>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="mongoApiKey">MongoDB API Key</Label>
+                    <Label htmlFor="googleSheetsApiKey">Google Sheets API Key</Label>
                     <Input 
-                      id="mongoApiKey" 
-                      name="mongoApiKey"
+                      id="googleSheetsApiKey" 
+                      name="googleSheetsApiKey"
                       type="password"
-                      value={settings.mongoApiKey || ''}
+                      value={settings.googleSheetsApiKey || ''}
                       onChange={handleInputChange}
-                      placeholder="API Key từ MongoDB Atlas"
+                      placeholder="API Key từ Google Cloud Console"
                     />
                     <p className="text-xs text-gray-500">
-                      API Key được tạo trong MongoDB Atlas App Services
+                      API Key được tạo trong Google Cloud Console (Google Sheets API)
                     </p>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <input 
                       type="checkbox" 
-                      id="mongoEnabled" 
-                      name="mongoEnabled"
+                      id="googleSheetsEnabled" 
+                      name="googleSheetsEnabled"
                       className="h-4 w-4 rounded border-gray-300"
-                      checked={settings.mongoEnabled || false}
+                      checked={settings.googleSheetsEnabled || false}
                       onChange={(e) => setSettings(prev => ({
                         ...prev,
-                        mongoEnabled: e.target.checked
+                        googleSheetsEnabled: e.target.checked
                       }))}
                     />
-                    <Label htmlFor="mongoEnabled" className="cursor-pointer">
+                    <Label htmlFor="googleSheetsEnabled" className="cursor-pointer">
                       Bật đồng bộ dữ liệu tự động
                     </Label>
                   </div>

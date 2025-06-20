@@ -1,4 +1,4 @@
-import { mongoDBService } from './mongodb';
+import { googleSheetsService } from './googlesheets';
 import { settingsDb } from './settings';
 import { db } from './db';
 
@@ -12,8 +12,8 @@ class AutoSyncService {
     try {
       const settings = await settingsDb.getSettings();
       
-      if (settings.mongoEnabled && settings.mongoConnectionString && settings.mongoDatabaseName) {
-        await mongoDBService.initialize();
+      if (settings.googleSheetsEnabled && settings.googleSheetsId && settings.googleSheetsApiKey) {
+        await googleSheetsService.initialize();
         
         // Initial sync when app starts
         await this.performInitialSync();
@@ -40,53 +40,38 @@ class AutoSyncService {
       const isLocalDatabaseEmpty = customerCount === 0 && vehicleCount === 0 && inventoryCount === 0;
       
       if (isLocalDatabaseEmpty) {
-        // New device/browser - load data from MongoDB first
-        console.log('Empty local database detected, loading from MongoDB...');
-        await mongoDBService.loadFromMongoDB();
-        console.log('Initial data loaded from MongoDB');
+        // New device - try to load data from Google Sheets
+        console.log('Empty local database detected, attempting to load from Google Sheets...');
+        await googleSheetsService.loadFromGoogleSheets();
       } else {
-        // Existing data - sync local changes to MongoDB
-        console.log('Local data found, syncing to MongoDB...');
-        await mongoDBService.syncAllData();
-        console.log('Local data synced to MongoDB');
+        // Existing data - sync to Google Sheets
+        console.log('Local data found, syncing to Google Sheets...');
+        await googleSheetsService.syncAllData();
+        console.log('Local data synced to Google Sheets');
       }
-      
-      // Update last sync time
-      await settingsDb.updateSettings({
-        lastSyncTime: new Date()
-      });
     } catch (error) {
       console.error('Initial sync failed:', error);
     }
   }
 
   private setupPeriodicSync() {
-    // Clear any existing interval
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
     }
-
-    // Set up sync every 5 minutes
+    
+    // Sync every 5 minutes
     this.syncInterval = setInterval(async () => {
       await this.performPeriodicSync();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
   }
 
   private async performPeriodicSync() {
     try {
       const settings = await settingsDb.getSettings();
-      
-      if (!settings.mongoEnabled) {
-        this.stopPeriodicSync();
-        return;
+      if (settings.googleSheetsEnabled) {
+        await googleSheetsService.syncAllData();
+        console.log('Periodic sync completed');
       }
-
-      await mongoDBService.syncAllData();
-      await settingsDb.updateSettings({
-        lastSyncTime: new Date()
-      });
-      
-      console.log('Periodic sync completed');
     } catch (error) {
       console.error('Periodic sync failed:', error);
     }
@@ -95,12 +80,8 @@ class AutoSyncService {
   async syncOnDataChange() {
     try {
       const settings = await settingsDb.getSettings();
-      
-      if (settings.mongoEnabled && mongoDBService.isEnabled()) {
-        await mongoDBService.syncAllData();
-        await settingsDb.updateSettings({
-          lastSyncTime: new Date()
-        });
+      if (settings.googleSheetsEnabled) {
+        await googleSheetsService.syncAllData();
       }
     } catch (error) {
       console.error('Data change sync failed:', error);
@@ -115,17 +96,19 @@ class AutoSyncService {
   }
 
   async reconfigure() {
-    this.isInitialized = false;
     this.stopPeriodicSync();
+    this.isInitialized = false;
     await this.initialize();
   }
 }
 
 export const autoSyncService = new AutoSyncService();
 
-// Hook into database changes for automatic sync
+// Initialize auto-sync when the module loads
+autoSyncService.initialize();
+
 export function setupDatabaseChangeSync() {
-  // Listen for changes in the database and trigger sync
+  // Listen for data changes and trigger sync
   db.customers.hook('creating', () => autoSyncService.syncOnDataChange());
   db.customers.hook('updating', () => autoSyncService.syncOnDataChange());
   db.customers.hook('deleting', () => autoSyncService.syncOnDataChange());
@@ -134,35 +117,7 @@ export function setupDatabaseChangeSync() {
   db.vehicles.hook('updating', () => autoSyncService.syncOnDataChange());
   db.vehicles.hook('deleting', () => autoSyncService.syncOnDataChange());
   
-  db.inventoryCategories.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.inventoryCategories.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.inventoryCategories.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
   db.inventoryItems.hook('creating', () => autoSyncService.syncOnDataChange());
   db.inventoryItems.hook('updating', () => autoSyncService.syncOnDataChange());
   db.inventoryItems.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.services.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.services.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.services.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.quotations.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.quotations.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.quotations.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.quotationItems.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.quotationItems.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.quotationItems.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.repairOrders.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.repairOrders.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.repairOrders.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.repairOrderItems.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.repairOrderItems.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.repairOrderItems.hook('deleting', () => autoSyncService.syncOnDataChange());
-  
-  db.invoices.hook('creating', () => autoSyncService.syncOnDataChange());
-  db.invoices.hook('updating', () => autoSyncService.syncOnDataChange());
-  db.invoices.hook('deleting', () => autoSyncService.syncOnDataChange());
 }

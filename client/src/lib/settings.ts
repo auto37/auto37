@@ -14,11 +14,9 @@ export interface Settings {
   bankAccount?: string; // Số tài khoản
   bankOwner?: string; // Tên chủ tài khoản
   bankBranch?: string; // Chi nhánh ngân hàng
-  mongoConnectionString?: string; // MongoDB Connection String
-  mongoDatabaseName?: string; // MongoDB Database Name
-  mongoEnabled?: boolean; // Bật/tắt đồng bộ MongoDB
-  mongoDataApiUrl?: string; // MongoDB Data API URL
-  mongoApiKey?: string; // MongoDB Data API Key
+  googleSheetsId?: string; // Google Sheets ID
+  googleSheetsApiKey?: string; // Google Sheets API Key
+  googleSheetsEnabled?: boolean; // Bật/tắt đồng bộ Google Sheets
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
 }
@@ -52,9 +50,9 @@ class SettingsDatabase extends Dexie {
         bankAccount: '',
         bankOwner: '',
         bankBranch: '',
-        mongoConnectionString: '',
-        mongoDatabaseName: '',
-        mongoEnabled: false,
+        googleSheetsId: '',
+        googleSheetsApiKey: '',
+        googleSheetsEnabled: false,
         lastSyncTime: undefined,
         updatedAt: new Date()
       };
