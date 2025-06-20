@@ -148,6 +148,7 @@ class GoogleSheetsService {
           console.log(`Note: Configure Google Apps Script Web App URL in Settings for full write capability`);
           this.hasShownWriteWarning = true;
         }
+        return; // Exit early to prevent further processing
       }
     } else {
       // Show warning only once to avoid console spam
@@ -162,52 +163,92 @@ class GoogleSheetsService {
 
   async syncCustomers(customers: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Customers', customers);
+    try {
+      await this.updateSheetData('Customers', customers);
+    } catch (error) {
+      // Silently handle sync errors to prevent unhandled rejections
+    }
   }
 
   async syncVehicles(vehicles: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Vehicles', vehicles);
+    try {
+      await this.updateSheetData('Vehicles', vehicles);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncInventoryCategories(categories: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('InventoryCategories', categories);
+    try {
+      await this.updateSheetData('InventoryCategories', categories);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncInventoryItems(items: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('InventoryItems', items);
+    try {
+      await this.updateSheetData('InventoryItems', items);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncServices(services: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Services', services);
+    try {
+      await this.updateSheetData('Services', services);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncQuotations(quotations: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Quotations', quotations);
+    try {
+      await this.updateSheetData('Quotations', quotations);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncQuotationItems(items: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('QuotationItems', items);
+    try {
+      await this.updateSheetData('QuotationItems', items);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncRepairOrders(repairOrders: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('RepairOrders', repairOrders);
+    try {
+      await this.updateSheetData('RepairOrders', repairOrders);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncRepairOrderItems(items: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('RepairOrderItems', items);
+    try {
+      await this.updateSheetData('RepairOrderItems', items);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async syncInvoices(invoices: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Invoices', invoices);
+    try {
+      await this.updateSheetData('Invoices', invoices);
+    } catch (error) {
+      // Silently handle sync errors
+    }
   }
 
   async loadFromGoogleSheets() {
