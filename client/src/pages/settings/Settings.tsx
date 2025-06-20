@@ -27,6 +27,7 @@ export default function SettingsPage() {
     bankBranch: '',
     googleSheetsId: '',
     googleSheetsApiKey: '',
+    googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()

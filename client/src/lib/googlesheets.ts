@@ -4,6 +4,7 @@ import { settingsDb } from './settings';
 export interface GoogleSheetsConfig {
   sheetsId: string;
   apiKey: string;
+  webAppUrl?: string; // Google Apps Script Web App URL for writing data
   enabled: boolean;
 }
 
@@ -108,36 +109,51 @@ class GoogleSheetsService {
 
   private async updateSheetData(sheetName: string, data: any[]): Promise<void> {
     if (!this.config) throw new Error('Google Sheets not configured');
-    if (data.length === 0) return;
-
-    const cleanId = this.extractSheetId(this.config.sheetsId);
     
-    // Get headers from first object
+    console.log(`Syncing ${data.length} records to ${sheetName}`);
+    
+    if (data.length === 0) {
+      console.log(`No data to sync for ${sheetName}`);
+      return;
+    }
+
+    // Try Google Apps Script Web App first (supports write operations)
+    if (this.config.webAppUrl) {
+      try {
+        const response = await fetch(this.config.webAppUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sheetName,
+            records: data,
+            spreadsheetId: this.extractSheetId(this.config.sheetsId)
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            console.log(`✅ Successfully synced ${data.length} records to ${sheetName}`);
+            return;
+          } else {
+            console.error(`Apps Script error: ${result.error}`);
+          }
+        } else {
+          console.error(`Apps Script request failed: ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Apps Script sync failed:`, error);
+      }
+    }
+    
+    // Fallback: API Key only supports read operations
+    console.warn(`⚠️ Cannot write to ${sheetName}: API Key only supports read operations`);
+    console.log(`To enable data writing, configure Google Apps Script Web App URL in Settings`);
+    
     const headers = Object.keys(data[0]);
-    const values = [
-      headers,
-      ...data.map(item => headers.map(header => item[header] || ''))
-    ];
-
-    // Clear existing data first
-    await fetch(
-      `${this.baseUrl}/${cleanId}/values/${sheetName}:clear?key=${this.config.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      }
-    );
-
-    // Update with new data
-    await fetch(
-      `${this.baseUrl}/${cleanId}/values/${sheetName}?valueInputOption=RAW&key=${this.config.apiKey}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values })
-      }
-    );
+    console.log(`Would sync ${data.length} records with fields:`, headers);
   }
 
   async syncCustomers(customers: any[]) {

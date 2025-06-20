@@ -92,11 +92,17 @@ export function GoogleSheetsDemo() {
 
       if (response.ok) {
         const data = await response.json();
-        setResult(`✅ Tạo sheets thành công!\nID: ${data.spreadsheetId}\nLink: https://docs.google.com/spreadsheets/d/${data.spreadsheetId}/edit`);
+        setResult(`✅ Tạo sheets thành công!\nID: ${data.spreadsheetId}\nLink: https://docs.google.com/spreadsheets/d/${data.spreadsheetId}/edit\n\n⚠️ Quan trọng: Nhớ share sheets với quyền "Anyone with the link can EDIT" để có thể ghi dữ liệu!`);
         setSheetsId(data.spreadsheetId);
       } else {
         const errorText = await response.text();
-        setResult(`❌ Không thể tạo sheets (${response.status}): ${errorText}`);
+        let errorMsg = `❌ Không thể tạo sheets (${response.status}): ${errorText}`;
+        
+        if (response.status === 403) {
+          errorMsg += '\n\n💡 API Key cần quyền tạo spreadsheet. Kiểm tra Google Drive API cũng đã được bật chưa.';
+        }
+        
+        setResult(errorMsg);
       }
     } catch (error) {
       setResult(`❌ Lỗi tạo sheets: ${error}`);

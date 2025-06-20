@@ -16,6 +16,7 @@ export interface Settings {
   bankBranch?: string; // Chi nhánh ngân hàng
   googleSheetsId?: string; // Google Sheets ID
   googleSheetsApiKey?: string; // Google Sheets API Key
+  googleSheetsWebAppUrl?: string; // Google Apps Script Web App URL for writing data
   googleSheetsEnabled?: boolean; // Bật/tắt đồng bộ Google Sheets
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
