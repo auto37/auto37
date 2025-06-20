@@ -25,7 +25,7 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 ### Database Design
 - **Primary Database**: PostgreSQL for production data
 - **Local Storage**: IndexedDB for offline functionality
-- **External Sync**: MongoDB Atlas integration for data synchronization
+- **External Sync**: Google Sheets API integration for data synchronization
 - **Schema Management**: Drizzle ORM with TypeScript schema definitions
 
 ## Key Components
@@ -75,8 +75,7 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - pg (node-postgres) for PostgreSQL connectivity
 
 ### External Integrations
-- MongoDB Atlas for cloud synchronization
-- Supabase for additional backend services
+- Google Sheets API for cloud synchronization
 - PDF generation using @react-pdf/renderer
 
 ## Deployment Strategy
@@ -95,13 +94,14 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 
 ### Database Configuration
 - Primary: PostgreSQL via DATABASE_URL environment variable
-- Fallback: MongoDB Atlas for sync and backup
+- Fallback: Google Sheets API for sync and backup
 - Local: IndexedDB for offline functionality
 
 ## Changelog
 
 - June 19, 2025. Initial setup
 - June 19, 2025. Replaced Supabase with MongoDB Atlas Data API integration for real cloud synchronization
+- June 19, 2025. Replaced MongoDB with Google Sheets API integration for simpler cloud synchronization
 
 ## User Preferences
 
