@@ -35,10 +35,18 @@ export function GoogleSheetsDemo() {
       
       if (response.ok) {
         const data = await response.json();
-        setResult(`✅ Kết nối thành công!\nTên sheets: ${data.properties?.title || 'Không có tên'}\nID: ${data.spreadsheetId}`);
+        setResult(`✅ Kết nối thành công!\nTên sheets: ${data.properties?.title || 'Không có tên'}\nID: ${data.spreadsheetId}\n\n🎉 Bạn có thể sử dụng cấu hình này trong Settings để đồng bộ dữ liệu!`);
       } else {
         const errorText = await response.text();
-        setResult(`❌ Lỗi kết nối (${response.status}): ${errorText}`);
+        let errorMsg = `❌ Lỗi kết nối (${response.status}): ${errorText}`;
+        
+        if (response.status === 403) {
+          errorMsg += '\n\n💡 Gợi ý: Kiểm tra API Key và đảm bảo Google Sheets API đã được bật';
+        } else if (response.status === 404) {
+          errorMsg += '\n\n💡 Gợi ý: Kiểm tra ID sheets và đảm bảo sheets được chia sẻ public';
+        }
+        
+        setResult(errorMsg);
       }
     } catch (error) {
       setResult(`❌ Lỗi mạng: ${error}`);

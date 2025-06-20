@@ -551,18 +551,26 @@ export default function SettingsPage() {
               Kết nối với Google Sheets để đồng bộ dữ liệu giữa các thiết bị và trình duyệt khác nhau. Đơn giản và dễ sử dụng hơn MongoDB.
             </p>
             
+            <Alert>
+              <i className="fas fa-lightbulb"></i>
+              <AlertTitle>Hướng dẫn thiết lập</AlertTitle>
+              <AlertDescription>
+                Cần hỗ trợ thiết lập Google Sheets API? Truy cập <a href="/google-sheets-demo" className="text-blue-600 underline">trang demo</a> để test kết nối và nhận hướng dẫn chi tiết.
+              </AlertDescription>
+            </Alert>
+            
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="googleSheetsId">Google Sheets ID</Label>
+                <Label htmlFor="googleSheetsId">Google Sheets ID hoặc URL đầy đủ</Label>
                 <Input 
                   id="googleSheetsId" 
                   name="googleSheetsId"
                   value={settings.googleSheetsId || ''}
                   onChange={handleInputChange}
-                  placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                  placeholder="Paste URL hoặc chỉ ID: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
                 />
                 <p className="text-xs text-gray-500">
-                  ID của Google Sheets (từ URL: docs.google.com/spreadsheets/d/[ID]/edit)
+                  Có thể paste toàn bộ URL Google Sheets hoặc chỉ ID. Hệ thống sẽ tự động trích xuất ID.
                 </p>
               </div>
               

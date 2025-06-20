@@ -102,6 +102,8 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 19, 2025. Initial setup
 - June 19, 2025. Replaced Supabase with MongoDB Atlas Data API integration for real cloud synchronization
 - June 19, 2025. Replaced MongoDB with Google Sheets API integration for simpler cloud synchronization
+- June 20, 2025. Fixed Google Sheets API URL extraction issue - system now successfully syncs data to Google Sheets
+- June 20, 2025. Added Google Sheets demo page at `/google-sheets-demo` for API testing and configuration
 
 ## User Preferences
 
