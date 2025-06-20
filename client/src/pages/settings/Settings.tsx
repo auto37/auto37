@@ -554,9 +554,10 @@ export default function SettingsPage() {
             
             <Alert>
               <i className="fas fa-lightbulb"></i>
-              <AlertTitle>Hướng dẫn thiết lập</AlertTitle>
+              <AlertTitle>Thông tin quan trọng</AlertTitle>
               <AlertDescription>
-                Cần hỗ trợ thiết lập Google Sheets API? Truy cập <a href="/google-sheets-demo" className="text-blue-600 underline">trang demo</a> để test kết nối và nhận hướng dẫn chi tiết.
+                <strong>API Key chỉ cho phép đọc dữ liệu.</strong> Để ghi dữ liệu lên Google Sheets, cần thiết lập Google Apps Script Web App URL. 
+                Xem hướng dẫn chi tiết trong file <strong>GOOGLE_APPS_SCRIPT_SETUP.md</strong>
               </AlertDescription>
             </Alert>
             
@@ -586,7 +587,21 @@ export default function SettingsPage() {
                   placeholder="API Key từ Google Cloud Console"
                 />
                 <p className="text-xs text-gray-500">
-                  API Key được tạo trong Google Cloud Console (Google Sheets API)
+                  API Key cho đọc dữ liệu từ Google Sheets (chỉ đọc)
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="googleSheetsWebAppUrl">Google Apps Script Web App URL (Tùy chọn)</Label>
+                <Input 
+                  id="googleSheetsWebAppUrl" 
+                  name="googleSheetsWebAppUrl"
+                  value={settings.googleSheetsWebAppUrl || ''}
+                  onChange={handleInputChange}
+                  placeholder="https://script.google.com/macros/s/ABC.../exec"
+                />
+                <p className="text-xs text-gray-500">
+                  Web App URL để ghi dữ liệu lên Google Sheets. Xem hướng dẫn trong GOOGLE_APPS_SCRIPT_SETUP.md
                 </p>
               </div>
               

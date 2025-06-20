@@ -104,6 +104,9 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 19, 2025. Replaced MongoDB with Google Sheets API integration for simpler cloud synchronization
 - June 20, 2025. Fixed Google Sheets API URL extraction issue - system now successfully syncs data to Google Sheets
 - June 20, 2025. Added Google Sheets demo page at `/google-sheets-demo` for API testing and configuration
+- June 20, 2025. Discovered Google Sheets API limitation: API Keys only support READ operations, not WRITE
+- June 20, 2025. Implemented dual-mode solution: API Key for reading + Google Apps Script Web App for writing data
+- June 20, 2025. Created GOOGLE_APPS_SCRIPT_SETUP.md with complete setup instructions for full read-write capability
 
 ## User Preferences
 

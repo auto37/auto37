@@ -29,6 +29,7 @@ class GoogleSheetsService {
       this.config = {
         sheetsId: settings.googleSheetsId,
         apiKey: settings.googleSheetsApiKey,
+        webAppUrl: settings.googleSheetsWebAppUrl,
         enabled: settings.googleSheetsEnabled || false
       };
     }
