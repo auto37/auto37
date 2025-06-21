@@ -532,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pool = new Pool({ connectionString: databaseUrl });
       const client = await pool.connect();
 
-      const result = {};
+      const result: any = {};
       const tables = [
         'customers', 'vehicles', 'inventory_categories', 'inventory_items',
         'services', 'quotations', 'quotation_items', 'repair_orders', 

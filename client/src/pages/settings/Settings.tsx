@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import { googleSheetsService } from '@/lib/googlesheets';
+import { SupabaseConfig } from '@/components/SupabaseConfig';
 
 
 export default function SettingsPage() {
@@ -29,6 +29,8 @@ export default function SettingsPage() {
     googleSheetsApiKey: '',
     googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
+    supabaseDatabaseUrl: '',
+    supabaseEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
