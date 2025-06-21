@@ -1,7 +1,7 @@
--- Garage Management System Database Setup for Supabase
--- Copy và paste đoạn code này vào Supabase SQL Editor để tạo tables
+-- Complete Supabase Database Setup with Correct Field Names
+-- This matches the IndexedDB structure exactly
 
--- Drop existing tables if they exist (to fix structure mismatch)
+-- Drop existing tables if they exist
 DROP TABLE IF EXISTS invoices CASCADE;
 DROP TABLE IF EXISTS repair_order_items CASCADE;
 DROP TABLE IF EXISTS repair_orders CASCADE;
@@ -14,21 +14,8 @@ DROP TABLE IF EXISTS vehicles CASCADE;
 DROP TABLE IF EXISTS customers CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Enable RLS (Row Level Security)
-ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
-
--- Create tables
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS customers (
+-- Create tables with exact field names from IndexedDB
+CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -41,7 +28,7 @@ CREATE TABLE IF NOT EXISTS customers (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS vehicles (
+CREATE TABLE vehicles (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     customerId INTEGER REFERENCES customers(id) ON DELETE CASCADE,
@@ -58,7 +45,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS inventory_categories (
+CREATE TABLE inventory_categories (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -67,7 +54,7 @@ CREATE TABLE IF NOT EXISTS inventory_categories (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS inventory_items (
+CREATE TABLE inventory_items (
     id SERIAL PRIMARY KEY,
     sku VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -83,7 +70,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS services (
+CREATE TABLE services (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -95,7 +82,7 @@ CREATE TABLE IF NOT EXISTS services (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS quotations (
+CREATE TABLE quotations (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     customerId INTEGER REFERENCES customers(id) ON DELETE CASCADE,
@@ -111,7 +98,7 @@ CREATE TABLE IF NOT EXISTS quotations (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS quotation_items (
+CREATE TABLE quotation_items (
     id SERIAL PRIMARY KEY,
     quotationId INTEGER REFERENCES quotations(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('service', 'part')),
@@ -125,7 +112,7 @@ CREATE TABLE IF NOT EXISTS quotation_items (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS repair_orders (
+CREATE TABLE repair_orders (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     customerId INTEGER REFERENCES customers(id) ON DELETE CASCADE,
@@ -144,7 +131,7 @@ CREATE TABLE IF NOT EXISTS repair_orders (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS repair_order_items (
+CREATE TABLE repair_order_items (
     id SERIAL PRIMARY KEY,
     repairOrderId INTEGER REFERENCES repair_orders(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('service', 'part')),
@@ -158,7 +145,7 @@ CREATE TABLE IF NOT EXISTS repair_order_items (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS invoices (
+CREATE TABLE invoices (
     id SERIAL PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     customerId INTEGER REFERENCES customers(id) ON DELETE CASCADE,
@@ -178,23 +165,22 @@ CREATE TABLE IF NOT EXISTS invoices (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
-CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
-CREATE INDEX IF NOT EXISTS idx_vehicles_license_plate ON vehicles(licensePlate);
-CREATE INDEX IF NOT EXISTS idx_vehicles_customer_id ON vehicles(customerId);
-CREATE INDEX IF NOT EXISTS idx_inventory_items_category_id ON inventory_items(categoryId);
-CREATE INDEX IF NOT EXISTS idx_quotations_customer_id ON quotations(customerId);
-CREATE INDEX IF NOT EXISTS idx_quotations_vehicle_id ON quotations(vehicleId);
-CREATE INDEX IF NOT EXISTS idx_quotation_items_quotation_id ON quotation_items(quotationId);
-CREATE INDEX IF NOT EXISTS idx_repair_orders_customer_id ON repair_orders(customerId);
-CREATE INDEX IF NOT EXISTS idx_repair_orders_vehicle_id ON repair_orders(vehicleId);
-CREATE INDEX IF NOT EXISTS idx_repair_order_items_repair_order_id ON repair_order_items(repairOrderId);
-CREATE INDEX IF NOT EXISTS idx_invoices_customer_id ON invoices(customerId);
-CREATE INDEX IF NOT EXISTS idx_invoices_vehicle_id ON invoices(vehicleId);
+-- Create indexes for performance
+CREATE INDEX idx_customers_phone ON customers(phone);
+CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_vehicles_license_plate ON vehicles(licensePlate);
+CREATE INDEX idx_vehicles_customer_id ON vehicles(customerId);
+CREATE INDEX idx_inventory_items_category_id ON inventory_items(categoryId);
+CREATE INDEX idx_quotations_customer_id ON quotations(customerId);
+CREATE INDEX idx_quotations_vehicle_id ON quotations(vehicleId);
+CREATE INDEX idx_quotation_items_quotation_id ON quotation_items(quotationId);
+CREATE INDEX idx_repair_orders_customer_id ON repair_orders(customerId);
+CREATE INDEX idx_repair_orders_vehicle_id ON repair_orders(vehicleId);
+CREATE INDEX idx_repair_order_items_repair_order_id ON repair_order_items(repairOrderId);
+CREATE INDEX idx_invoices_customer_id ON invoices(customerId);
+CREATE INDEX idx_invoices_vehicle_id ON invoices(vehicleId);
 
--- Disable RLS for now (enable later for security)
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+-- Disable RLS for easier development (enable later for security)
 ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
 ALTER TABLE vehicles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE inventory_categories DISABLE ROW LEVEL SECURITY;
@@ -206,17 +192,12 @@ ALTER TABLE repair_orders DISABLE ROW LEVEL SECURITY;
 ALTER TABLE repair_order_items DISABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices DISABLE ROW LEVEL SECURITY;
 
--- Insert sample data if needed
-INSERT INTO users (username, password_hash, full_name, role) VALUES 
-('admin', '$2b$10$example_hash', 'Administrator', 'admin')
-ON CONFLICT (username) DO NOTHING;
+-- Insert sample categories for testing
+INSERT INTO inventory_categories (code, name, description) VALUES 
+('DM001', 'Phụ tùng động cơ', 'Các phụ tùng liên quan đến động cơ'),
+('DM002', 'Hệ thống phanh', 'Phụ tùng hệ thống phanh'),
+('DM003', 'Hệ thống điện', 'Các thiết bị điện tử, dây điện'),
+('DM004', 'Thân vỏ xe', 'Phụ tùng thân vỏ, nội thất')
+ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO inventory_categories (category_code, name, description) VALUES 
-('ENGINE', 'Phụ tùng động cơ', 'Các phụ tùng liên quan đến động cơ'),
-('BRAKE', 'Hệ thống phanh', 'Phụ tùng hệ thống phanh'),
-('ELECTRICAL', 'Hệ thống điện', 'Các thiết bị điện tử, dây điện'),
-('BODY', 'Thân vỏ xe', 'Phụ tùng thân vỏ, nội thất')
-ON CONFLICT (category_code) DO NOTHING;
-
--- Success message
-SELECT 'Database setup completed successfully!' as result;
+SELECT 'Database setup completed successfully! All tables created with correct field names.' as result;

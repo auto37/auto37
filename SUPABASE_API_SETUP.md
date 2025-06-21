@@ -31,9 +31,11 @@ Sau khi dự án được tạo:
 ## Bước 4: Chạy SQL script để tạo database
 1. Trong Supabase Dashboard, vào **SQL Editor** (biểu tượng </> ở sidebar)
 2. Nhấn **"New query"**
-3. Copy toàn bộ nội dung file `supabase-setup.sql` 
+3. Copy toàn bộ nội dung file `supabase-field-mapping.sql` 
 4. Paste vào SQL Editor và nhấn **"Run"**
-5. Kiểm tra message "Database setup completed successfully!"
+5. Kiểm tra message "Database setup completed successfully! All tables created with correct field names."
+
+**Quan trọng**: Sử dụng file `supabase-field-mapping.sql` thay vì `supabase-setup.sql` để tránh lỗi field name mismatch.
 
 ## Bước 5: Test kết nối trong ứng dụng
 1. Vào Settings → tab "Cơ Sở Dữ Liệu"
