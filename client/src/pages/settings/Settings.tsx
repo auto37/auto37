@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import { SupabaseConfig } from '@/components/SupabaseConfig';
+import { SupabaseApiConfig } from '@/components/SupabaseApiConfig';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -28,8 +28,10 @@ export default function SettingsPage() {
     googleSheetsApiKey: '',
     googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
-    supabaseDatabaseUrl: 'postgresql://postgres:1PhuocKhanh%40@db.tmsvwvajgfdhjrfigtuy.supabase.co:5432/postgres?sslmode=require',
-    supabaseEnabled: true,
+    supabaseDatabaseUrl: '',
+    supabaseProjectUrl: '',
+    supabaseAnonKey: '',
+    supabaseEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
@@ -448,7 +450,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="database" className="space-y-6">
-          <SupabaseConfig 
+          <SupabaseApiConfig 
             settings={settings} 
             onSettingsChange={handleSettingsChange}
           />

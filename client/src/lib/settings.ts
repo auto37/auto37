@@ -19,6 +19,8 @@ export interface Settings {
   googleSheetsWebAppUrl?: string; // Google Apps Script Web App URL for writing data
   googleSheetsEnabled?: boolean; // Bật/tắt đồng bộ Google Sheets
   supabaseDatabaseUrl?: string; // Supabase Database URL
+  supabaseProjectUrl?: string; // Supabase Project URL
+  supabaseAnonKey?: string; // Supabase Anon Key
   supabaseEnabled?: boolean; // Bật/tắt đồng bộ Supabase
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
@@ -57,7 +59,9 @@ class SettingsDatabase extends Dexie {
         googleSheetsApiKey: '',
         googleSheetsEnabled: false,
         supabaseDatabaseUrl: 'postgresql://postgres:1PhuocKhanh%40@db.tmsvwvajgfdhjrfigtuy.supabase.co:5432/postgres?sslmode=require',
-        supabaseEnabled: true,
+        supabaseProjectUrl: '',
+        supabaseAnonKey: '',
+        supabaseEnabled: false,
         lastSyncTime: undefined,
         updatedAt: new Date()
       };
