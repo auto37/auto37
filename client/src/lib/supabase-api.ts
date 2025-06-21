@@ -15,135 +15,6 @@ class SupabaseApiService {
   private config: SupabaseApiConfig | null = null;
   private supabase: SupabaseClient | null = null;
 
-  private mapDataForSupabase(data: any[], tableName: string): any[] {
-    return data.map(item => {
-      const mapped: any = {};
-      
-      // Copy all properties first
-      Object.keys(item).forEach(key => {
-        mapped[key] = item[key];
-      });
-      
-      // Handle specific column mappings based on table
-      switch (tableName) {
-        case 'customers':
-          if (item.code) {
-            mapped.customer_code = item.code;
-            delete mapped.code;
-          }
-          break;
-        case 'vehicles':
-          if (item.code) {
-            mapped.vehicle_code = item.code;
-            delete mapped.code;
-          }
-          if (item.customerId) {
-            mapped.customer_id = item.customerId;
-            delete mapped.customerId;
-          }
-          break;
-        case 'inventory_categories':
-          if (item.code) {
-            mapped.category_code = item.code;
-            delete mapped.code;
-          }
-          break;
-        case 'inventory_items':
-          if (item.code) {
-            mapped.item_code = item.code;
-            delete mapped.code;
-          }
-          if (item.categoryId) {
-            mapped.category_id = item.categoryId;
-            delete mapped.categoryId;
-          }
-          break;
-        case 'services':
-          if (item.code) {
-            mapped.service_code = item.code;
-            delete mapped.code;
-          }
-          break;
-        case 'quotations':
-          if (item.code) {
-            mapped.quotation_code = item.code;
-            delete mapped.code;
-          }
-          if (item.customerId) {
-            mapped.customer_id = item.customerId;
-            delete mapped.customerId;
-          }
-          if (item.vehicleId) {
-            mapped.vehicle_id = item.vehicleId;
-            delete mapped.vehicleId;
-          }
-          break;
-        case 'quotation_items':
-          if (item.quotationId) {
-            mapped.quotation_id = item.quotationId;
-            delete mapped.quotationId;
-          }
-          if (item.itemId) {
-            mapped.item_id = item.itemId;
-            delete mapped.itemId;
-          }
-          break;
-        case 'repair_orders':
-          if (item.code) {
-            mapped.repair_order_code = item.code;
-            delete mapped.code;
-          }
-          if (item.customerId) {
-            mapped.customer_id = item.customerId;
-            delete mapped.customerId;
-          }
-          if (item.vehicleId) {
-            mapped.vehicle_id = item.vehicleId;
-            delete mapped.vehicleId;
-          }
-          if (item.quotationId) {
-            mapped.quotation_id = item.quotationId;
-            delete mapped.quotationId;
-          }
-          break;
-        case 'repair_order_items':
-          if (item.repairOrderId) {
-            mapped.repair_order_id = item.repairOrderId;
-            delete mapped.repairOrderId;
-          }
-          if (item.itemId) {
-            mapped.item_id = item.itemId;
-            delete mapped.itemId;
-          }
-          break;
-        case 'invoices':
-          if (item.code) {
-            mapped.invoice_code = item.code;
-            delete mapped.code;
-          }
-          if (item.customerId) {
-            mapped.customer_id = item.customerId;
-            delete mapped.customerId;
-          }
-          if (item.vehicleId) {
-            mapped.vehicle_id = item.vehicleId;
-            delete mapped.vehicleId;
-          }
-          if (item.repairOrderId) {
-            mapped.repair_order_id = item.repairOrderId;
-            delete mapped.repairOrderId;
-          }
-          if (item.amountPaid) {
-            mapped.paid_amount = item.amountPaid;
-            delete mapped.amountPaid;
-          }
-          break;
-      }
-      
-      return mapped;
-    });
-  }
-
   async initialize() {
     const { settingsDb } = await import('./settings');
     const settings = await settingsDb.getSettings();
@@ -386,14 +257,11 @@ class SupabaseApiService {
 
       for (const table of tables) {
         if (table.data.length > 0) {
-          // Map data to match Supabase column names
-          const mappedData = this.mapDataForSupabase(table.data, table.name);
-          
           // Clear existing data
           await this.supabase.from(table.name).delete().neq('id', 0);
 
           // Insert new data
-          const { error } = await this.supabase.from(table.name).insert(mappedData);
+          const { error } = await this.supabase.from(table.name).insert(table.data);
           
           if (error) {
             console.error(`Error syncing ${table.name}:`, error);
@@ -454,14 +322,7 @@ class SupabaseApiService {
         if (error) {
           console.warn(`Error loading ${table.name}:`, error);
         } else if (data && data.length > 0) {
-          // Add records one by one to avoid TypeScript issues
-          for (const item of data) {
-            try {
-              await (table.dbTable as any).put(item);
-            } catch (itemError) {
-              console.warn(`Error adding item to ${table.name}:`, itemError);
-            }
-          }
+          await table.dbTable.bulkAdd(data as any);
           console.log(`Loaded ${data.length} records from ${table.name}`);
         }
       }
