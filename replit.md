@@ -112,6 +112,10 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 21, 2025. Implemented comprehensive Supabase integration with full CRUD operations
 - June 21, 2025. Created SUPABASE_SETUP.md with detailed setup instructions for database configuration
 - June 21, 2025. Updated Settings page with modern Supabase configuration component
+- June 21, 2025. Fixed field name mapping issues between IndexedDB and Supabase tables
+- June 21, 2025. Created supabase-field-mapping.sql with correct schema matching local structure
+- June 21, 2025. Resolved synchronization errors by aligning database field names (code, customerId, categoryId, etc.)
+- June 21, 2025. Rebuilt Supabase API service with proper error handling and table mapping
 
 ## User Preferences
 
