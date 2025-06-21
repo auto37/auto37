@@ -18,6 +18,8 @@ export interface Settings {
   googleSheetsApiKey?: string; // Google Sheets API Key
   googleSheetsWebAppUrl?: string; // Google Apps Script Web App URL for writing data
   googleSheetsEnabled?: boolean; // Bật/tắt đồng bộ Google Sheets
+  supabaseDatabaseUrl?: string; // Supabase Database URL
+  supabaseEnabled?: boolean; // Bật/tắt đồng bộ Supabase
   lastSyncTime?: Date; // Thời gian đồng bộ cuối cùng
   updatedAt: Date;
 }
@@ -54,6 +56,7 @@ class SettingsDatabase extends Dexie {
         googleSheetsId: '',
         googleSheetsApiKey: '',
         googleSheetsEnabled: false,
+        supabaseEnabled: false,
         lastSyncTime: undefined,
         updatedAt: new Date()
       };

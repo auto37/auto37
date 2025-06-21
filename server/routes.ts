@@ -292,6 +292,268 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Supabase integration endpoints
+  app.post('/api/test-supabase-connection', async (req, res) => {
+    try {
+      const { databaseUrl } = req.body;
+      
+      if (!databaseUrl) {
+        return res.status(400).json({ error: 'Database URL is required' });
+      }
+
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      await pool.end();
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Supabase connection test failed:', error);
+      res.status(500).json({ error: 'Connection failed' });
+    }
+  });
+
+  app.post('/api/initialize-supabase-db', async (req, res) => {
+    try {
+      const { databaseUrl } = req.body;
+      
+      if (!databaseUrl) {
+        return res.status(400).json({ error: 'Database URL is required' });
+      }
+
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      
+      const client = await pool.connect();
+      
+      // Create tables if they don't exist
+      const createTables = `
+        CREATE TABLE IF NOT EXISTS customers (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          phone VARCHAR(20),
+          email VARCHAR(255),
+          address TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS vehicles (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          customer_id INTEGER REFERENCES customers(id),
+          license_plate VARCHAR(20) NOT NULL,
+          brand VARCHAR(100),
+          model VARCHAR(100),
+          year INTEGER,
+          color VARCHAR(50),
+          engine_number VARCHAR(100),
+          chassis_number VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS inventory_categories (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          description TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS inventory_items (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          category_id INTEGER REFERENCES inventory_categories(id),
+          unit VARCHAR(20),
+          quantity INTEGER DEFAULT 0,
+          unit_price DECIMAL(10,2),
+          supplier VARCHAR(255),
+          location VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS services (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          description TEXT,
+          unit_price DECIMAL(10,2),
+          estimated_time INTEGER,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS quotations (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          customer_id INTEGER REFERENCES customers(id),
+          vehicle_id INTEGER REFERENCES vehicles(id),
+          date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          date_expected TIMESTAMP,
+          status VARCHAR(20) DEFAULT 'pending',
+          notes TEXT,
+          subtotal DECIMAL(10,2) DEFAULT 0,
+          tax DECIMAL(10,2),
+          total DECIMAL(10,2) DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS quotation_items (
+          id SERIAL PRIMARY KEY,
+          quotation_id INTEGER REFERENCES quotations(id),
+          item_id INTEGER,
+          item_type VARCHAR(20),
+          quantity INTEGER DEFAULT 1,
+          unit_price DECIMAL(10,2),
+          total DECIMAL(10,2),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS repair_orders (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          quotation_id INTEGER REFERENCES quotations(id),
+          customer_id INTEGER REFERENCES customers(id),
+          vehicle_id INTEGER REFERENCES vehicles(id),
+          date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          date_expected TIMESTAMP,
+          odometer INTEGER DEFAULT 0,
+          status VARCHAR(20) DEFAULT 'pending',
+          notes TEXT,
+          subtotal DECIMAL(10,2) DEFAULT 0,
+          tax DECIMAL(10,2),
+          total DECIMAL(10,2) DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS repair_order_items (
+          id SERIAL PRIMARY KEY,
+          repair_order_id INTEGER REFERENCES repair_orders(id),
+          item_id INTEGER,
+          item_type VARCHAR(20),
+          quantity INTEGER DEFAULT 1,
+          unit_price DECIMAL(10,2),
+          total DECIMAL(10,2),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS invoices (
+          id SERIAL PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          repair_order_id INTEGER REFERENCES repair_orders(id),
+          customer_id INTEGER REFERENCES customers(id),
+          vehicle_id INTEGER REFERENCES vehicles(id),
+          date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          status VARCHAR(20) DEFAULT 'pending',
+          notes TEXT,
+          subtotal DECIMAL(10,2) DEFAULT 0,
+          discount DECIMAL(10,2),
+          tax DECIMAL(10,2),
+          total DECIMAL(10,2) DEFAULT 0,
+          amount_paid DECIMAL(10,2) DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      
+      await client.query(createTables);
+      client.release();
+      await pool.end();
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Supabase database initialization failed:', error);
+      res.status(500).json({ error: 'Database initialization failed' });
+    }
+  });
+
+  app.post('/api/sync-to-supabase', async (req, res) => {
+    try {
+      const { databaseUrl, tables } = req.body;
+      
+      if (!databaseUrl || !tables) {
+        return res.status(400).json({ error: 'Database URL and tables are required' });
+      }
+
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      const client = await pool.connect();
+
+      for (const table of tables) {
+        const { tableName, data } = table;
+        
+        if (!data || data.length === 0) continue;
+
+        // Clear existing data
+        await client.query(`DELETE FROM ${tableName}`);
+
+        // Insert new data
+        const columns = Object.keys(data[0]).filter(key => key !== 'id');
+        const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+        const insertQuery = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+        for (const row of data) {
+          const values = columns.map(col => row[col]);
+          await client.query(insertQuery, values);
+        }
+      }
+
+      client.release();
+      await pool.end();
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Supabase sync failed:', error);
+      res.status(500).json({ error: 'Sync failed' });
+    }
+  });
+
+  app.post('/api/load-from-supabase', async (req, res) => {
+    try {
+      const { databaseUrl } = req.body;
+      
+      if (!databaseUrl) {
+        return res.status(400).json({ error: 'Database URL is required' });
+      }
+
+      const { Pool } = await import('pg');
+      const pool = new Pool({ connectionString: databaseUrl });
+      const client = await pool.connect();
+
+      const result = {};
+      const tables = [
+        'customers', 'vehicles', 'inventory_categories', 'inventory_items',
+        'services', 'quotations', 'quotation_items', 'repair_orders', 
+        'repair_order_items', 'invoices'
+      ];
+
+      for (const table of tables) {
+        const { rows } = await client.query(`SELECT * FROM ${table} ORDER BY id`);
+        result[table.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())] = rows;
+      }
+
+      client.release();
+      await pool.end();
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Supabase load failed:', error);
+      res.status(500).json({ error: 'Load failed' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
