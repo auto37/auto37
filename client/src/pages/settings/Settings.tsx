@@ -28,7 +28,7 @@ export default function SettingsPage() {
     googleSheetsApiKey: '',
     googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
-    supabaseDatabaseUrl: 'postgresql://postgres:1PhuocKhanh%40@db.tmsvwvajgfdhjrfigtuy.supabase.co:5432/postgres',
+    supabaseDatabaseUrl: 'postgresql://postgres:1PhuocKhanh%40@db.tmsvwvajgfdhjrfigtuy.supabase.co:5432/postgres?sslmode=require',
     supabaseEnabled: true,
     lastSyncTime: undefined,
     updatedAt: new Date()

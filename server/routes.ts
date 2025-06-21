@@ -302,17 +302,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { Pool } = await import('pg');
-      const pool = new Pool({ connectionString: databaseUrl });
+      
+      // Try with longer timeout and SSL options
+      const pool = new Pool({ 
+        connectionString: databaseUrl,
+        connectionTimeoutMillis: 30000,
+        ssl: {
+          rejectUnauthorized: false
+        }
+      });
       
       const client = await pool.connect();
-      await client.query('SELECT 1');
+      const result = await client.query('SELECT NOW() as current_time');
       client.release();
       await pool.end();
       
-      res.json({ success: true });
+      res.json({ 
+        success: true, 
+        message: 'Connected successfully',
+        serverTime: result.rows[0].current_time
+      });
     } catch (error) {
       console.error('Supabase connection test failed:', error);
-      res.status(500).json({ error: 'Connection failed' });
+      
+      // Provide more detailed error information
+      let errorMessage = 'Connection failed';
+      if (error.code === 'ENOTFOUND') {
+        errorMessage = 'Database hostname not found. Please check your Supabase project URL.';
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = 'Connection refused. Database may be paused or network blocked.';
+      } else if (error.code === 'ETIMEDOUT') {
+        errorMessage = 'Connection timeout. Check network connectivity.';
+      } else if (error.message.includes('password')) {
+        errorMessage = 'Authentication failed. Please check your password.';
+      }
+      
+      res.status(500).json({ 
+        error: errorMessage,
+        details: error.message,
+        code: error.code
+      });
     }
   });
 

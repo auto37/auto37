@@ -41,9 +41,32 @@ Sau khi dự án được tạo:
 - **Performance**: Kết nối có thể chậm hơn local database do network latency
 
 ## Khắc phục sự cố
-- **Lỗi kết nối**: Kiểm tra lại chuỗi kết nối và mật khẩu
-- **Lỗi SSL**: Thêm `?sslmode=require` vào cuối chuỗi kết nối
-- **Timeout**: Thử lại sau vài phút, server có thể đang khởi động
+
+### Lỗi ENOTFOUND hoặc Connection Refused
+1. **Database bị tạm dừng**: Supabase tự động tạm dừng database sau 1 tuần không hoạt động
+   - Vào Supabase Dashboard → Project → Settings → Database
+   - Nhấn "Resume" nếu database đang pause
+   
+2. **URL không chính xác**: 
+   - Kiểm tra lại Project Reference ID
+   - URL phải có dạng: `db.[PROJECT_ID].supabase.co`
+   
+3. **Mật khẩu có ký tự đặc biệt**:
+   - Encode ký tự `@` thành `%40`
+   - Encode ký tự `#` thành `%23`
+   - Encode ký tự `?` thành `%3F`
+
+### Các bước troubleshooting
+1. Vào Supabase Dashboard → Your Project
+2. Kiểm tra trạng thái database trong Settings → Database
+3. Copy lại connection string mới từ "Connection Info"
+4. Thử với `?sslmode=require` hoặc `?sslmode=disable`
+
+### Lỗi thường gặp
+- **ENOTFOUND**: Database hostname không tồn tại hoặc bị pause
+- **ECONNREFUSED**: Database từ chối kết nối (firewall/network)
+- **ETIMEDOUT**: Timeout kết nối (network chậm)
+- **Authentication failed**: Sai username/password
 
 ## Hỗ trợ
 Nếu gặp vấn đề, kiểm tra:
