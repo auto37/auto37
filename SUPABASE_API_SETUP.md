@@ -28,9 +28,16 @@ Sau khi dự án được tạo:
 4. Tích **"Bật đồng bộ dữ liệu tự động"**
 5. Nhấn **"Kiểm tra kết nối"** để test
 
-## Bước 4: Khởi tạo database
-1. Sau khi kết nối thành công, nhấn **"Khởi tạo Database"**
-2. Hệ thống sẽ tự động tạo các bảng cần thiết
+## Bước 4: Chạy SQL script để tạo database
+1. Trong Supabase Dashboard, vào **SQL Editor** (biểu tượng </> ở sidebar)
+2. Nhấn **"New query"**
+3. Copy toàn bộ nội dung file `supabase-setup.sql` 
+4. Paste vào SQL Editor và nhấn **"Run"**
+5. Kiểm tra message "Database setup completed successfully!"
+
+## Bước 5: Test kết nối trong ứng dụng
+1. Vào Settings → tab "Cơ Sở Dữ Liệu"
+2. Nhấn **"Kiểm tra kết nối"** để test
 3. Nhấn **"Đồng bộ lên Supabase"** để upload dữ liệu local
 
 ## Ưu điểm của phương pháp API
