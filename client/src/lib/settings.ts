@@ -56,7 +56,8 @@ class SettingsDatabase extends Dexie {
         googleSheetsId: '',
         googleSheetsApiKey: '',
         googleSheetsEnabled: false,
-        supabaseEnabled: false,
+        supabaseDatabaseUrl: 'postgresql://postgres:1PhuocKhanh@db.tmsvwvajgfdhjrfigtuy.supabase.co:5432/postgres',
+        supabaseEnabled: true,
         lastSyncTime: undefined,
         updatedAt: new Date()
       };
