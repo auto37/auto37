@@ -11,7 +11,6 @@ import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
 import { SupabaseConfig } from '@/components/SupabaseConfig';
 
-
 export default function SettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<Settings>({
@@ -52,13 +51,19 @@ export default function SettingsPage() {
   const loadSettings = async () => {
     setIsLoading(true);
     try {
-      const currentSettings = await settingsDb.getSettings();
-      setSettings(currentSettings);
-      if (currentSettings.logoUrl) {
-        setLogoPreview(currentSettings.logoUrl);
+      const loadedSettings = await settingsDb.getSettings();
+      setSettings(loadedSettings);
+      
+      if (loadedSettings.logoUrl) {
+        setLogoPreview(loadedSettings.logoUrl);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải cài đặt.',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -66,47 +71,43 @@ export default function SettingsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSettings(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setSettings(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setLogoFile(file);
       
-      // Preview
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
         setLogoPreview(result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveSettings = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSaving(true);
+
     try {
       let logoUrl = settings.logoUrl;
       
-      // Upload logo if new file selected
       if (logoFile) {
         logoUrl = await settingsDb.saveLogoAsBase64(logoFile);
       }
-      
-      const updatedSettings: Partial<Settings> = {
+
+      const updatedSettings = {
         ...settings,
         logoUrl,
         updatedAt: new Date()
       };
-      
+
       await settingsDb.updateSettings(updatedSettings);
-      setSettings(prev => ({ ...prev, ...updatedSettings }));
-      setLogoFile(null);
-      
+      setSettings(updatedSettings);
+
       toast({
         title: 'Thành công',
         description: 'Đã lưu cài đặt thành công!'
@@ -115,7 +116,7 @@ export default function SettingsPage() {
       console.error('Error saving settings:', error);
       toast({
         title: 'Lỗi',
-        description: 'Có lỗi xảy ra khi lưu cài đặt.',
+        description: 'Không thể lưu cài đặt. Vui lòng thử lại.',
         variant: 'destructive'
       });
     } finally {
@@ -134,13 +135,13 @@ export default function SettingsPage() {
       await downloadBackup();
       toast({
         title: 'Thành công',
-        description: 'Đã tải xuống file sao lưu!'
+        description: 'Đã tạo và tải xuống file sao lưu!'
       });
     } catch (error) {
       console.error('Error creating backup:', error);
       toast({
-        title: 'Lỗi',
-        description: 'Có lỗi xảy ra khi tạo file sao lưu.',
+        title: 'Lỗi sao lưu',
+        description: 'Không thể tạo file sao lưu. Vui lòng thử lại.',
         variant: 'destructive'
       });
     } finally {
@@ -148,40 +149,48 @@ export default function SettingsPage() {
     }
   };
 
+  const handleFileRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setRestoreFile(file);
+    }
+  };
+
   const handleRestore = async () => {
-    if (!restoreFile) return;
-    
+    if (!restoreFile) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng chọn file sao lưu.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsRestoring(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const jsonData = e.target?.result as string;
-          await importDatabaseFromJson(jsonData);
-          
-          toast({
-            title: 'Thành công',
-            description: 'Đã khôi phục dữ liệu thành công!'
-          });
-          
-          setRestoreFile(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        } catch (error) {
-          console.error('Error restoring data:', error);
-          toast({
-            title: 'Lỗi',
-            description: 'Có lỗi xảy ra khi khôi phục dữ liệu.',
-            variant: 'destructive'
-          });
-        } finally {
-          setIsRestoring(false);
-        }
-      };
-      reader.readAsText(restoreFile);
+      const fileContent = await restoreFile.text();
+      await importDatabaseFromJson(fileContent);
+      
+      // Reload settings after restore
+      await loadSettings();
+      
+      toast({
+        title: 'Thành công',
+        description: 'Đã khôi phục dữ liệu thành công!'
+      });
+      
+      setRestoreFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
-      console.error('Error reading file:', error);
+      console.error('Error restoring data:', error);
+      toast({
+        title: 'Lỗi khôi phục',
+        description: 'Không thể khôi phục dữ liệu. Vui lòng kiểm tra file sao lưu.',
+        variant: 'destructive'
+      });
+    } finally {
       setIsRestoring(false);
     }
   };
@@ -190,16 +199,19 @@ export default function SettingsPage() {
     setIsClearing(true);
     try {
       await clearAllData();
+      await loadSettings(); // Reload default settings
+      
       toast({
         title: 'Thành công',
         description: 'Đã xóa toàn bộ dữ liệu!'
       });
+      
       setShowClearConfirm(false);
     } catch (error) {
       console.error('Error clearing data:', error);
       toast({
         title: 'Lỗi',
-        description: 'Có lỗi xảy ra khi xóa dữ liệu.',
+        description: 'Không thể xóa dữ liệu. Vui lòng thử lại.',
         variant: 'destructive'
       });
     } finally {
@@ -209,9 +221,9 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="container mx-auto p-6">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <i className="fas fa-spinner fa-spin text-2xl mb-4"></i>
           <p>Đang tải cài đặt...</p>
         </div>
       </div>
@@ -222,250 +234,219 @@ export default function SettingsPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Cài Đặt Hệ Thống</h1>
-        <Button 
-          onClick={handleSaveSettings} 
-          disabled={isSaving}
-          className="bg-orange-500 hover:bg-orange-600 text-white"
-        >
-          {isSaving ? (
-            <>
-              <i className="fas fa-spinner fa-spin mr-2"></i>
-              Đang lưu...
-            </>
-          ) : (
-            <>
-              <i className="fas fa-save mr-2"></i>
-              Lưu cài đặt
-            </>
-          )}
-        </Button>
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">Chung</TabsTrigger>
-          <TabsTrigger value="display">Hiển thị</TabsTrigger>
-          <TabsTrigger value="database">Cơ sở dữ liệu</TabsTrigger>
-          <TabsTrigger value="backup">Sao lưu</TabsTrigger>
+          <TabsTrigger value="general">Thông Tin Chung</TabsTrigger>
+          <TabsTrigger value="display">Hiển Thị</TabsTrigger>
+          <TabsTrigger value="database">Cơ Sở Dữ Liệu</TabsTrigger>
+          <TabsTrigger value="backup">Sao Lưu</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông Tin Garage</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="garageName">Tên Garage</Label>
-                  <Input 
-                    id="garageName" 
-                    name="garageName"
-                    value={settings.garageName} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập tên garage"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="garageAddress">Địa chỉ</Label>
-                  <Input 
-                    id="garageAddress" 
-                    name="garageAddress"
-                    value={settings.garageAddress || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập địa chỉ garage"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="garagePhone">Số điện thoại</Label>
-                  <Input 
-                    id="garagePhone" 
-                    name="garagePhone"
-                    value={settings.garagePhone || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="garageEmail">Email</Label>
-                  <Input 
-                    id="garageEmail" 
-                    name="garageEmail"
-                    type="email"
-                    value={settings.garageEmail || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập email garage"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="garageTaxCode">Mã số thuế</Label>
-                  <Input 
-                    id="garageTaxCode" 
-                    name="garageTaxCode"
-                    value={settings.garageTaxCode || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập mã số thuế"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+        <form onSubmit={handleSubmit}>
+          <TabsContent value="general" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông Tin Garage</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="garageName">Tên garage *</Label>
+                    <Input 
+                      id="garageName" 
+                      name="garageName"
+                      value={settings.garageName} 
+                      onChange={handleInputChange}
+                      placeholder="Garage ABC"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="garageAddress">Địa chỉ</Label>
+                    <Input 
+                      id="garageAddress" 
+                      name="garageAddress"
+                      value={settings.garageAddress || ''} 
+                      onChange={handleInputChange}
+                      placeholder="123 Đường ABC, Quận XYZ, TP.HCM"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="garagePhone">Số điện thoại</Label>
+                    <Input 
+                      id="garagePhone" 
+                      name="garagePhone"
+                      value={settings.garagePhone || ''} 
+                      onChange={handleInputChange}
+                      placeholder="0123 456 789"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="garageEmail">Email</Label>
+                    <Input 
+                      id="garageEmail" 
+                      name="garageEmail"
+                      type="email"
+                      value={settings.garageEmail || ''} 
+                      onChange={handleInputChange}
+                      placeholder="contact@garage.com"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="garageTaxCode">Mã số thuế</Label>
+                    <Input 
+                      id="garageTaxCode" 
+                      name="garageTaxCode"
+                      value={settings.garageTaxCode || ''} 
+                      onChange={handleInputChange}
+                      placeholder="0123456789"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông Tin Ngân Hàng</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Tên ngân hàng</Label>
+                    <Input 
+                      id="bankName" 
+                      name="bankName"
+                      value={settings.bankName || ''} 
+                      onChange={handleInputChange}
+                      placeholder="Vietcombank, Techcombank, ..."
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccount">Số tài khoản</Label>
+                    <Input 
+                      id="bankAccount" 
+                      name="bankAccount"
+                      value={settings.bankAccount || ''} 
+                      onChange={handleInputChange}
+                      placeholder="Nhập số tài khoản"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bankOwner">Tên chủ tài khoản</Label>
+                    <Input 
+                      id="bankOwner" 
+                      name="bankOwner"
+                      value={settings.bankOwner || ''} 
+                      onChange={handleInputChange}
+                      placeholder="Nhập tên chủ tài khoản"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bankBranch">Chi nhánh</Label>
+                    <Input 
+                      id="bankBranch" 
+                      name="bankBranch"
+                      value={settings.bankBranch || ''} 
+                      onChange={handleInputChange}
+                      placeholder="Chi nhánh ngân hàng"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>Thông Tin Ngân Hàng</CardTitle>
+                <CardTitle>Logo Garage</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bankName">Tên ngân hàng</Label>
+                  <Label htmlFor="logo">Chọn logo (PNG, JPG)</Label>
                   <Input 
-                    id="bankName" 
-                    name="bankName"
-                    value={settings.bankName || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Vietcombank, Techcombank, ..."
+                    id="logo" 
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="bankAccount">Số tài khoản</Label>
-                  <Input 
-                    id="bankAccount" 
-                    name="bankAccount"
-                    value={settings.bankAccount || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập số tài khoản"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bankOwner">Tên chủ tài khoản</Label>
-                  <Input 
-                    id="bankOwner" 
-                    name="bankOwner"
-                    value={settings.bankOwner || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Nhập tên chủ tài khoản"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bankBranch">Chi nhánh</Label>
-                  <Input 
-                    id="bankBranch" 
-                    name="bankBranch"
-                    value={settings.bankBranch || ''} 
-                    onChange={handleInputChange}
-                    placeholder="Chi nhánh ngân hàng"
-                  />
-                </div>
+                {logoPreview && (
+                  <div className="space-y-2">
+                    <Label>Xem trước logo</Label>
+                    <div className="flex items-center space-x-4">
+                      <img 
+                        src={logoPreview} 
+                        alt="Logo preview" 
+                        className="w-24 h-24 object-contain border rounded-md"
+                      />
+                      <div className="text-sm text-gray-500">
+                        Logo sẽ hiển thị trên các hóa đơn, báo giá và tài liệu in ấn.
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </div>
 
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save mr-2"></i>
+                    Lưu cài đặt
+                  </>
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+        </form>
+
+        <TabsContent value="display" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Logo Garage</CardTitle>
+              <CardTitle>Giao Diện & Hiển Thị</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="logo">Chọn logo (PNG, JPG)</Label>
-                <Input 
-                  id="logo" 
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-              </div>
-              
-              {logoPreview && (
-                <div className="space-y-2">
-                  <Label>Xem trước logo</Label>
-                  <div className="flex items-center space-x-4">
-                    <img 
-                      src={logoPreview} 
-                      alt="Logo preview" 
-                      className="w-24 h-24 object-contain border rounded-md"
-                    />
-                    <div className="text-sm text-gray-500">
-                      Logo sẽ hiển thị trên các hóa đơn, báo giá và tài liệu in ấn.
+            <CardContent>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Cài Đặt Hiển Thị</h3>
+                <div className="p-4 border rounded-md space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="iconColor">Màu Biểu Tượng (Icon)</Label>
+                      <div className="flex items-center gap-4">
+                        <Input 
+                          id="iconColor" 
+                          name="iconColor"
+                          type="color"
+                          value={settings.iconColor || '#3b82f6'}
+                          onChange={handleInputChange}
+                          className="w-20 h-10"
+                        />
+                        <span className="text-sm text-gray-500">
+                          Màu này sẽ áp dụng cho các biểu tượng trong ứng dụng
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="display" className="space-y-6">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Giao Diện & Hiển Thị</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold">Cài Đặt Hiển Thị</h3>
-                  <div className="p-4 border rounded-md space-y-4">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="iconColor">Màu Biểu Tượng (Icon)</Label>
-                        <div className="flex items-center gap-4">
-                          <Input 
-                            id="iconColor" 
-                            name="iconColor"
-                            type="color"
-                            value={settings.iconColor || '#f97316'} 
-                            onChange={handleInputChange}
-                            className="w-16 h-10 p-1 cursor-pointer"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm">
-                              Màu hiển thị cho các biểu tượng trong thanh bên
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4 mt-4">
-                      <h4 className="text-md font-medium">Cài Đặt In Ấn</h4>
-                      <p className="text-sm text-gray-500">
-                        Các tùy chọn hiển thị khi in ấn báo giá, hóa đơn và báo cáo.
-                      </p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="checkbox" 
-                            id="showLogo" 
-                            className="h-4 w-4 rounded border-gray-300"
-                            checked
-                          />
-                          <Label htmlFor="showLogo" className="cursor-pointer">Hiển thị logo trên tài liệu in</Label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="checkbox" 
-                            id="showContactInfo" 
-                            className="h-4 w-4 rounded border-gray-300"
-                            checked
-                          />
-                          <Label htmlFor="showContactInfo" className="cursor-pointer">Hiển thị thông tin liên hệ</Label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
         <TabsContent value="database" className="space-y-6">
           <SupabaseConfig 
             settings={settings} 
@@ -508,20 +489,21 @@ export default function SettingsPage() {
               Khôi phục dữ liệu từ file sao lưu đã tải xuống trước đó.
             </p>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="restore">Chọn file sao lưu (.json)</Label>
+              <div>
+                <Label htmlFor="restore-file">Chọn file sao lưu</Label>
                 <Input 
-                  ref={fileInputRef}
-                  id="restore" 
+                  id="restore-file"
                   type="file"
                   accept=".json"
-                  onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+                  onChange={handleFileRestore}
+                  ref={fileInputRef}
                 />
               </div>
+              
               <Button 
-                variant="destructive"
                 onClick={handleRestore}
                 disabled={!restoreFile || isRestoring}
+                variant="destructive"
               >
                 {isRestoring ? (
                   <>
@@ -543,7 +525,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-red-600">Xóa Toàn Bộ Dữ Liệu</h3>
             <p className="text-sm text-gray-500">
-              <strong>Cảnh báo:</strong> Thao tác này sẽ xóa hoàn toàn tất cả dữ liệu trong hệ thống và không thể khôi phục.
+              <strong>Cảnh báo:</strong> Hành động này sẽ xóa toàn bộ dữ liệu và không thể hoàn tác. Hãy tạo bản sao lưu trước khi thực hiện.
             </p>
             
             {!showClearConfirm ? (
@@ -555,14 +537,10 @@ export default function SettingsPage() {
                 Xóa toàn bộ dữ liệu
               </Button>
             ) : (
-              <div className="space-y-4">
-                <Alert variant="destructive">
-                  <i className="fas fa-exclamation-triangle"></i>
-                  <AlertTitle>Xác nhận xóa dữ liệu</AlertTitle>
-                  <AlertDescription>
-                    Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Thao tác này không thể hoàn tác.
-                  </AlertDescription>
-                </Alert>
+              <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                <p className="text-sm font-medium text-red-800 mb-4">
+                  Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.
+                </p>
                 <div className="flex space-x-2">
                   <Button 
                     variant="destructive"

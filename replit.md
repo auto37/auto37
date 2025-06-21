@@ -94,8 +94,9 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 
 ### Database Configuration
 - Primary: PostgreSQL via DATABASE_URL environment variable
-- Fallback: Google Sheets API for sync and backup
+- Cloud Sync: Supabase PostgreSQL database for multi-device synchronization
 - Local: IndexedDB for offline functionality
+- Legacy: Google Sheets API integration (deprecated due to write limitations)
 
 ## Changelog
 
@@ -107,6 +108,10 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 20, 2025. Discovered Google Sheets API limitation: API Keys only support READ operations, not WRITE
 - June 20, 2025. Implemented dual-mode solution: API Key for reading + Google Apps Script Web App for writing data
 - June 20, 2025. Created GOOGLE_APPS_SCRIPT_SETUP.md with complete setup instructions for full read-write capability
+- June 21, 2025. Switched back to Supabase PostgreSQL database due to Google Sheets write limitations
+- June 21, 2025. Implemented comprehensive Supabase integration with full CRUD operations
+- June 21, 2025. Created SUPABASE_SETUP.md with detailed setup instructions for database configuration
+- June 21, 2025. Updated Settings page with modern Supabase configuration component
 
 ## User Preferences
 
