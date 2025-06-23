@@ -60,27 +60,37 @@ class FirebaseService {
     }
     
     try {
-      console.log('Testing Firebase connection...');
+      console.log('Testing Firebase connection with read-only test...');
       
-      // Try to write a test document to verify connection and permissions
-      const testCollection = collection(this.firestore, 'connection_test');
-      const testDoc = doc(testCollection, 'test_' + Date.now());
+      // First try a simple read operation to test basic connectivity
+      const testCollection = collection(this.firestore, 'test_connection');
+      const snapshot = await getDocs(testCollection);
+      console.log('Read test successful, database is accessible');
       
-      await setDoc(testDoc, { 
+      // Try a simple write test with timeout
+      console.log('Testing write permissions...');
+      const testDoc = doc(testCollection, 'connection_test');
+      
+      const writePromise = setDoc(testDoc, { 
         timestamp: new Date().toISOString(),
-        test: true,
-        message: 'Firebase connection test'
+        test: true 
       });
       
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      );
+      
+      await Promise.race([writePromise, timeoutPromise]);
       console.log('Write test successful');
       
-      // Read it back to confirm
-      const snapshot = await getDocs(testCollection);
-      console.log('Read test successful, docs:', snapshot.size);
-      
       // Clean up
-      await deleteDoc(testDoc);
-      console.log('Cleanup successful');
+      try {
+        await deleteDoc(testDoc);
+        console.log('Cleanup successful');
+      } catch (cleanupError) {
+        console.warn('Cleanup failed, but connection is working:', cleanupError);
+      }
       
       return true;
     } catch (error: any) {
@@ -88,18 +98,22 @@ class FirebaseService {
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
       
-      // Provide specific error messages
-      if (error.code === 'permission-denied') {
-        throw new Error('Lỗi quyền truy cập: Firestore Database chưa được tạo hoặc đang ở production mode. Vui lòng kiểm tra database rules.');
+      // Check for specific error patterns
+      if (error.message === 'Connection timeout') {
+        throw new Error('Kết nối Firebase bị timeout. Kiểm tra firewall hoặc network settings.');
+      } else if (error.code === 'permission-denied') {
+        throw new Error('Lỗi quyền truy cập: Kiểm tra Firestore Database Rules. Đảm bảo database ở test mode.');
       } else if (error.code === 'not-found') {
-        throw new Error('Không tìm thấy Firebase project. Kiểm tra Project ID: ' + this.config?.projectId);
+        throw new Error('Project không tồn tại. Kiểm tra Project ID: ' + this.config?.projectId);
       } else if (error.code === 'invalid-argument' || error.code === 'invalid-api-key') {
-        throw new Error('API Key không hợp lệ: ' + this.config?.apiKey?.substring(0, 15) + '...');
-      } else if (error.code === 'app/invalid-credential') {
-        throw new Error('Thông tin xác thực không hợp lệ. Kiểm tra API Key và Project ID.');
+        throw new Error('API Key không hợp lệ hoặc đã hết hạn.');
+      } else if (error.code === 'unavailable') {
+        throw new Error('Firestore service tạm thời không khả dụng. Thử lại sau.');
+      } else if (error.message?.includes('transport')) {
+        throw new Error('Lỗi network connection. Kiểm tra internet hoặc firewall settings.');
       }
       
-      throw new Error(`Lỗi kết nối Firebase [${error.code}]: ${error.message}`);
+      throw new Error(`Lỗi kết nối Firebase: ${error.message || 'Unknown error'}`);
     }
   }
 

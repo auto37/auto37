@@ -144,18 +144,18 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert className="border-green-200 bg-green-50">
-            <AlertTitle className="text-green-800">✅ Firestore Database đã tạo thành công!</AlertTitle>
-            <AlertDescription className="text-green-700">
-              <div className="mb-2 font-medium">Bạn đã hoàn thành việc tạo Firestore Database. Bây giờ:</div>
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertTitle className="text-orange-800">🔧 Khắc phục lỗi kết nối</AlertTitle>
+            <AlertDescription className="text-orange-700">
+              <div className="mb-2 font-medium">Nếu gặp lỗi "transport errored", cần kiểm tra Firestore Rules:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Điền <strong>API Key</strong> và <strong>Project ID</strong> bên dưới</li>
-                <li>Tích <strong>"Bật đồng bộ dữ liệu tự động"</strong></li>
-                <li>Nhấn <strong>"Kiểm tra kết nối"</strong> để test</li>
-                <li>Sau đó có thể <strong>"Đồng bộ lên Firebase"</strong></li>
+                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore/rules" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Database Rules</a></li>
+                <li>Thay rules thành: <code>allow read, write: if true;</code></li>
+                <li>Nhấn <strong>"Publish"</strong> để áp dụng</li>
+                <li>Quay lại đây test kết nối</li>
               </ol>
-              <div className="p-2 bg-green-100 rounded text-sm">
-                <strong>Database sẵn sàng:</strong> Test mode, location Singapore, ready for data sync.
+              <div className="p-2 bg-orange-100 rounded text-sm">
+                <strong>Lý do:</strong> Default rules có thể chặn write operations, gây lỗi transport.
               </div>
             </AlertDescription>
           </Alert>

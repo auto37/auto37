@@ -120,6 +120,8 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 23, 2025. Implemented Firebase Firestore integration with comprehensive error handling
 - June 23, 2025. Created detailed FIREBASE_SETUP.md guide and FirebaseConfig component
 - June 23, 2025. Added improved error messages for common Firebase setup issues
+- June 23, 2025. Identified and documented Firestore Database Rules issue causing transport errors
+- June 23, 2025. Updated Firebase setup guide with rules troubleshooting section
 
 ## User Preferences
 

@@ -52,21 +52,31 @@ const firebaseConfig = {
 2. Kiểm tra trong Firebase Console → Firestore Database
 3. Bạn sẽ thấy các collections: customers, vehicles, services, etc.
 
-## Security Rules (Tùy chọn - cho Production)
-Trong test mode, database cho phép read/write tự do. Để bảo mật hơn:
+## ⚠️ Khắc phục lỗi kết nối
+Nếu gặp lỗi "transport errored" hoặc "permission denied":
 
-1. Vào **Firestore → Rules**
-2. Thay đổi rules:
+1. **Kiểm tra Firestore Rules**:
+   - Vào Firebase Console → Firestore Database → **Rules**
+   - Đảm bảo rules như sau:
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Cho phép read/write cho tất cả documents
     match /{document=**} {
       allow read, write: if true;
     }
   }
 }
+```
+   - Nhấn **"Publish"** để áp dụng
+
+2. **Kiểm tra Database Location**:
+   - Database phải ở **asia-southeast1** (Singapore)
+   - Nếu sai location, tạo lại database
+
+3. **Kiểm tra Test Mode**:
+   - Database phải ở **test mode**, không phải production mode
+   - Test mode tự động cho phép read/write trong 30 ngày
 ```
 
 ## Ưu điểm Firebase Firestore
