@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { settingsDb } from './settings';
 import { db } from './db';
 
@@ -141,7 +141,7 @@ class FirebaseService {
     }
 
     try {
-      // Clear all local data
+      // Clear all local data first
       await db.customers.clear();
       await db.vehicles.clear();
       await db.inventoryCategories.clear();
@@ -153,31 +153,60 @@ class FirebaseService {
       await db.repairOrderItems.clear();
       await db.invoices.clear();
 
-      // Load data from Firebase
+      // Load customers
+      try {
+        const customersSnapshot = await getDocs(collection(this.firestore, 'customers'));
+        const customers = customersSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (customers.length > 0) {
+          await db.customers.bulkAdd(customers as any);
+          console.log(`Loaded ${customers.length} customers`);
+        }
+      } catch (error) {
+        console.warn('Error loading customers:', error);
+      }
+
+      // Load vehicles  
+      try {
+        const vehiclesSnapshot = await getDocs(collection(this.firestore, 'vehicles'));
+        const vehicles = vehiclesSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (vehicles.length > 0) {
+          await db.vehicles.bulkAdd(vehicles as any);
+          console.log(`Loaded ${vehicles.length} vehicles`);
+        }
+      } catch (error) {
+        console.warn('Error loading vehicles:', error);
+      }
+
+      // Load inventory categories
+      try {
+        const categoriesSnapshot = await getDocs(collection(this.firestore, 'inventory_categories'));
+        const categories = categoriesSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (categories.length > 0) {
+          await db.inventoryCategories.bulkAdd(categories as any);
+          console.log(`Loaded ${categories.length} inventory categories`);
+        }
+      } catch (error) {
+        console.warn('Error loading inventory categories:', error);
+      }
+
+      // Load remaining collections individually to avoid type issues
       const collections = [
-        { name: 'customers', dbTable: db.customers },
-        { name: 'vehicles', dbTable: db.vehicles },
-        { name: 'inventory_categories', dbTable: db.inventoryCategories },
-        { name: 'inventory_items', dbTable: db.inventoryItems },
-        { name: 'services', dbTable: db.services },
-        { name: 'quotations', dbTable: db.quotations },
-        { name: 'quotation_items', dbTable: db.quotationItems },
-        { name: 'repair_orders', dbTable: db.repairOrders },
-        { name: 'repair_order_items', dbTable: db.repairOrderItems },
-        { name: 'invoices', dbTable: db.invoices }
+        { firebase: 'inventory_items', local: db.inventoryItems, name: 'inventory items' },
+        { firebase: 'services', local: db.services, name: 'services' },
+        { firebase: 'quotations', local: db.quotations, name: 'quotations' },
+        { firebase: 'quotation_items', local: db.quotationItems, name: 'quotation items' },
+        { firebase: 'repair_orders', local: db.repairOrders, name: 'repair orders' },
+        { firebase: 'repair_order_items', local: db.repairOrderItems, name: 'repair order items' },
+        { firebase: 'invoices', local: db.invoices, name: 'invoices' }
       ];
 
       for (const coll of collections) {
         try {
-          const querySnapshot = await getDocs(collection(this.firestore, coll.name));
-          const data = querySnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: parseInt(doc.id) || doc.data().id
-          }));
-          
+          const snapshot = await getDocs(collection(this.firestore, coll.firebase));
+          const data = snapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
           if (data.length > 0) {
-            await coll.dbTable.bulkAdd(data as any);
-            console.log(`Loaded ${data.length} records from ${coll.name}`);
+            await coll.local.bulkAdd(data as any);
+            console.log(`Loaded ${data.length} ${coll.name}`);
           }
         } catch (error) {
           console.warn(`Error loading ${coll.name}:`, error);

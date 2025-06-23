@@ -450,13 +450,10 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="database" className="space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-gray-500">
-                Tính năng đồng bộ cơ sở dữ liệu đã được tạm thời gỡ bỏ.
-              </p>
-            </CardContent>
-          </Card>
+          <FirebaseConfig 
+            settings={settings} 
+            onSettingsChange={handleSettingsChange}
+          />
         </TabsContent>
         
         <TabsContent value="backup" className="space-y-6">
