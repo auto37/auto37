@@ -19,9 +19,9 @@
 Sau khi đăng ký app, bạn sẽ thấy màn hình config:
 ```javascript
 const firebaseConfig = {
-  apiKey: "AIzaSyC...",           // ← Copy cái này
+  apiKey: "AIzaSyAX-62emVGaERGjY_zomxJSz3JTwwSapQ4",           // ← Copy cái này
   authDomain: "...",
-  projectId: "garage-project",    // ← Copy cái này
+  projectId: "garage-management-database",    // ← Copy cái này
   storageBucket: "...",
   messagingSenderId: "...",
   appId: "..."

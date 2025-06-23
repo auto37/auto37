@@ -56,12 +56,35 @@ class FirebaseService {
     if (!this.firestore) return false;
     
     try {
-      // Try to read from a test collection
-      await getDocs(collection(this.firestore, 'test'));
+      // Try to write a test document to verify connection and permissions
+      const testCollection = collection(this.firestore, 'connection_test');
+      const testDoc = doc(testCollection, 'test');
+      
+      await setDoc(testDoc, { 
+        timestamp: new Date().toISOString(),
+        test: true 
+      });
+      
+      // Read it back to confirm
+      await getDocs(testCollection);
+      
+      // Clean up
+      await deleteDoc(testDoc);
+      
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Firebase connection test failed:', error);
-      return false;
+      
+      // Provide specific error messages
+      if (error.code === 'permission-denied') {
+        throw new Error('Chưa tạo Firestore Database hoặc đang ở production mode. Vui lòng tạo database ở test mode.');
+      } else if (error.code === 'not-found') {
+        throw new Error('Không tìm thấy Firebase project. Kiểm tra Project ID: ' + this.config?.projectId);
+      } else if (error.code === 'invalid-argument') {
+        throw new Error('API Key không hợp lệ. Vui lòng kiểm tra lại.');
+      }
+      
+      throw new Error(`Lỗi kết nối Firebase: ${error.message}`);
     }
   }
 

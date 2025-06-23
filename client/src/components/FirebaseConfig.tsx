@@ -127,17 +127,20 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert>
-            <AlertTitle>Hướng dẫn lấy thông tin Firebase</AlertTitle>
-            <AlertDescription>
-              <ol className="list-decimal list-inside space-y-1 text-sm">
-                <li>Vào <strong>Firebase Console</strong> → tạo project mới</li>
-                <li>Chọn <strong>Project Settings</strong> → <strong>General</strong></li>
-                <li>Trong <strong>Your apps</strong>, thêm Web app</li>
-                <li>Copy <strong>API Key</strong> và <strong>Project ID</strong></li>
-                <li>Vào <strong>Firestore Database</strong> → <strong>Create database</strong></li>
-                <li>Chọn <strong>Start in test mode</strong> (cho development)</li>
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertTitle className="text-orange-800">🔥 Bước quan trọng: Tạo Firestore Database</AlertTitle>
+            <AlertDescription className="text-orange-700">
+              <div className="mb-2 font-medium">Bạn đã có Firebase project, bây giờ cần tạo Firestore Database:</div>
+              <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
+                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Database</a> của project</li>
+                <li>Nhấn <strong>"Create database"</strong></li>
+                <li><strong>Chọn "Start in test mode"</strong> (không phải production)</li>
+                <li>Location: <strong>asia-southeast1</strong></li>
+                <li>Nhấn <strong>"Done"</strong></li>
               </ol>
+              <div className="p-2 bg-orange-100 rounded text-sm">
+                <strong>Lý do lỗi:</strong> Firebase project tồn tại nhưng chưa có Firestore Database nên không thể kết nối.
+              </div>
             </AlertDescription>
           </Alert>
           

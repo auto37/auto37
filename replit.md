@@ -116,6 +116,10 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 21, 2025. Created supabase-field-mapping.sql with correct schema matching local structure
 - June 21, 2025. Resolved synchronization errors by aligning database field names (code, customerId, categoryId, etc.)
 - June 21, 2025. Rebuilt Supabase API service with proper error handling and table mapping
+- June 23, 2025. Completely removed Supabase integration per user request
+- June 23, 2025. Implemented Firebase Firestore integration with comprehensive error handling
+- June 23, 2025. Created detailed FIREBASE_SETUP.md guide and FirebaseConfig component
+- June 23, 2025. Added improved error messages for common Firebase setup issues
 
 ## User Preferences
 
