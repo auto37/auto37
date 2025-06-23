@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
+import { FirebaseConfig } from '@/components/FirebaseConfig';
 
 
 export default function SettingsPage() {
@@ -28,7 +29,9 @@ export default function SettingsPage() {
     googleSheetsApiKey: '',
     googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
-
+    firebaseApiKey: '',
+    firebaseProjectId: '',
+    firebaseEnabled: false,
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
