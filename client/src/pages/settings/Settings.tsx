@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { settingsDb, Settings } from '@/lib/settings';
 import { downloadBackup, importDatabaseFromJson, clearAllData } from '@/lib/backup';
-import { SupabaseApiConfig } from '@/components/SupabaseApiConfig';
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -28,10 +28,7 @@ export default function SettingsPage() {
     googleSheetsApiKey: '',
     googleSheetsWebAppUrl: '',
     googleSheetsEnabled: false,
-    supabaseDatabaseUrl: '',
-    supabaseProjectUrl: '',
-    supabaseAnonKey: '',
-    supabaseEnabled: false,
+
     lastSyncTime: undefined,
     updatedAt: new Date()
   });
@@ -450,10 +447,13 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="database" className="space-y-6">
-          <SupabaseApiConfig 
-            settings={settings} 
-            onSettingsChange={handleSettingsChange}
-          />
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-gray-500">
+                Tính năng đồng bộ cơ sở dữ liệu đã được tạm thời gỡ bỏ.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="backup" className="space-y-6">

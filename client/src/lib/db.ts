@@ -27,7 +27,7 @@ class GarageDexie extends Dexie {
 
   // Sự kiện thay đổi dữ liệu
   triggerDataChange() {
-    // Phát sự kiện thay đổi dữ liệu để đồng bộ với Supabase
+    // Phát sự kiện thay đổi dữ liệu để đồng bộ
     window.dispatchEvent(new CustomEvent('data-changed'));
   }
 
