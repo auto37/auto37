@@ -212,28 +212,92 @@ class FirebaseService {
         console.warn('Error loading inventory categories:', error);
       }
 
-      // Load remaining collections individually to avoid type issues
-      const collections = [
-        { firebase: 'inventory_items', local: db.inventoryItems, name: 'inventory items' },
-        { firebase: 'services', local: db.services, name: 'services' },
-        { firebase: 'quotations', local: db.quotations, name: 'quotations' },
-        { firebase: 'quotation_items', local: db.quotationItems, name: 'quotation items' },
-        { firebase: 'repair_orders', local: db.repairOrders, name: 'repair orders' },
-        { firebase: 'repair_order_items', local: db.repairOrderItems, name: 'repair order items' },
-        { firebase: 'invoices', local: db.invoices, name: 'invoices' }
-      ];
-
-      for (const coll of collections) {
-        try {
-          const snapshot = await getDocs(collection(this.firestore, coll.firebase));
-          const data = snapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
-          if (data.length > 0) {
-            await coll.local.bulkAdd(data as any);
-            console.log(`Loaded ${data.length} ${coll.name}`);
+      // Load inventory items
+      try {
+        const itemsSnapshot = await getDocs(collection(this.firestore, 'inventory_items'));
+        const items = itemsSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (items.length > 0) {
+          for (const item of items) {
+            await db.inventoryItems.add(item as any);
           }
-        } catch (error) {
-          console.warn(`Error loading ${coll.name}:`, error);
+          console.log(`Loaded ${items.length} inventory items`);
         }
+      } catch (error) {
+        console.warn('Error loading inventory items:', error);
+      }
+
+
+
+      // Load services
+      try {
+        const servicesSnapshot = await getDocs(collection(this.firestore, 'services'));
+        const services = servicesSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (services.length > 0) {
+          await db.services.bulkAdd(services as any);
+          console.log(`Loaded ${services.length} services`);
+        }
+      } catch (error) {
+        console.warn('Error loading services:', error);
+      }
+
+      // Load quotations
+      try {
+        const quotationsSnapshot = await getDocs(collection(this.firestore, 'quotations'));
+        const quotations = quotationsSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (quotations.length > 0) {
+          await db.quotations.bulkAdd(quotations as any);
+          console.log(`Loaded ${quotations.length} quotations`);
+        }
+      } catch (error) {
+        console.warn('Error loading quotations:', error);
+      }
+
+      // Load quotation items
+      try {
+        const quotationItemsSnapshot = await getDocs(collection(this.firestore, 'quotation_items'));
+        const quotationItems = quotationItemsSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (quotationItems.length > 0) {
+          await db.quotationItems.bulkAdd(quotationItems as any);
+          console.log(`Loaded ${quotationItems.length} quotation items`);
+        }
+      } catch (error) {
+        console.warn('Error loading quotation items:', error);
+      }
+
+      // Load repair orders
+      try {
+        const repairOrdersSnapshot = await getDocs(collection(this.firestore, 'repair_orders'));
+        const repairOrders = repairOrdersSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (repairOrders.length > 0) {
+          await db.repairOrders.bulkAdd(repairOrders as any);
+          console.log(`Loaded ${repairOrders.length} repair orders`);
+        }
+      } catch (error) {
+        console.warn('Error loading repair orders:', error);
+      }
+
+      // Load repair order items
+      try {
+        const repairOrderItemsSnapshot = await getDocs(collection(this.firestore, 'repair_order_items'));
+        const repairOrderItems = repairOrderItemsSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (repairOrderItems.length > 0) {
+          await db.repairOrderItems.bulkAdd(repairOrderItems as any);
+          console.log(`Loaded ${repairOrderItems.length} repair order items`);
+        }
+      } catch (error) {
+        console.warn('Error loading repair order items:', error);
+      }
+
+      // Load invoices
+      try {
+        const invoicesSnapshot = await getDocs(collection(this.firestore, 'invoices'));
+        const invoices = invoicesSnapshot.docs.map(doc => ({ ...doc.data(), id: parseInt(doc.id) }));
+        if (invoices.length > 0) {
+          await db.invoices.bulkAdd(invoices as any);
+          console.log(`Loaded ${invoices.length} invoices`);
+        }
+      } catch (error) {
+        console.warn('Error loading invoices:', error);
       }
 
       console.log('Data loaded from Firebase successfully');

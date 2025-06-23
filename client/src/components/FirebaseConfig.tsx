@@ -148,10 +148,10 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             <Input 
               id="firebaseApiKey" 
               name="firebaseApiKey"
-              type="password"
+              type="text"
               value={settings.firebaseApiKey || ''}
               onChange={handleInputChange}
-              placeholder="AIzaSyC..."
+              placeholder="AIzaSyAX-62emVGaERGjY_zomxJSz3JTwwSapQ4"
             />
             <p className="text-xs text-gray-500">
               API Key từ Firebase Console → Project Settings → General
