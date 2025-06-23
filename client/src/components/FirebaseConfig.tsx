@@ -144,28 +144,19 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert className="border-red-200 bg-red-50">
-            <AlertTitle className="text-red-800">🔧 Sửa lỗi syntax trong Firestore Rules</AlertTitle>
-            <AlertDescription className="text-red-700">
-              <div className="mb-2 font-medium">Sử dụng template mặc định từ Firebase:</div>
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertTitle className="text-blue-800">💡 Giải pháp đơn giản: Sử dụng Test Mode</AlertTitle>
+            <AlertDescription className="text-blue-700">
+              <div className="mb-2 font-medium">Thay vì sửa rules phức tạp, hãy sử dụng Test Mode:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore/rules" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Rules</a></li>
-                <li>Tìm nút <strong>"Use template"</strong> hoặc <strong>"Test rules"</strong></li>
-                <li>Chọn template: <strong>"Allow read/write access on all documents"</strong></li>
-                <li>Hoặc thay thế toàn bộ bằng:</li>
+                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Database</a></li>
+                <li>Nhấn <strong>"Rules"</strong> tab</li>
+                <li>Tìm và nhấn nút <strong>"Test rules"</strong> hoặc <strong>"Start in test mode"</strong></li>
+                <li>Chọn <strong>30 days</strong> test mode</li>
+                <li>Firebase sẽ tự động tạo rules cho phép read/write</li>
               </ol>
-              <div className="bg-gray-800 text-green-400 p-3 rounded text-xs font-mono mb-3">
-                <div>rules_version = '2';</div>
-                <div>service cloud.firestore &#123;</div>
-                <div>&nbsp;&nbsp;match /databases/&#123;database&#125;/documents &#123;</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;match /&#123;document=**&#125; &#123;</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if true;</div>
-                <div>&nbsp;&nbsp;&nbsp;&nbsp;&#125;</div>
-                <div>&nbsp;&nbsp;&#125;</div>
-                <div>&#125;</div>
-              </div>
-              <div className="p-2 bg-red-100 rounded text-sm">
-                <strong>Lỗi thường gặp:</strong> Thiếu dấu ngoặc kép hoặc có dấu ngoặc nhọn thừa.
+              <div className="p-2 bg-blue-100 rounded text-sm">
+                <strong>Test mode</strong> tự động cho phép read/write trong 30 ngày, tránh lỗi syntax.
               </div>
             </AlertDescription>
           </Alert>
