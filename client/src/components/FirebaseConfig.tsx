@@ -127,19 +127,18 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert className="border-orange-200 bg-orange-50">
-            <AlertTitle className="text-orange-800">🔥 Bước quan trọng: Tạo Firestore Database</AlertTitle>
-            <AlertDescription className="text-orange-700">
-              <div className="mb-2 font-medium">Bạn đã có Firebase project, bây giờ cần tạo Firestore Database:</div>
+          <Alert className="border-green-200 bg-green-50">
+            <AlertTitle className="text-green-800">✅ Firestore Database đã tạo thành công!</AlertTitle>
+            <AlertDescription className="text-green-700">
+              <div className="mb-2 font-medium">Bạn đã hoàn thành việc tạo Firestore Database. Bây giờ:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Database</a> của project</li>
-                <li>Nhấn <strong>"Create database"</strong></li>
-                <li><strong>Chọn "Start in test mode"</strong> (không phải production)</li>
-                <li>Location: <strong>asia-southeast1</strong></li>
-                <li>Nhấn <strong>"Done"</strong></li>
+                <li>Điền <strong>API Key</strong> và <strong>Project ID</strong> bên dưới</li>
+                <li>Tích <strong>"Bật đồng bộ dữ liệu tự động"</strong></li>
+                <li>Nhấn <strong>"Kiểm tra kết nối"</strong> để test</li>
+                <li>Sau đó có thể <strong>"Đồng bộ lên Firebase"</strong></li>
               </ol>
-              <div className="p-2 bg-orange-100 rounded text-sm">
-                <strong>Lý do lỗi:</strong> Firebase project tồn tại nhưng chưa có Firestore Database nên không thể kết nối.
+              <div className="p-2 bg-green-100 rounded text-sm">
+                <strong>Database sẵn sàng:</strong> Test mode, location Singapore, ready for data sync.
               </div>
             </AlertDescription>
           </Alert>
