@@ -25,11 +25,27 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
   };
 
   const handleTestConnection = async () => {
+    if (!settings.firebaseApiKey || !settings.firebaseProjectId) {
+      toast({
+        title: 'Thiếu thông tin',
+        description: 'Vui lòng điền đầy đủ API Key và Project ID',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsTestingConnection(true);
     try {
+      console.log('Starting connection test with:', {
+        apiKey: settings.firebaseApiKey?.substring(0, 10) + '...',
+        projectId: settings.firebaseProjectId,
+        enabled: settings.firebaseEnabled
+      });
+
       await settingsDb.updateSettings({
         firebaseApiKey: settings.firebaseApiKey,
-        firebaseProjectId: settings.firebaseProjectId
+        firebaseProjectId: settings.firebaseProjectId,
+        firebaseEnabled: true
       });
       
       await firebaseService.initialize();
@@ -38,20 +54,21 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
       if (isConnected) {
         toast({
           title: 'Thành công',
-          description: 'Kết nối Firebase thành công!'
+          description: 'Kết nối Firebase thành công! Database sẵn sàng đồng bộ.'
         });
       } else {
         toast({
           title: 'Lỗi kết nối',
-          description: 'Không thể kết nối tới Firebase. Vui lòng kiểm tra API Key và Project ID.',
+          description: 'Không thể kết nối tới Firebase.',
           variant: 'destructive'
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Connection test failed:', error);
+      
       toast({
         title: 'Lỗi kết nối',
-        description: 'Có lỗi xảy ra khi kiểm tra kết nối.',
+        description: error.message || 'Không thể kết nối tới Firebase',
         variant: 'destructive'
       });
     } finally {

@@ -34,17 +34,19 @@ class FirebaseService {
           apiKey: this.config.apiKey,
           authDomain: `${this.config.projectId}.firebaseapp.com`,
           projectId: this.config.projectId,
-          storageBucket: `${this.config.projectId}.appspot.com`,
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:abcdef123456"
+          storageBucket: `${this.config.projectId}.firebasestorage.app`,
+          messagingSenderId: "886259199861",
+          appId: "1:886259199861:web:d8b988f2effbfa0517ad3c",
+          measurementId: "G-YD8M01XCRV"
         };
 
         this.app = initializeApp(firebaseConfig);
         this.firestore = getFirestore(this.app);
-        console.log('Firebase initialized successfully');
+        console.log('Firebase initialized successfully with config:', { projectId: this.config.projectId, apiKey: this.config.apiKey?.substring(0, 10) + '...' });
       }
     } catch (error) {
       console.error('Failed to initialize Firebase:', error);
+      throw error;
     }
   }
 
@@ -53,38 +55,51 @@ class FirebaseService {
   }
 
   async testConnection(): Promise<boolean> {
-    if (!this.firestore) return false;
+    if (!this.firestore) {
+      throw new Error('Firebase chưa được khởi tạo. Vui lòng kiểm tra cấu hình.');
+    }
     
     try {
+      console.log('Testing Firebase connection...');
+      
       // Try to write a test document to verify connection and permissions
       const testCollection = collection(this.firestore, 'connection_test');
-      const testDoc = doc(testCollection, 'test');
+      const testDoc = doc(testCollection, 'test_' + Date.now());
       
       await setDoc(testDoc, { 
         timestamp: new Date().toISOString(),
-        test: true 
+        test: true,
+        message: 'Firebase connection test'
       });
       
+      console.log('Write test successful');
+      
       // Read it back to confirm
-      await getDocs(testCollection);
+      const snapshot = await getDocs(testCollection);
+      console.log('Read test successful, docs:', snapshot.size);
       
       // Clean up
       await deleteDoc(testDoc);
+      console.log('Cleanup successful');
       
       return true;
     } catch (error: any) {
       console.error('Firebase connection test failed:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       
       // Provide specific error messages
       if (error.code === 'permission-denied') {
-        throw new Error('Chưa tạo Firestore Database hoặc đang ở production mode. Vui lòng tạo database ở test mode.');
+        throw new Error('Lỗi quyền truy cập: Firestore Database chưa được tạo hoặc đang ở production mode. Vui lòng kiểm tra database rules.');
       } else if (error.code === 'not-found') {
         throw new Error('Không tìm thấy Firebase project. Kiểm tra Project ID: ' + this.config?.projectId);
-      } else if (error.code === 'invalid-argument') {
-        throw new Error('API Key không hợp lệ. Vui lòng kiểm tra lại.');
+      } else if (error.code === 'invalid-argument' || error.code === 'invalid-api-key') {
+        throw new Error('API Key không hợp lệ: ' + this.config?.apiKey?.substring(0, 15) + '...');
+      } else if (error.code === 'app/invalid-credential') {
+        throw new Error('Thông tin xác thực không hợp lệ. Kiểm tra API Key và Project ID.');
       }
       
-      throw new Error(`Lỗi kết nối Firebase: ${error.message}`);
+      throw new Error(`Lỗi kết nối Firebase [${error.code}]: ${error.message}`);
     }
   }
 
