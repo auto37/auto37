@@ -144,18 +144,28 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert className="border-green-200 bg-green-50">
-            <AlertTitle className="text-green-800">✅ Firestore Rules đã cập nhật!</AlertTitle>
-            <AlertDescription className="text-green-700">
-              <div className="mb-2 font-medium">Rules đã được cấu hình chính xác. Bây giờ:</div>
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTitle className="text-red-800">🔧 Sửa lỗi syntax trong Firestore Rules</AlertTitle>
+            <AlertDescription className="text-red-700">
+              <div className="mb-2 font-medium">Rules hiện tại có lỗi syntax. Copy chính xác rules này:</div>
+              <div className="bg-gray-100 p-3 rounded text-xs font-mono mb-3 overflow-x-auto">
+{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}`}
+              </div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Điền <strong>API Key</strong> và <strong>Project ID</strong> bên dưới</li>
-                <li>Tích <strong>"Bật đồng bộ dữ liệu tự động"</strong></li>
-                <li>Nhấn <strong>"Kiểm tra kết nối"</strong> để test</li>
-                <li>Sau đó có thể <strong>"Đồng bộ lên Firebase"</strong></li>
+                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore/rules" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Rules</a></li>
+                <li>Xóa toàn bộ rules hiện tại</li>
+                <li>Copy paste chính xác rules ở trên</li>
+                <li>Nhấn <strong>"Publish"</strong></li>
               </ol>
-              <div className="p-2 bg-green-100 rounded text-sm">
-                <strong>Sẵn sàng:</strong> Database rules cho phép read/write, kết nối sẽ thành công.
+              <div className="p-2 bg-red-100 rounded text-sm">
+                <strong>Lỗi thường gặp:</strong> Thiếu dấu ngoặc kép hoặc có dấu ngoặc nhọn thừa.
               </div>
             </AlertDescription>
           </Alert>
