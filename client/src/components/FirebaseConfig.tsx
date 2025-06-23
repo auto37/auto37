@@ -147,23 +147,23 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
           <Alert className="border-red-200 bg-red-50">
             <AlertTitle className="text-red-800">🔧 Sửa lỗi syntax trong Firestore Rules</AlertTitle>
             <AlertDescription className="text-red-700">
-              <div className="mb-2 font-medium">Rules hiện tại có lỗi syntax. Copy chính xác rules này:</div>
-              <div className="bg-gray-100 p-3 rounded text-xs font-mono mb-3 overflow-x-auto">
-{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}`}
-              </div>
+              <div className="mb-2 font-medium">Sử dụng template mặc định từ Firebase:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
                 <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore/rules" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Rules</a></li>
-                <li>Xóa toàn bộ rules hiện tại</li>
-                <li>Copy paste chính xác rules ở trên</li>
-                <li>Nhấn <strong>"Publish"</strong></li>
+                <li>Tìm nút <strong>"Use template"</strong> hoặc <strong>"Test rules"</strong></li>
+                <li>Chọn template: <strong>"Allow read/write access on all documents"</strong></li>
+                <li>Hoặc thay thế toàn bộ bằng:</li>
               </ol>
+              <div className="bg-gray-800 text-green-400 p-3 rounded text-xs font-mono mb-3">
+                <div>rules_version = '2';</div>
+                <div>service cloud.firestore &#123;</div>
+                <div>&nbsp;&nbsp;match /databases/&#123;database&#125;/documents &#123;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;match /&#123;document=**&#125; &#123;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if true;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&#125;</div>
+                <div>&nbsp;&nbsp;&#125;</div>
+                <div>&#125;</div>
+              </div>
               <div className="p-2 bg-red-100 rounded text-sm">
                 <strong>Lỗi thường gặp:</strong> Thiếu dấu ngoặc kép hoặc có dấu ngoặc nhọn thừa.
               </div>
