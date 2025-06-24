@@ -1,17 +1,25 @@
-// Google Sheets Database Service
-import { settingsDb } from './settings';
+// DEPRECATED: Google Sheets integration removed per user request
+// All functionality disabled - use Firebase instead
 
 export interface GoogleSheetsConfig {
-  sheetsId: string;
-  apiKey: string;
-  webAppUrl?: string; // Google Apps Script Web App URL for writing data
-  enabled: boolean;
+  enabled: false;
 }
 
-interface SheetData {
-  range: string;
-  values: any[][];
+class GoogleSheetsService {
+  isEnabled(): boolean {
+    return false;
+  }
+  
+  async syncAllData(): Promise<void> {
+    // Disabled - no Google Sheets sync
+  }
+  
+  async loadFromGoogleSheets(): Promise<void> {
+    // Disabled - no Google Sheets sync
+  }
 }
+
+export const googleSheetsService = new GoogleSheetsService();
 
 class GoogleSheetsService {
   private config: GoogleSheetsConfig | null = null;

@@ -28,7 +28,7 @@ import InvoiceDetails from "./pages/invoices/InvoiceDetails";
 import Reports from "./pages/reports/Reports";
 import Settings from "./pages/settings/Settings";
 import InvoicePrint from "./pages/print/InvoicePrint";
-import { GoogleSheetsDemo } from "./components/GoogleSheetsDemo";
+
 import QuotePrint from "./pages/print/QuotePrint";
 import RepairPrint from "./pages/print/RepairPrint";
 import NotFound from "@/pages/not-found";

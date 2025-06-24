@@ -1,4 +1,4 @@
-import { googleSheetsService } from './googlesheets';
+import { firebaseService } from './firebase';
 import { settingsDb } from './settings';
 import { db } from './db';
 
@@ -10,7 +10,7 @@ class AutoSyncService {
     if (this.isInitialized) return;
 
     try {
-      await googleSheetsService.initialize();
+      await firebaseService.initialize();
       
       // Auto-sync disabled to reduce console noise
       // Use manual sync in Settings when needed
@@ -31,14 +31,14 @@ class AutoSyncService {
       const isLocalDatabaseEmpty = customerCount === 0 && vehicleCount === 0 && inventoryCount === 0;
       
       if (isLocalDatabaseEmpty) {
-        // New device - try to load data from Google Sheets
-        console.log('Empty local database detected, attempting to load from Google Sheets...');
-        await googleSheetsService.loadFromGoogleSheets();
+        // New device - try to load data from Firebase
+        console.log('Empty local database detected, attempting to load from Firebase...');
+        await firebaseService.loadFromFirebase();
       } else {
-        // Existing data - sync to Google Sheets
-        console.log('Local data found, syncing to Google Sheets...');
-        await googleSheetsService.syncAllData();
-        console.log('Local data synced to Google Sheets');
+        // Existing data - sync to Firebase
+        console.log('Local data found, syncing to Firebase...');
+        await firebaseService.syncAllData();
+        console.log('Local data synced to Firebase');
       }
     } catch (error) {
       console.error('Initial sync failed:', error);
@@ -59,8 +59,8 @@ class AutoSyncService {
   private async performPeriodicSync() {
     try {
       const settings = await settingsDb.getSettings();
-      if (settings.googleSheetsEnabled) {
-        await googleSheetsService.syncAllData();
+      if (settings.firebaseEnabled) {
+        await firebaseService.syncAllData();
         console.log('Periodic sync completed');
       }
     } catch (error) {
@@ -71,8 +71,8 @@ class AutoSyncService {
   async syncOnDataChange() {
     try {
       const settings = await settingsDb.getSettings();
-      if (settings.googleSheetsEnabled) {
-        await googleSheetsService.syncAllData();
+      if (settings.firebaseEnabled) {
+        await firebaseService.syncAllData();
       }
     } catch (error) {
       console.error('Data change sync failed:', error);
