@@ -232,30 +232,36 @@ export default function CustomerForm() {
         });
       } else {
         // Add new customer
-        const customerId = await db.customers.add({
+        const customerData = {
           code: data.code,
           name: data.name,
           phone: data.phone,
-          address: data.address,
-          email: data.email,
-          taxCode: data.taxCode,
-          notes: data.notes
-        });
+          address: data.address || '',
+          email: data.email || '',
+          taxCode: data.taxCode || '',
+          notes: data.notes || ''
+        };
+        
+        console.log('Adding customer data:', customerData);
+        const customerId = await db.customers.add(customerData);
         
         // Add vehicles
         for (const vehicle of data.vehicles) {
           const vehicleCode = await db.generateVehicleCode();
-          await db.vehicles.add({
+          const vehicleData = {
             code: vehicleCode,
             customerId: customerId,
             licensePlate: vehicle.licensePlate,
             brand: vehicle.brand,
             model: vehicle.model,
-            vin: vehicle.vin,
-            year: vehicle.year,
-            color: vehicle.color,
-            lastOdometer: vehicle.lastOdometer
-          });
+            vin: vehicle.vin || '',
+            year: vehicle.year || undefined,
+            color: vehicle.color || '',
+            lastOdometer: vehicle.lastOdometer || 0
+          };
+          
+          console.log('Adding vehicle data:', vehicleData);
+          await db.vehicles.add(vehicleData);
         }
         
         toast({

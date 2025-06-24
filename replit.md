@@ -122,6 +122,8 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 23, 2025. Added improved error messages for common Firebase setup issues
 - June 23, 2025. Identified and documented Firestore Database Rules issue causing transport errors
 - June 23, 2025. Updated Firebase setup guide with rules troubleshooting section
+- June 24, 2025. Successfully resolved Firebase connection issues and achieved working sync
+- June 24, 2025. Fixed DataCloneError in customer form by cleaning undefined values for IndexedDB
 
 ## User Preferences
 
