@@ -231,16 +231,23 @@ export default function CustomerForm() {
           description: 'Đã cập nhật thông tin khách hàng.',
         });
       } else {
-        // Add new customer
+        // Add new customer - ensure all fields are properly serialized
         const customerData = {
-          code: data.code,
-          name: data.name,
-          phone: data.phone,
-          address: data.address || '',
-          email: data.email || '',
-          taxCode: data.taxCode || '',
-          notes: data.notes || ''
+          code: String(data.code || ''),
+          name: String(data.name || ''),
+          phone: String(data.phone || ''),
+          address: String(data.address || ''),
+          email: String(data.email || ''),
+          taxCode: String(data.taxCode || ''),
+          notes: String(data.notes || '')
         };
+        
+        // Remove any undefined/null values
+        Object.keys(customerData).forEach(key => {
+          if (customerData[key] === undefined || customerData[key] === null) {
+            customerData[key] = '';
+          }
+        });
         
         console.log('Adding customer data:', customerData);
         const customerId = await db.customers.add(customerData);
@@ -249,16 +256,21 @@ export default function CustomerForm() {
         for (const vehicle of data.vehicles) {
           const vehicleCode = await db.generateVehicleCode();
           const vehicleData = {
-            code: vehicleCode,
-            customerId: customerId,
-            licensePlate: vehicle.licensePlate,
-            brand: vehicle.brand,
-            model: vehicle.model,
-            vin: vehicle.vin || '',
-            year: vehicle.year,
-            color: vehicle.color || '',
-            lastOdometer: vehicle.lastOdometer || 0
+            code: String(vehicleCode),
+            customerId: Number(customerId),
+            licensePlate: String(vehicle.licensePlate || ''),
+            brand: String(vehicle.brand || ''),
+            model: String(vehicle.model || ''),
+            vin: String(vehicle.vin || ''),
+            year: vehicle.year ? Number(vehicle.year) : undefined,
+            color: String(vehicle.color || ''),
+            lastOdometer: Number(vehicle.lastOdometer || 0)
           };
+          
+          // Remove undefined values
+          if (vehicleData.year === undefined) {
+            delete vehicleData.year;
+          }
           
           console.log('Adding vehicle data:', vehicleData);
           await db.vehicles.add(vehicleData);
