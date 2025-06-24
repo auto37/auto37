@@ -98,7 +98,8 @@ export default function CustomerForm() {
       setIsEditing(true);
       fetchCustomer(parseInt(params.id));
     } else {
-      generateCustomerCode();
+      // Await the async function properly
+      generateCustomerCode().catch(console.error);
     }
   }, [match, params.id]);
 
@@ -162,6 +163,19 @@ export default function CustomerForm() {
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
+    
+    // Debug: Check raw form data
+    console.log('Raw form data:', data);
+    console.log('Data code type:', typeof data.code, data.code);
+    
+    // Check for Promise objects in form data
+    Object.keys(data).forEach(key => {
+      const value = data[key];
+      if (value && typeof value === 'object' && typeof value.then === 'function') {
+        console.error('FOUND PROMISE in form data:', key, value);
+      }
+    });
+    
     try {
       if (isEditing && params.id) {
         // Update existing customer
@@ -232,25 +246,39 @@ export default function CustomerForm() {
         });
       } else {
         // Add new customer - ensure all fields are properly serialized
-        const customerData = {
-          code: String(data.code || ''),
-          name: String(data.name || ''),
-          phone: String(data.phone || ''),
-          address: String(data.address || ''),
-          email: String(data.email || ''),
-          taxCode: String(data.taxCode || ''),
-          notes: String(data.notes || '')
-        };
+        const customerData = {};
         
-        // Remove any undefined/null values
+        // Manually assign each field to avoid any Promise references
+        customerData.code = data.code ? String(data.code) : '';
+        customerData.name = data.name ? String(data.name) : '';
+        customerData.phone = data.phone ? String(data.phone) : '';
+        customerData.address = data.address ? String(data.address) : '';
+        customerData.email = data.email ? String(data.email) : '';
+        customerData.taxCode = data.taxCode ? String(data.taxCode) : '';
+        customerData.notes = data.notes ? String(data.notes) : '';
+        
+        // Remove any undefined/null values and check for non-serializable data
         Object.keys(customerData).forEach(key => {
-          if (customerData[key] === undefined || customerData[key] === null) {
+          const value = customerData[key];
+          if (value === undefined || value === null) {
+            customerData[key] = '';
+          } else if (typeof value === 'object' && value !== null) {
+            console.error('Found object in customer data:', key, value);
+            customerData[key] = '';
+          } else if (typeof value === 'function') {
+            console.error('Found function in customer data:', key);
             customerData[key] = '';
           }
         });
         
         console.log('Adding customer data:', customerData);
-        const customerId = await db.customers.add(customerData);
+        console.log('Data type check:', typeof customerData, Object.prototype.toString.call(customerData));
+        
+        // Deep clone to ensure no references
+        const cleanCustomerData = JSON.parse(JSON.stringify(customerData));
+        console.log('Clean customer data:', cleanCustomerData);
+        
+        const customerId = await db.customers.add(cleanCustomerData);
         
         // Add vehicles
         for (const vehicle of data.vehicles) {
