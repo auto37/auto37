@@ -134,5 +134,5 @@ class GarageDexie extends Dexie {
 
 export const db = new GarageDexie();
 
-// DISABLED: All database hooks removed to prevent DataCloneError
-// Khách hàng
+// COMPLETELY DISABLED: All database hooks removed to prevent DataCloneError
+// DataCloneError was caused by Promise objects being injected via these hooks
