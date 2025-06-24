@@ -25,10 +25,9 @@ class GarageDexie extends Dexie {
   repairOrderItems!: Table<RepairOrderItem>;
   invoices!: Table<Invoice>;
 
-  // Sự kiện thay đổi dữ liệu - tạm thời tắt để debug
+  // Sự kiện thay đổi dữ liệu - HOÀN TOÀN TẮT
   triggerDataChange() {
-    // Tắt auto-sync để debug DataCloneError
-    // window.dispatchEvent(new CustomEvent('data-changed'));
+    // KHÔNG làm gì cả để tránh Promise injection
   }
 
   constructor() {

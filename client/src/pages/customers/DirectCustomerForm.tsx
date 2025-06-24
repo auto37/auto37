@@ -6,9 +6,25 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/db';
+import Dexie from 'dexie';
 
-export default function SimpleCustomerForm() {
+// Create a clean database instance just for this form
+class DirectDatabase extends Dexie {
+  customers!: Dexie.Table<any, number>;
+  vehicles!: Dexie.Table<any, number>;
+
+  constructor() {
+    super('garageDatabase');
+    this.version(1).stores({
+      customers: '++id, code, name, phone, email',
+      vehicles: '++id, code, customerId, licensePlate, brand, model'
+    });
+  }
+}
+
+const directDb = new DirectDatabase();
+
+export default function DirectCustomerForm() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -71,47 +87,45 @@ export default function SimpleCustomerForm() {
     setIsLoading(true);
 
     try {
-      // Create customer object with hardcoded code for now
-      const cleanCustomer = {
-        code: `KH${Date.now().toString().slice(-4)}`, // Use timestamp to avoid async
-        name: customerData.name.trim(),
-        phone: customerData.phone.trim(),
-        address: customerData.address.trim() || '',
-        email: customerData.email.trim() || '',
-        taxCode: customerData.taxCode.trim() || '',
-        notes: customerData.notes.trim() || ''
-      };
-
-      console.log('Saving customer:', cleanCustomer);
-
-      // Direct add without any async wrapper
-      const customerId = await db.customers.add(cleanCustomer);
+      // Create clean customer object - NO async code generation
+      const timestamp = Date.now().toString();
       
-      console.log('Customer saved with ID:', customerId);
+      const customerRecord = {};
+      customerRecord['code'] = 'KH' + timestamp.slice(-4);
+      customerRecord['name'] = customerData.name.trim();
+      customerRecord['phone'] = customerData.phone.trim();
+      customerRecord['address'] = customerData.address.trim();
+      customerRecord['email'] = customerData.email.trim();
+      customerRecord['taxCode'] = customerData.taxCode.trim();
+      customerRecord['notes'] = customerData.notes.trim();
 
-      // Create clean vehicle object
-      const cleanVehicle = {
-        code: `XE${Date.now().toString().slice(-4)}`, // Use timestamp to avoid async
-        customerId: Number(customerId),
-        licensePlate: vehicleData.licensePlate.trim(),
-        brand: vehicleData.brand.trim(),
-        model: vehicleData.model.trim() || '',
-        vin: vehicleData.vin.trim() || '',
-        color: vehicleData.color.trim() || '',
-        lastOdometer: Number(vehicleData.lastOdometer || 0)
-      };
+      console.log('Direct customer save:', customerRecord);
 
-      // Only add year if it has a valid value
+      // Direct database add
+      const customerId = await directDb.customers.add(customerRecord);
+      
+      console.log('Customer ID received:', customerId);
+
+      // Create vehicle record
+      const vehicleRecord = {};
+      vehicleRecord['code'] = 'XE' + (timestamp.slice(-4));
+      vehicleRecord['customerId'] = Number(customerId);
+      vehicleRecord['licensePlate'] = vehicleData.licensePlate.trim();
+      vehicleRecord['brand'] = vehicleData.brand.trim();
+      vehicleRecord['model'] = vehicleData.model.trim();
+      vehicleRecord['vin'] = vehicleData.vin.trim();
+      vehicleRecord['color'] = vehicleData.color.trim();
+      vehicleRecord['lastOdometer'] = Number(vehicleData.lastOdometer || 0);
+      
       if (vehicleData.year && !isNaN(Number(vehicleData.year))) {
-        cleanVehicle.year = Number(vehicleData.year);
+        vehicleRecord['year'] = Number(vehicleData.year);
       }
 
-      console.log('Saving vehicle:', cleanVehicle);
+      console.log('Direct vehicle save:', vehicleRecord);
 
-      // Add vehicle
-      await db.vehicles.add(cleanVehicle);
+      await directDb.vehicles.add(vehicleRecord);
 
-      console.log('Vehicle saved successfully');
+      console.log('Both records saved successfully');
 
       toast({
         title: 'Thành công',
@@ -136,7 +150,7 @@ export default function SimpleCustomerForm() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Thêm khách hàng mới</h1>
+        <h1 className="text-3xl font-bold">Thêm khách hàng mới (Direct)</h1>
         <Button 
           variant="outline" 
           onClick={() => navigate('/customers')}

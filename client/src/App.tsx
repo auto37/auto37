@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/customers/Customers";
 import CustomerForm from "./pages/customers/CustomerForm";
 import SimpleCustomerForm from "./pages/customers/SimpleCustomerForm";
+import DirectCustomerForm from "./pages/customers/DirectCustomerForm";
 import CustomerDetails from "./pages/customers/CustomerDetails";
 import Inventory from "./pages/inventory/Inventory";
 import InventoryForm from "./pages/inventory/InventoryForm";
@@ -54,8 +55,9 @@ function App() {
               <Route path="/" component={Dashboard} />
               
               <Route path="/customers" component={Customers} />
-              <Route path="/customers/new" component={SimpleCustomerForm} />
+              <Route path="/customers/new" component={DirectCustomerForm} />
               <Route path="/customers/new-simple" component={SimpleCustomerForm} />
+              <Route path="/customers/new-direct" component={DirectCustomerForm} />
               <Route path="/customers/:id/edit" component={CustomerForm} />
               <Route path="/customers/:id" component={CustomerDetails} />
               
