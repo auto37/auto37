@@ -15,9 +15,11 @@ import DirectCustomerForm from "./pages/customers/DirectCustomerForm";
 import CustomerDetails from "./pages/customers/CustomerDetails";
 import Inventory from "./pages/inventory/Inventory";
 import InventoryForm from "./pages/inventory/InventoryForm";
+import DirectInventoryForm from "./pages/inventory/DirectInventoryForm";
 import CategoryForm from "./pages/inventory/CategoryForm";
 import Services from "./pages/services/Services";
 import ServiceForm from "./pages/services/ServiceForm";
+import DirectServiceForm from "./pages/services/DirectServiceForm";
 import Quotes from "./pages/quotes/Quotes";
 import QuoteForm from "./pages/quotes/QuoteForm";
 import QuoteDetails from "./pages/quotes/QuoteDetails";
@@ -62,13 +64,13 @@ function App() {
               <Route path="/customers/:id" component={CustomerDetails} />
               
               <Route path="/inventory" component={Inventory} />
-              <Route path="/inventory/new" component={InventoryForm} />
+              <Route path="/inventory/new" component={DirectInventoryForm} />
               <Route path="/inventory/:id/edit" component={InventoryForm} />
               <Route path="/inventory/category/new" component={CategoryForm} />
               <Route path="/inventory/category/:id/edit" component={CategoryForm} />
               
               <Route path="/services" component={Services} />
-              <Route path="/services/new" component={ServiceForm} />
+              <Route path="/services/new" component={DirectServiceForm} />
               <Route path="/services/:id/edit" component={ServiceForm} />
               
               <Route path="/quotes" component={Quotes} />
