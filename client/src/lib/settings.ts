@@ -14,10 +14,7 @@ export interface Settings {
   bankAccount?: string; // Số tài khoản
   bankOwner?: string; // Tên chủ tài khoản
   bankBranch?: string; // Chi nhánh ngân hàng
-  googleSheetsId?: string; // Google Sheets ID
-  googleSheetsApiKey?: string; // Google Sheets API Key
-  googleSheetsWebAppUrl?: string; // Google Apps Script Web App URL for writing data
-  googleSheetsEnabled?: boolean; // Bật/tắt đồng bộ Google Sheets
+
   firebaseApiKey?: string; // Firebase API Key
   firebaseProjectId?: string; // Firebase Project ID
   firebaseEnabled?: boolean; // Bật/tắt đồng bộ Firebase

@@ -25,10 +25,7 @@ export default function SettingsPage() {
     bankAccount: '',
     bankOwner: '',
     bankBranch: '',
-    googleSheetsId: '',
-    googleSheetsApiKey: '',
-    googleSheetsWebAppUrl: '',
-    googleSheetsEnabled: false,
+
     firebaseApiKey: '',
     firebaseProjectId: '',
     firebaseEnabled: false,

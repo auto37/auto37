@@ -88,7 +88,7 @@ function App() {
               
               <Route path="/settings" component={Settings} />
               
-              <Route path="/google-sheets-demo" component={() => <GoogleSheetsDemo />} />
+
               
               <Route path="/print/invoice/:id" component={InvoicePrint} />
               <Route path="/print/quote/:id" component={QuotePrint} />

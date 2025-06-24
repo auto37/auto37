@@ -255,7 +255,7 @@ export default function CustomerForm() {
             brand: vehicle.brand,
             model: vehicle.model,
             vin: vehicle.vin || '',
-            year: vehicle.year || undefined,
+            year: vehicle.year,
             color: vehicle.color || '',
             lastOdometer: vehicle.lastOdometer || 0
           };
