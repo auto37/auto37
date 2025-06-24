@@ -94,13 +94,15 @@ export default function CustomerForm() {
 
   // Check if editing mode based on URL
   useEffect(() => {
-    if (match && params.id) {
-      setIsEditing(true);
-      fetchCustomer(parseInt(params.id));
-    } else {
-      // Await the async function properly
-      generateCustomerCode().catch(console.error);
-    }
+    const initializeForm = async () => {
+      if (match && params.id) {
+        setIsEditing(true);
+        await fetchCustomer(parseInt(params.id));
+      } else {
+        await generateCustomerCode();
+      }
+    };
+    initializeForm();
   }, [match, params.id]);
 
   // Fetch customer data
@@ -245,17 +247,19 @@ export default function CustomerForm() {
           description: 'Đã cập nhật thông tin khách hàng.',
         });
       } else {
-        // Add new customer - ensure all fields are properly serialized
-        const customerData = {};
+        // Generate fresh customer code to avoid any Promise issues
+        const freshCode = await db.generateCustomerCode();
         
-        // Manually assign each field to avoid any Promise references
-        customerData.code = data.code ? String(data.code) : '';
-        customerData.name = data.name ? String(data.name) : '';
-        customerData.phone = data.phone ? String(data.phone) : '';
-        customerData.address = data.address ? String(data.address) : '';
-        customerData.email = data.email ? String(data.email) : '';
-        customerData.taxCode = data.taxCode ? String(data.taxCode) : '';
-        customerData.notes = data.notes ? String(data.notes) : '';
+        // Add new customer - ensure all fields are properly serialized
+        const customerData = {
+          code: freshCode,
+          name: String(data.name || ''),
+          phone: String(data.phone || ''),
+          address: String(data.address || ''),
+          email: String(data.email || ''),
+          taxCode: String(data.taxCode || ''),
+          notes: String(data.notes || '')
+        };
         
         // Remove any undefined/null values and check for non-serializable data
         Object.keys(customerData).forEach(key => {

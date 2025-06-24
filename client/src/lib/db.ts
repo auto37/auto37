@@ -50,13 +50,25 @@ class GarageDexie extends Dexie {
 
   // Helper functions for generating auto-increment codes
   async generateCustomerCode(): Promise<string> {
-    const count = await this.customers.count();
-    return `KH${(count + 1).toString().padStart(4, '0')}`;
+    try {
+      const count = await this.customers.count();
+      const code = `KH${(count + 1).toString().padStart(4, '0')}`;
+      return code;
+    } catch (error) {
+      console.error('Error generating customer code:', error);
+      return `KH0001`; // Fallback
+    }
   }
 
   async generateVehicleCode(): Promise<string> {
-    const count = await this.vehicles.count();
-    return `XE${(count + 1).toString().padStart(4, '0')}`;
+    try {
+      const count = await this.vehicles.count();
+      const code = `XE${(count + 1).toString().padStart(4, '0')}`;
+      return code;
+    } catch (error) {
+      console.error('Error generating vehicle code:', error);
+      return `XE0001`; // Fallback
+    }
   }
 
   async generateCategoryCode(): Promise<string> {
