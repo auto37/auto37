@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { settingsDb } from './settings';
 import { db } from './db';
@@ -40,7 +40,15 @@ class FirebaseService {
           measurementId: "G-YD8M01XCRV"
         };
 
-        this.app = initializeApp(firebaseConfig);
+        // Check if app already exists to avoid duplicate app error
+        let app;
+        try {
+          app = getApp();
+        } catch (error) {
+          app = initializeApp(firebaseConfig);
+        }
+        
+        this.app = app;
         this.firestore = getFirestore(this.app);
         console.log('Firebase initialized successfully with config:', { projectId: this.config.projectId, apiKey: this.config.apiKey?.substring(0, 10) + '...' });
       }

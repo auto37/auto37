@@ -144,19 +144,18 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
             Kết nối với Firebase Firestore để đồng bộ dữ liệu cloud. Firestore cung cấp realtime sync và offline support.
           </p>
 
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertTitle className="text-blue-800">💡 Giải pháp đơn giản: Sử dụng Test Mode</AlertTitle>
-            <AlertDescription className="text-blue-700">
-              <div className="mb-2 font-medium">Thay vì sửa rules phức tạp, hãy sử dụng Test Mode:</div>
+          <Alert className="border-green-200 bg-green-50">
+            <AlertTitle className="text-green-800">Đã khắc phục lỗi Firebase</AlertTitle>
+            <AlertDescription className="text-green-700">
+              <div className="mb-2 font-medium">Firebase connection đã được cải thiện. Thử test kết nối:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Vào <a href="https://console.firebase.google.com/project/garage-management-database/firestore" target="_blank" className="text-blue-600 hover:underline font-medium">Firestore Database</a></li>
-                <li>Nhấn <strong>"Rules"</strong> tab</li>
-                <li>Tìm và nhấn nút <strong>"Test rules"</strong> hoặc <strong>"Start in test mode"</strong></li>
-                <li>Chọn <strong>30 days</strong> test mode</li>
-                <li>Firebase sẽ tự động tạo rules cho phép read/write</li>
+                <li>Điền API Key và Project ID bên dưới</li>
+                <li>Tích "Bật đồng bộ dữ liệu tự động"</li>
+                <li>Nhấn "Kiểm tra kết nối"</li>
+                <li>Nếu vẫn lỗi, có thể là do Firestore rules chưa đúng</li>
               </ol>
-              <div className="p-2 bg-blue-100 rounded text-sm">
-                <strong>Test mode</strong> tự động cho phép read/write trong 30 ngày, tránh lỗi syntax.
+              <div className="p-2 bg-green-100 rounded text-sm">
+                <strong>Lưu ý:</strong> Settings sẽ được lưu trong IndexedDB (local) và Firebase (cloud).
               </div>
             </AlertDescription>
           </Alert>
