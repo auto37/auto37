@@ -145,17 +145,17 @@ export function FirebaseConfig({ settings, onSettingsChange }: FirebaseConfigPro
           </p>
 
           <Alert className="border-green-200 bg-green-50">
-            <AlertTitle className="text-green-800">Đã khắc phục lỗi Firebase</AlertTitle>
+            <AlertTitle className="text-green-800">✅ Firebase kết nối thành công!</AlertTitle>
             <AlertDescription className="text-green-700">
-              <div className="mb-2 font-medium">Firebase connection đã được cải thiện. Thử test kết nối:</div>
+              <div className="mb-2 font-medium">Database connection đã hoạt động. Bây giờ bạn có thể:</div>
               <ol className="list-decimal list-inside space-y-1 text-sm mb-3">
-                <li>Điền API Key và Project ID bên dưới</li>
-                <li>Tích "Bật đồng bộ dữ liệu tự động"</li>
-                <li>Nhấn "Kiểm tra kết nối"</li>
-                <li>Nếu vẫn lỗi, có thể là do Firestore rules chưa đúng</li>
+                <li>Nhấn <strong>"Đồng bộ lên Firebase"</strong> để upload dữ liệu local</li>
+                <li>Hoặc <strong>"Tải từ Firebase"</strong> để download dữ liệu cloud</li>
+                <li>Dữ liệu sẽ tự động sync realtime khi có thay đổi</li>
+                <li>Truy cập từ nhiều thiết bị với cùng Firebase project</li>
               </ol>
               <div className="p-2 bg-green-100 rounded text-sm">
-                <strong>Lưu ý:</strong> Settings sẽ được lưu trong IndexedDB (local) và Firebase (cloud).
+                <strong>Hoàn thành:</strong> Settings và dữ liệu được lưu trong IndexedDB (local) và Firebase (cloud).
               </div>
             </AlertDescription>
           </Alert>
