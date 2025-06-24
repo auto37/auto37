@@ -124,6 +124,9 @@ This is a comprehensive garage management system built as a Progressive Web Appl
 - June 23, 2025. Updated Firebase setup guide with rules troubleshooting section
 - June 24, 2025. Successfully resolved Firebase connection issues and achieved working sync
 - June 24, 2025. Fixed DataCloneError in customer form by cleaning undefined values for IndexedDB
+- June 24, 2025. Created DirectCustomerForm, DirectInventoryForm, DirectServiceForm to bypass DataCloneError
+- June 24, 2025. Removed all database hooks that were injecting Promise objects into IndexedDB
+- June 24, 2025. Added auto-generating SKU system based on category (2 letters + 4 digits)
 
 ## User Preferences
 

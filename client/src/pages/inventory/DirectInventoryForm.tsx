@@ -58,11 +58,48 @@ export default function DirectInventoryForm() {
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  // Generate SKU based on category
+  const generateSKU = async (categoryId: string) => {
+    if (!categoryId) return '';
+    
+    try {
+      const category = categories.find(c => c.id.toString() === categoryId);
+      if (!category) return '';
+
+      // Get first 2 uppercase letters from category name
+      const categoryCode = category.name
+        .replace(/[^a-zA-Z]/g, '') // Remove non-letters
+        .substring(0, 2)
+        .toUpperCase();
+
+      // Count existing items with same category prefix
+      const existingItems = await directInventoryDb.inventoryItems
+        .where('sku')
+        .startsWith(categoryCode)
+        .toArray();
+
+      const nextNumber = (existingItems.length + 1).toString().padStart(4, '0');
+      return `${categoryCode}${nextNumber}`;
+    } catch (error) {
+      console.error('Error generating SKU:', error);
+      return '';
+    }
+  };
+
+  const handleChange = async (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Auto-generate SKU when category changes
+    if (field === 'categoryId' && value) {
+      const generatedSKU = await generateSKU(value);
+      setFormData(prev => ({
+        ...prev,
+        sku: generatedSKU
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,9 +119,18 @@ export default function DirectInventoryForm() {
     try {
       const timestamp = Date.now().toString();
       
+      // Generate SKU if empty
+      let finalSKU = formData.sku.trim();
+      if (!finalSKU) {
+        finalSKU = await generateSKU(formData.categoryId);
+        if (!finalSKU) {
+          finalSKU = `SKU${timestamp.slice(-6)}`; // Fallback
+        }
+      }
+
       // Create clean inventory item object
       const itemRecord = {};
-      itemRecord['sku'] = formData.sku.trim() || `SKU${timestamp.slice(-6)}`;
+      itemRecord['sku'] = finalSKU;
       itemRecord['name'] = formData.name.trim();
       itemRecord['categoryId'] = Number(formData.categoryId);
       itemRecord['quantity'] = Number(formData.quantity || 0);
@@ -149,7 +195,7 @@ export default function DirectInventoryForm() {
                   id="sku"
                   value={formData.sku}
                   onChange={(e) => handleChange('sku', e.target.value)}
-                  placeholder="Để trống để tự tạo"
+                  placeholder="Tự động tạo theo danh mục"
                   disabled={isLoading}
                 />
               </div>
