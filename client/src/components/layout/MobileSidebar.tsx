@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { settingsDb } from "@/lib/settings";
@@ -58,6 +58,9 @@ export default function MobileSidebar() {
       </SheetTrigger>
       
       <SheetContent side="left" className="w-80 p-0 bg-sidebar">
+        <SheetHeader className="sr-only">
+          <SheetTitle>Navigation Menu</SheetTitle>
+        </SheetHeader>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
