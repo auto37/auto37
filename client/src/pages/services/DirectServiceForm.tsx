@@ -98,13 +98,14 @@ export default function DirectServiceForm() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Thêm dịch vụ mới</h1>
+    <div className="container mx-auto py-3 lg:py-6 px-4 lg:px-6 space-y-4 lg:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl lg:text-3xl font-bold">Thêm dịch vụ mới</h1>
         <Button 
           variant="outline" 
           onClick={() => navigate('/services')}
           disabled={isLoading}
+          className="self-start sm:self-auto"
         >
           Quay lại
         </Button>
@@ -179,18 +180,20 @@ export default function DirectServiceForm() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-4 sm:space-x-4 sm:gap-0">
           <Button 
             type="button" 
             variant="outline"
             onClick={() => navigate('/services')}
             disabled={isLoading}
+            className="order-2 sm:order-1"
           >
             Hủy
           </Button>
           <Button 
             type="submit"
             disabled={isLoading}
+            className="order-1 sm:order-2"
           >
             {isLoading ? 'Đang lưu...' : 'Lưu dịch vụ'}
           </Button>
