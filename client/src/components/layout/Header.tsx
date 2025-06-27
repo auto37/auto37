@@ -51,7 +51,7 @@ export default function Header() {
         <h2 className="text-xl font-semibold text-gray-800">{getTitle()}</h2>
       </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 lg:space-x-4">
         <div className="relative">
           <button className="p-2 rounded-full hover:bg-gray-100">
             <i className="fas fa-bell text-gray-600"></i>

@@ -209,7 +209,7 @@ export default function DirectInventoryForm() {
             <CardTitle>Thông tin vật tư</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="sku">Mã SKU</Label>
                 <Input
@@ -233,7 +233,7 @@ export default function DirectInventoryForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="categoryId">Danh mục *</Label>
                 <Select 
@@ -304,7 +304,7 @@ export default function DirectInventoryForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="minQuantity">Số lượng tối thiểu</Label>
                 <Input
