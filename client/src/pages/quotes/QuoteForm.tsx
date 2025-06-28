@@ -28,7 +28,7 @@ const quoteItemSchema = z.object({
   type: z.enum(['part', 'service']),
   itemId: z.number().int(), // Cho phép itemId = -1 cho mục nhập tay
   name: z.string().min(1),
-  quantity: z.number().int().positive(),
+  quantity: z.number().positive(), // Cho phép số thập phân
   unitPrice: z.number().positive(),
   total: z.number().nonnegative(),
 });
@@ -875,51 +875,30 @@ export default function QuoteForm() {
 
                       <div>
                         <Label htmlFor="itemId">Chọn {selectedItemType === 'part' ? 'Vật Tư' : 'Dịch Vụ'}</Label>
-                        <Select
+                        <SearchableSelect
+                          options={[
+                            { value: "-1", label: `Thêm mới ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}` },
+                            ...(selectedItemType === 'part' 
+                              ? inventoryItems.filter(item => item.id).map((item) => ({
+                                  value: item.id!.toString(),
+                                  label: item.name,
+                                  details: `${formatCurrency(item.sellingPrice)} - SL: ${item.quantity} ${item.unit}`,
+                                  disabled: item.quantity <= 0
+                                }))
+                              : services.filter(service => service.id).map((service) => ({
+                                  value: service.id!.toString(),
+                                  label: service.name,
+                                  details: formatCurrency(service.price),
+                                  disabled: false
+                                }))
+                            )
+                          ]}
                           value={selectedItemId?.toString() || '0'}
                           onValueChange={(value) => setSelectedItemId(parseInt(value))}
-                        >
-                          <SelectTrigger id="itemId">
-                            <SelectValue placeholder={`Chọn ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {selectedItemType === 'part' ? (
-                              <>
-                                <SelectItem value="-1">Thêm mới vật tư</SelectItem>
-                                {inventoryItems.length === 0 ? (
-                                  <SelectItem value="0" disabled>Không có vật tư nào</SelectItem>
-                                ) : (
-                                  inventoryItems.map((item) => (
-                                    <SelectItem 
-                                      key={item.id} 
-                                      value={item.id?.toString()}
-                                      disabled={item.quantity <= 0}
-                                    >
-                                      {item.name} ({formatCurrency(item.sellingPrice)})
-                                      {item.quantity <= 0 && ' - Hết hàng'}
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <SelectItem value="-1">Thêm mới dịch vụ</SelectItem>
-                                {services.length === 0 ? (
-                                  <SelectItem value="0" disabled>Không có dịch vụ nào</SelectItem>
-                                ) : (
-                                  services.map((service) => (
-                                    <SelectItem 
-                                      key={service.id} 
-                                      value={service.id?.toString()}
-                                    >
-                                      {service.name} ({formatCurrency(service.price)})
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </>
-                            )}
-                          </SelectContent>
-                        </Select>
+                          placeholder={`Chọn ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}`}
+                          searchPlaceholder={`Tìm ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}...`}
+                          emptyText="Không tìm thấy kết quả"
+                        />
                       </div>
 
                       <div>
@@ -927,7 +906,8 @@ export default function QuoteForm() {
                         <Input
                           id="quantity"
                           type="number"
-                          min="1"
+                          min="0.1"
+                          step="0.1"
                           value={selectedQuantity}
                           onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 0)}
                         />

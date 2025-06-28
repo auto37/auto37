@@ -23,12 +23,13 @@ import {
   RepairOrderWithDetails
 } from '@/lib/types';
 import { formatCurrency, formatDate, calculateTotals } from '@/lib/utils';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 
 const repairItemSchema = z.object({
   type: z.enum(['part', 'service']),
   itemId: z.number().int(), // Cho phép itemId = -1 cho mục nhập thủ công
   name: z.string().min(1),
-  quantity: z.number().int().positive(),
+  quantity: z.number().positive(), // Cho phép số thập phân
   unitPrice: z.number().positive(),
   total: z.number().nonnegative(),
 });
@@ -951,44 +952,28 @@ export default function RepairForm() {
 
                       <div>
                         <Label htmlFor="itemId">Chọn {selectedItemType === 'part' ? 'Vật Tư' : 'Dịch Vụ'}</Label>
-                        <Select
+                        <SearchableSelect
+                          options={
+                            selectedItemType === 'part' 
+                              ? inventoryItems.filter(item => item.id).map((item) => ({
+                                  value: item.id!.toString(),
+                                  label: item.name,
+                                  details: `${formatCurrency(item.sellingPrice)} - SL: ${item.quantity} ${item.unit}`,
+                                  disabled: item.quantity <= 0
+                                }))
+                              : services.filter(service => service.id).map((service) => ({
+                                  value: service.id!.toString(),
+                                  label: service.name,
+                                  details: formatCurrency(service.price),
+                                  disabled: false
+                                }))
+                          }
                           value={selectedItemId?.toString() || '0'}
                           onValueChange={(value) => setSelectedItemId(parseInt(value))}
-                        >
-                          <SelectTrigger id="itemId">
-                            <SelectValue placeholder={`Chọn ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {selectedItemType === 'part' ? (
-                              inventoryItems.length === 0 ? (
-                                <SelectItem value="0" disabled>Không có vật tư nào</SelectItem>
-                              ) : (
-                                inventoryItems.map((item) => (
-                                  <SelectItem 
-                                    key={item.id} 
-                                    value={item.id?.toString() || '0'}
-                                  >
-                                    {item.name} ({formatCurrency(item.sellingPrice)})
-                                    {item.quantity <= 0 && ' - Hết hàng'}
-                                  </SelectItem>
-                                ))
-                              )
-                            ) : (
-                              services.length === 0 ? (
-                                <SelectItem value="0" disabled>Không có dịch vụ nào</SelectItem>
-                              ) : (
-                                services.map((service) => (
-                                  <SelectItem 
-                                    key={service.id} 
-                                    value={service.id?.toString() || '0'}
-                                  >
-                                    {service.name} ({formatCurrency(service.price)})
-                                  </SelectItem>
-                                ))
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
+                          placeholder={`Chọn ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}`}
+                          searchPlaceholder={`Tìm ${selectedItemType === 'part' ? 'vật tư' : 'dịch vụ'}...`}
+                          emptyText="Không tìm thấy kết quả"
+                        />
                       </div>
 
                       <div>
