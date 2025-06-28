@@ -22,6 +22,7 @@ import {
   QuotationItem
 } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 
 const quoteItemSchema = z.object({
   type: z.enum(['part', 'service']),
