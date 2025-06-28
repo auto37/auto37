@@ -981,9 +981,10 @@ export default function RepairForm() {
                         <Input
                           id="quantity"
                           type="number"
-                          min="1"
+                          min="0.1"
+                          step="0.1"
                           value={selectedQuantity}
-                          onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 0)}
+                          onChange={(e) => setSelectedQuantity(parseFloat(e.target.value) || 0)}
                         />
                       </div>
 
@@ -1030,9 +1031,10 @@ export default function RepairForm() {
                                 <TableCell>
                                   <Input
                                     type="number"
-                                    min="1"
+                                    min="0.1"
+                                    step="0.1"
                                     value={item.quantity}
-                                    onChange={(e) => handleUpdateItemQuantity(index, parseInt(e.target.value) || 0)}
+                                    onChange={(e) => handleUpdateItemQuantity(index, parseFloat(e.target.value) || 0)}
                                     className="w-20"
                                   />
                                 </TableCell>

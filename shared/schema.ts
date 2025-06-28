@@ -149,7 +149,7 @@ export const quotationItems = pgTable("quotation_items", {
   type: text("type").notNull(), // 'part' or 'service'
   itemId: integer("item_id").notNull(),
   name: text("name").notNull(),
-  quantity: integer("quantity").notNull(),
+  quantity: real("quantity").notNull(), // Hỗ trợ số thập phân
   unitPrice: real("unit_price").notNull(),
   total: real("total").notNull(),
 });
@@ -194,7 +194,7 @@ export const repairOrderItems = pgTable("repair_order_items", {
   type: text("type").notNull(), // 'part' or 'service'
   itemId: integer("item_id").notNull(),
   name: text("name").notNull(),
-  quantity: integer("quantity").notNull(),
+  quantity: real("quantity").notNull(), // Hỗ trợ số thập phân
   unitPrice: real("unit_price").notNull(),
   total: real("total").notNull(),
 });
