@@ -148,6 +148,7 @@ class GoogleSheetsService {
           console.log(`Note: Configure Google Apps Script Web App URL in Settings for full write capability`);
           this.hasShownWriteWarning = true;
         }
+        return; // Exit early to prevent further processing
       }
     } else {
       // Show warning only once to avoid console spam
@@ -162,7 +163,11 @@ class GoogleSheetsService {
 
   async syncCustomers(customers: any[]) {
     if (!this.isEnabled()) return;
-    await this.updateSheetData('Customers', customers);
+    try {
+      await this.updateSheetData('Customers', customers);
+    } catch (error) {
+      // Silently handle sync errors to prevent unhandled rejections
+    }
   }
 
   async syncVehicles(vehicles: any[]) {
